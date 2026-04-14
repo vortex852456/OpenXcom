@@ -46,13 +46,20 @@ namespace OpenXcom
  */
 ResearchInfoState::ResearchInfoState(Base *base, RuleResearch *rule) : _base(base), _project(nullptr), _rule(rule)
 {
-	int rng = RNG::generate(50, 150);
-	int randomizedCost = rule->getCost() * rng / 100;
-	if (rule->getCost() > 0)
+	if (Options::oxceFixedResearchCosts)
 	{
-		randomizedCost = std::max(1, randomizedCost);
+		_project = new ResearchProject(rule, rule->getCost());
 	}
-	_project = new ResearchProject(rule, randomizedCost);
+	else
+	{
+		int rng = RNG::generate(50, 150);
+		int randomizedCost = rule->getCost() * rng / 100;
+		if (rule->getCost() > 0)
+		{
+			randomizedCost = std::max(1, randomizedCost);
+		}
+		_project = new ResearchProject(rule, randomizedCost);
+	}
 
 	buildUi();
 }

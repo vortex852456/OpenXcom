@@ -18,6 +18,7 @@
  */
 #include "ResearchProject.h"
 #include "../Mod/RuleResearch.h"
+#include "../Engine/Options.h"
 
 namespace OpenXcom
 {
@@ -137,6 +138,16 @@ void ResearchProject::save(YAML::YamlNodeWriter writer) const
  */
 std::string ResearchProject::getResearchProgress() const
 {
+	if (Options::oxceFixedResearchCosts)
+	{
+		int spent = getSpent();
+		int cost = std::max(1, getCost());
+		int progress = static_cast<int>(static_cast<float>(spent) / cost * 100);
+		std::ostringstream ss;
+		ss << progress << "% (" << spent << "/" << cost << ")";
+		return ss.str();
+	}
+
 	float progress = (float)getSpent() / getRules()->getCost();
 	if (getAssigned() == 0)
 	{
