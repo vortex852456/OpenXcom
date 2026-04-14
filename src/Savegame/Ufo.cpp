@@ -603,6 +603,15 @@ bool Ufo::isCrashed() const
 }
 
 /**
+ * Returns if this UFO is capable of crash-landing (not a kamikaze or unmanned drone).
+ * @return True if the UFO can crash land rather than being destroyed.
+ */
+bool Ufo::canCrash() const
+{
+	return _huntBehavior != 1 && !_rules->isUnmanned();
+}
+
+/**
  * Returns if this UFO took enough damage
  * to cause it to crash.
  * @return Crashed status.

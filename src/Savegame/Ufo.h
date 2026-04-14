@@ -151,6 +151,8 @@ public:
 	void setStatus(enum UfoStatus status) {_status = status; }
 	/// Gets if the UFO has crashed.
 	bool isCrashed() const;
+	/// Gets if the UFO can crash.
+	bool canCrash() const;
 	/// Gets if the UFO has been destroyed.
 	bool isDestroyed() const;
 	/// Handles UFO logic.

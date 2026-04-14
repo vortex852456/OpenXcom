@@ -53,6 +53,7 @@
 #include "DogfightErrorState.h"
 #include "../Mod/RuleInterface.h"
 #include "../Mod/Mod.h"
+#include "../Engine/Options.h"
 
 namespace OpenXcom
 {
@@ -1249,33 +1250,50 @@ void DogfightState::update()
 							_ufo->setHitFrame(3);
 						}
 
-						// How hard was the ufo hit?
-						if (_ufo->getShield() != 0)
+						if (Options::oxceShowUFOCombatStats)
 						{
-							setStatus("STR_UFO_SHIELD_HIT");
-						}
-						else
-						{
-							if (damage == 0)
+							std::ostringstream ss;
+							if (_ufo->getShield() > 0)
 							{
-								if (shieldDamage == 0)
-								{
-									setStatus("STR_UFO_HIT_NO_DAMAGE");
-								}
-								else
-								{
-									setStatus("STR_UFO_SHIELD_DOWN");
-								}
+								ss << "SH: " << _ufo->getShield() << " (" << _ufo->getShieldPercentage() << "%)";
 							}
 							else
 							{
-								if (damage < _ufo->getCraftStats().damageMax / 2 * _game->getMod()->getUfoGlancingHitThreshold() / 100)
+								ss << "HP: " << (_ufo->getCraftStats().damageMax / (_ufo->canCrash() ? 2 : 1)) - _ufo->getDamage() << " (" << (_ufo->canCrash() ? 50 : 100) - _ufo->getDamagePercentage() << "%)";
+							}
+							ss << " HIT: " << (shieldDamage > 0 ? shieldDamage : damage);
+							setStatus(ss.str());
+						}
+						else
+						{
+							// How hard was the ufo hit?
+							if (_ufo->getShield() != 0)
+							{
+								setStatus("STR_UFO_SHIELD_HIT");
+							}
+							else
+							{
+								if (damage == 0)
 								{
-									setStatus("STR_UFO_HIT_GLANCING");
+									if (shieldDamage == 0)
+									{
+										setStatus("STR_UFO_HIT_NO_DAMAGE");
+									}
+									else
+									{
+										setStatus("STR_UFO_SHIELD_DOWN");
+									}
 								}
 								else
 								{
-									setStatus("STR_UFO_HIT");
+									if (damage < _ufo->getCraftStats().damageMax / 2 * _game->getMod()->getUfoGlancingHitThreshold() / 100)
+									{
+										setStatus("STR_UFO_HIT_GLANCING");
+									}
+									else
+									{
+										setStatus("STR_UFO_HIT");
+									}
 								}
 							}
 						}
@@ -1873,8 +1891,11 @@ void DogfightState::ufoFireWeapon()
 	}
 	_ufo->setFireCountdown(RNG::generate(0, fireCountdown) + fireCountdown);
 
-	setStatus("STR_UFO_RETURN_FIRE");
-	CraftWeaponProjectile *p = new CraftWeaponProjectile(nullptr);
+	if (_txtStatus->getText() == "")
+	{
+		setStatus("STR_UFO_RETURN_FIRE");
+	}
+	CraftWeaponProjectile* p = new CraftWeaponProjectile(nullptr);
 	p->setType(CWPT_PLASMA_BEAM);
 	p->setAccuracy(60);
 	p->setDamage(_ufo->getRules()->getWeaponPower());
