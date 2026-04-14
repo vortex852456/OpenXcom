@@ -125,13 +125,10 @@ UfoDetectedState::UfoDetectedState(Ufo *ufo, GeoscapeState *state, bool detected
 	_btnCentre->setText(tr("STR_CENTER_ON_UFO_TIME_5_SECONDS"));
 	_btnCentre->onMouseClick((ActionHandler)&UfoDetectedState::btnCentreClick);
 
-	if (_game->isCtrlPressed())
 	{
-		_btnCancel->setText(tr("STR_IGNORE_UC"));
-	}
-	else
-	{
-		_btnCancel->setText(tr("STR_CANCEL_UC"));
+		// Option ON: click=ignore, Ctrl=cancel. Option OFF (default): click=cancel, Ctrl=ignore.
+		bool willIgnore = (Options::oxceIgnoreNewUFOs != _game->isCtrlPressed());
+		_btnCancel->setText(tr(willIgnore ? "STR_IGNORE_UC" : "STR_CANCEL_UC"));
 	}
 	_btnCancel->onMouseClick((ActionHandler)&UfoDetectedState::btnCancelClick);
 	_btnCancel->onKeyboardPress((ActionHandler)&UfoDetectedState::btnCancelClick, Options::keyCancel);
@@ -251,7 +248,8 @@ void UfoDetectedState::btnCentreClick(Action *)
  */
 void UfoDetectedState::btnCancelClick(Action *)
 {
-	if (_game->isCtrlPressed())
+	bool willIgnore = (Options::oxceIgnoreNewUFOs != _game->isCtrlPressed());
+	if (willIgnore)
 	{
 		// don't show UFO Detected window for this UFO anymore
 		_game->getSavedGame()->addUfoToIgnoreList(_ufo->getId());
@@ -260,19 +258,13 @@ void UfoDetectedState::btnCancelClick(Action *)
 }
 
 /**
- * Toggles Cancel button.
+ * Toggles Cancel button label when Ctrl is pressed/released.
  * @param action Pointer to an action.
  */
 void UfoDetectedState::toggleCancel(Action *)
 {
-	if (_game->isCtrlPressed())
-	{
-		_btnCancel->setText(tr("STR_IGNORE_UC"));
-	}
-	else
-	{
-		_btnCancel->setText(tr("STR_CANCEL_UC"));
-	}
+	bool willIgnore = (Options::oxceIgnoreNewUFOs != _game->isCtrlPressed());
+	_btnCancel->setText(tr(willIgnore ? "STR_IGNORE_UC" : "STR_CANCEL_UC"));
 }
 
 }

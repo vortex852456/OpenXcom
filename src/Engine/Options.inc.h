@@ -110,6 +110,7 @@ OPT bool oxceEnableOffCentreShooting;
 OPT bool oxceUniformShootingSpread;
 OPT int oxceCrashedOrLanded;
 OPT bool oxceInstantQuickSearch;
+OPT bool oxceIgnoreNewUFOs;
 
 // OXCE hidden, accessible only via options.cfg
 /**
