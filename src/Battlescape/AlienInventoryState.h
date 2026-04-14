@@ -55,6 +55,8 @@ public:
 	void btnToggleClick(Action *action);
 	/// Handler for clicking the Armor button.
 	void btnArmorClickMiddle(Action *action);
+	/// Handler for clicking the Name text.
+	void txtNameClick(Action* action);
 };
 
 }

@@ -35,6 +35,7 @@
 #include "../Savegame/SavedBattleGame.h"
 #include "../Savegame/SavedGame.h"
 #include "../Battlescape/TileEngine.h"
+#include "../Basescape/TechTreeViewerState.h"
 
 namespace OpenXcom
 {
@@ -131,6 +132,9 @@ AlienInventoryState::AlienInventoryState(BattleUnit *unit)
 		}
 	}
 
+	// Click on name to open Tech Tree Viewer for this unit type
+	_txtName->setTooltip(unit->getType());
+	_txtName->onMouseClick((ActionHandler)&AlienInventoryState::txtNameClick);
 	_txtFatalWounds->setHighContrast(true);
 
 	_txtLeftHand->setBig();
@@ -474,6 +478,16 @@ void AlienInventoryState::btnArmorClickMiddle(Action *action)
 	{
 		std::string articleId = unit->getArmor()->getUfopediaType();
 		Ufopaedia::openArticle(_game, articleId);
+	}
+}
+
+void AlienInventoryState::txtNameClick(Action* action)
+{
+	const RuleResearch* selectedTopic = _game->getMod()->getResearch(_txtName->getTooltip());
+
+	if (selectedTopic)
+	{
+		_game->pushState(new TechTreeViewerState(selectedTopic, 0));
 	}
 }
 
