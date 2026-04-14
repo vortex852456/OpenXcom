@@ -954,7 +954,16 @@ void SellState::lstItemsLeftArrowClick(Action *action)
 	if (_game->isRightClick(action, true)) changeByValue(INT_MAX, 1);
 	if (_game->isLeftClick(action, true))
 	{
-		changeByValue(_game->getScrollStep(), 1);
+		int change = _game->getScrollStep();
+		if (_game->isCtrlPressed())
+		{
+			change *= 10;
+		}
+		if (_game->isShiftPressed())
+		{
+			change *= 10;
+		}
+		changeByValue(change, 1);
 		_timerInc->setInterval(250);
 		_timerDec->setInterval(250);
 	}
@@ -992,7 +1001,16 @@ void SellState::lstItemsRightArrowClick(Action *action)
 	if (_game->isRightClick(action, true)) changeByValue(INT_MAX, -1);
 	if (_game->isLeftClick(action, true))
 	{
-		changeByValue(_game->getScrollStep(), -1);
+		int change = _game->getScrollStep();
+		if (_game->isCtrlPressed())
+		{
+			change *= 10;
+		}
+		if (_game->isShiftPressed())
+		{
+			change *= 10;
+		}
+		changeByValue(change, -1);
 		_timerInc->setInterval(250);
 		_timerDec->setInterval(250);
 	}
@@ -1134,7 +1152,16 @@ void SellState::increase()
 {
 	_timerDec->setInterval(50);
 	_timerInc->setInterval(50);
-	changeByValue(_game->getScrollStep(), 1);
+	int change = _game->getScrollStep();
+	if (_game->isCtrlPressed())
+	{
+		change *= 10;
+	}
+	if (_game->isShiftPressed())
+	{
+		change *= 10;
+	}
+	changeByValue(change,1);
 }
 
 /**
@@ -1215,7 +1242,16 @@ void SellState::decrease()
 {
 	_timerInc->setInterval(50);
 	_timerDec->setInterval(50);
-	changeByValue(_game->getScrollStep(), -1);
+	int change = _game->getScrollStep();
+	if (_game->isCtrlPressed())
+	{
+		change *= 10;
+	}
+	if (_game->isShiftPressed())
+	{
+		change *= 10;
+	}
+	changeByValue(change, -1);
 }
 
 /**

@@ -914,7 +914,16 @@ void PurchaseState::lstItemsLeftArrowClick(Action *action)
 	if (_game->isRightClick(action, true)) increaseByValue(INT_MAX);
 	if (_game->isLeftClick(action, true))
 	{
-		increaseByValue(_game->getScrollStep());
+		int change = _game->getScrollStep();
+		if (_game->isCtrlPressed())
+		{
+			change *= 10;
+		}
+		if (_game->isShiftPressed())
+		{
+			change *= 10;
+		}
+		increaseByValue(change);
 		_timerInc->setInterval(250);
 		_timerDec->setInterval(250);
 	}
@@ -952,7 +961,16 @@ void PurchaseState::lstItemsRightArrowClick(Action *action)
 	if (_game->isRightClick(action, true)) decreaseByValue(INT_MAX);
 	if (_game->isLeftClick(action, true))
 	{
-		decreaseByValue(_game->getScrollStep());
+		int change = _game->getScrollStep();
+		if (_game->isCtrlPressed())
+		{
+			change *= 10;
+		}
+		if (_game->isShiftPressed())
+		{
+			change *= 10;
+		}
+		decreaseByValue(change);
 		_timerInc->setInterval(250);
 		_timerDec->setInterval(250);
 	}
