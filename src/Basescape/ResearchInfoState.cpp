@@ -306,9 +306,12 @@ void ResearchInfoState::moreByValue(int change)
 	if (0 >= change) return;
 	int freeScientist = _base->getAvailableScientists();
 	int freeSpaceLab = _base->getFreeLaboratories();
-	if (freeScientist > 0 && freeSpaceLab > 0)
+	int remaining = _project->getCost() - _project->getSpent() - _project->getAssigned();
+	remaining = std::max(1, remaining);
+
+	if (freeScientist > 0 && freeSpaceLab > 0 && remaining > 0)
 	{
-		change = std::min(std::min(freeScientist, freeSpaceLab), change);
+		change = std::min(std::min(std::min(freeScientist, freeSpaceLab), remaining), change);
 		_project->setAssigned(_project->getAssigned()+change);
 		_base->setScientists(_base->getScientists()-change);
 		setAssignedScientist();

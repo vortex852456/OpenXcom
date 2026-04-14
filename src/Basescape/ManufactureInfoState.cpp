@@ -391,16 +391,21 @@ void ManufactureInfoState::moreEngineer(int change)
 	if (change <= 0) return;
 	int availableEngineer = _base->getAvailableEngineers();
 	int availableWorkSpace = _base->getFreeWorkshops();
+	int timeLeft = _production->getAmountTotal() * _production->getRules()->getManufactureTime() - _production->getTimeSpent();
+	if (_production->getInfiniteAmount())
+		timeLeft = INT_MAX;
+
 	if (_production->isQueuedOnly())
 	{
 		// start counting the workshop space now
 		availableWorkSpace -= _production->getRules()->getRequiredSpace();
 	}
-	if (availableEngineer > 0 && availableWorkSpace > 0)
+	if (availableEngineer > 0 && availableWorkSpace > 0 && timeLeft > _production->getAssignedEngineers())
 	{
-		change = std::min(std::min(availableEngineer, availableWorkSpace), change);
-		_production->setAssignedEngineers(_production->getAssignedEngineers()+change);
-		_base->setEngineers(_base->getEngineers()-change);
+		change = std::min(std::min(std::min(availableEngineer, availableWorkSpace), change), timeLeft - _production->getAssignedEngineers());
+
+		_production->setAssignedEngineers(_production->getAssignedEngineers() + change);
+		_base->setEngineers(_base->getEngineers() - change);
 		setAssignedEngineer();
 	}
 	else if (availableWorkSpace <= 0 && availableEngineer > 0 && _production->isQueuedOnly() && _production->getRules()->getRequiredSpace() > 0)

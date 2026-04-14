@@ -277,6 +277,7 @@ void ManufactureState::lstManufactureMousePress(Action *action)
 	{
 		Production *selectedProject = _base->getProductions()[_lstManufacture->getSelectedRow()];
 		int availableWorkSpace = _base->getFreeWorkshops();
+		int timeLeft = selectedProject->getAmountTotal() * selectedProject->getRules()->getManufactureTime() - selectedProject->getTimeSpent();
 		if (selectedProject->isQueuedOnly())
 		{
 			// start counting the workshop space now
@@ -284,6 +285,9 @@ void ManufactureState::lstManufactureMousePress(Action *action)
 		}
 		change = std::min(change, _base->getAvailableEngineers());
 		change = std::min(change, availableWorkSpace);
+		if (!selectedProject->getInfiniteAmount())
+			change = std::min(change, timeLeft - selectedProject->getAssignedEngineers());
+
 		if (change > 0)
 		{
 			selectedProject->setAssignedEngineers(selectedProject->getAssignedEngineers() + change);

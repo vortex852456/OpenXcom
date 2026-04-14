@@ -195,8 +195,14 @@ void ResearchState::lstResearchMousePress(Action *action)
 
 	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
 	{
+		ResearchProject* selectedProject = _base->getResearch()[_lstResearch->getSelectedRow()];
+		int remaining = selectedProject->getCost() - selectedProject->getSpent() - selectedProject->getAssigned();
+		remaining = std::max(1, remaining);
+
 		change = std::min(change, _base->getAvailableScientists());
 		change = std::min(change, _base->getFreeLaboratories());
+		change = std::min(change, remaining);
+
 		if (change > 0)
 		{
 			ResearchProject *selectedProject = _base->getResearch()[_lstResearch->getSelectedRow()];
