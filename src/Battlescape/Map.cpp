@@ -52,6 +52,7 @@
 #include "../Interface/NumberText.h"
 #include "../Interface/Text.h"
 #include "../fmath.h"
+#include "../Engine/Options.h"
 
 
 /*
@@ -525,7 +526,8 @@ void Map::drawUnit(UnitSprite &unitSprite, Tile *unitTile, Tile *currTile, Posit
 		return;
 	}
 
-	if (!(bu->getVisible() || _save->getDebugMode()))
+	if (!(bu->getVisible() || _save->getDebugMode()
+		|| (Options::oxceEnemyUnitsAlwaysVisible && bu->getFaction() != FACTION_PLAYER)))
 	{
 		return;
 	}
@@ -954,14 +956,14 @@ void Map::drawTerrain(Surface *surface)
 						{
 							if (_cursorType != CT_AIM)
 							{
-								if (unit && (unit->getVisible() || _save->getDebugMode()))
+								if (unit && (unit->getVisible() || _save->getDebugMode() || (Options::oxceEnemyUnitsAlwaysVisible && unit->getFaction() != FACTION_PLAYER)))
 									frameNumber = halfAnimFrameRest; // yellow box
 								else
 									frameNumber = 0; // red box
 							}
 							else
 							{
-								if (unit && (unit->getVisible() || _save->getDebugMode()))
+								if (unit && (unit->getVisible() || _save->getDebugMode() || (Options::oxceEnemyUnitsAlwaysVisible && unit->getFaction() != FACTION_PLAYER)))
 									frameNumber = 7 + halfAnimFrame; // yellow animated crosshairs
 								else
 									frameNumber = 6; // red static crosshairs
@@ -1323,14 +1325,14 @@ void Map::drawTerrain(Surface *surface)
 						{
 							if (_cursorType != CT_AIM)
 							{
-								if (unit && (unit->getVisible() || _save->getDebugMode()))
+								if (unit && (unit->getVisible() || _save->getDebugMode() || (Options::oxceEnemyUnitsAlwaysVisible && unit->getFaction() != FACTION_PLAYER)))
 									frameNumber = 3 + halfAnimFrameRest; // yellow box
 								else
 									frameNumber = 3; // red box
 							}
 							else
 							{
-								if (unit && (unit->getVisible() || _save->getDebugMode()))
+								if (unit && (unit->getVisible() || _save->getDebugMode() || (Options::oxceEnemyUnitsAlwaysVisible && unit->getFaction() != FACTION_PLAYER)))
 									frameNumber = 7 + halfAnimFrame; // yellow animated crosshairs
 								else
 									frameNumber = 6; // red static crosshairs
@@ -1388,7 +1390,7 @@ void Map::drawTerrain(Surface *surface)
 										else
 										{
 											// recalculate
-											if (unit && (unit->getVisible() || _save->getDebugMode()))
+											if (unit && (unit->getVisible() || _save->getDebugMode() || (Options::oxceEnemyUnitsAlwaysVisible && unit->getFaction() != FACTION_PLAYER)))
 											{
 												hasLOS = _save->getTileEngine()->visible(action->actor, tile);
 											}
