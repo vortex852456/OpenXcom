@@ -18,6 +18,7 @@
  */
 #include "Ufo.h"
 #include <assert.h>
+#include "../Engine/Options.h"
 #include <algorithm>
 #include <functional>
 #include "../fmath.h"
@@ -618,6 +619,11 @@ bool Ufo::canCrash() const
  */
 bool Ufo::isDestroyed() const
 {
+	if (Options::oxceUFONeverDestroyed)
+	{
+		// Crashable UFOs crash-land instead of being destroyed
+		return (_damage >= _stats.damageMax) && !canCrash();
+	}
 	return (_damage >= _stats.damageMax);
 }
 
