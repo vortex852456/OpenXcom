@@ -18,6 +18,7 @@
  */
 #include "Tile.h"
 #include <algorithm>
+#include "../Engine/Options.h"
 #include "../Mod/MapData.h"
 #include "../Mod/MapDataSet.h"
 #include "../Engine/SurfaceSet.h"
@@ -446,6 +447,7 @@ void Tile::setDiscovered(bool flag, TilePart part)
  */
 bool Tile::isDiscovered(TilePart part) const
 {
+	if (Options::oxceDisableFogOfWar) return true;
 	return _objectsCache[part].discovered;
 }
 

@@ -461,6 +461,12 @@ void createAdvancedOptionsOXCE()
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceInstantQuickSearch", &oxceInstantQuickSearch, false));
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceIgnoreNewUFOs", &oxceIgnoreNewUFOs, false));
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceAlwaysTechTreeDetails", &oxceAlwaysTechTreeDetails, false));
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceDisableFogOfWar", &oxceDisableFogOfWar, false));
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceEnemyUnitsAlwaysVisible", &oxceEnemyUnitsAlwaysVisible, false));
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceAlwaysRefundProductionCosts", &oxceAlwaysRefundProductionCosts, false));
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceFixedResearchCosts", &oxceFixedResearchCosts, false));
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceShowUFOCombatStats", &oxceShowUFOCombatStats, false));
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceUFONeverDestroyed", &oxceUFONeverDestroyed, false));
 
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceHighlightNewTopics", &oxceHighlightNewTopics, true, "STR_HIGHLIGHT_NEW", "STR_GENERAL"));
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxcePediaShowClipSize", &oxcePediaShowClipSize, false, "STR_PEDIA_SHOW_CLIP_SIZE", "STR_GENERAL"));

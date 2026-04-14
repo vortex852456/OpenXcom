@@ -112,6 +112,12 @@ OPT int oxceCrashedOrLanded;
 OPT bool oxceInstantQuickSearch;
 OPT bool oxceIgnoreNewUFOs;
 OPT bool oxceAlwaysTechTreeDetails;
+OPT bool oxceDisableFogOfWar;
+OPT bool oxceEnemyUnitsAlwaysVisible;
+OPT bool oxceAlwaysRefundProductionCosts;
+OPT bool oxceFixedResearchCosts;
+OPT bool oxceShowUFOCombatStats;
+OPT bool oxceUFONeverDestroyed;
 
 // OXCE hidden, accessible only via options.cfg
 /**
