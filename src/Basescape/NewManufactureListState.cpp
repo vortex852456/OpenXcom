@@ -40,6 +40,7 @@
 #include "ManufactureStartState.h"
 #include "TechTreeViewerState.h"
 #include "../Ufopaedia/Ufopaedia.h"
+#include "../Savegame/Production.h"
 
 namespace OpenXcom
 {
@@ -203,7 +204,45 @@ void NewManufactureListState::lstProdClickLeft(Action *)
 
 	// check and display error messages only further down the chain
 	_refreshCategories = false;
-	_game->pushState(new ManufactureStartState(_base, rule));
+	if (_game->isCtrlPressed() && rule && !rule->getProducedCraft())
+	{
+		// Ctrl+Click: start 1 item immediately; Ctrl+Shift+Click: start max possible items
+		int quantity = 1;
+		if (_game->isShiftPressed())
+		{
+			ItemContainer* itemContainer(_base->getStorageItems());
+			quantity = INT_MAX;
+			for (auto& iter : rule->getRequiredItems())
+			{
+				quantity = std::min(quantity, itemContainer->getItem(iter.first) / iter.second);
+			}
+		}
+		if (quantity > 0)
+		{
+			Production* production = new Production(rule, quantity);
+			_base->addProduction(production);
+
+			if (quantity == INT_MAX)
+				production->setInfiniteAmount(true);
+
+			int requiredSpace = std::max(1, rule->getRequiredSpace());
+			int available = std::min(std::min(1, _base->getAvailableEngineers()), (_base->getAvailableWorkshops() - requiredSpace));
+			production->setAssignedEngineers(available);
+			_base->setEngineers(_base->getAvailableEngineers() - production->getAssignedEngineers());
+
+			production->startItem(_base, _game->getSavedGame(), _game->getMod());
+
+			int oldState = _game->getSavedGame()->getManufactureRuleStatus(rule->getName());
+			if (oldState == RuleManufacture::MANU_STATUS_NEW)
+				_game->getSavedGame()->setManufactureRuleStatus(rule->getName(), RuleManufacture::MANU_STATUS_NORMAL);
+
+			fillProductionList(false);
+		}
+	}
+	else
+	{
+		_game->pushState(new ManufactureStartState(_base, rule));
+	}
 }
 
 /**
