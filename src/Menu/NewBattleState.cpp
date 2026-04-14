@@ -334,7 +334,7 @@ NewBattleState::NewBattleState() :
 	_lstSelect->setVisible(false);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&NewBattleState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&NewBattleState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(false);
 
 	_btnCancel->onKeyboardRelease((ActionHandler)&NewBattleState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -1127,8 +1127,14 @@ void NewBattleState::btnQuickSearchToggle(Action *action)
  * Quick search.
  * @param action Pointer to an action.
  */
-void NewBattleState::btnQuickSearchApply(Action *)
+void NewBattleState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	fillList(_selectType, _isRightClick);
 }
 

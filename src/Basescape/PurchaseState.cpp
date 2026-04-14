@@ -344,7 +344,7 @@ PurchaseState::PurchaseState(Base *base, CannotReequipState *parent) : _base(bas
 	_cbxCategory->onChange((ActionHandler)&PurchaseState::cbxCategoryChange);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&PurchaseState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&PurchaseState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOk->onKeyboardRelease((ActionHandler)&PurchaseState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -614,8 +614,14 @@ void PurchaseState::btnQuickSearchToggle(Action *action)
 * Quick search.
 * @param action Pointer to an action.
 */
-void PurchaseState::btnQuickSearchApply(Action *)
+void PurchaseState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	updateList();
 }
 

@@ -348,7 +348,7 @@ void SellState::delayedInit()
 	_cbxCategory->onKeyboardPress((ActionHandler)&SellState::btnSellAllButOneClick, Options::keySellAllButOne);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&SellState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&SellState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	// OK button is not always visible, so bind it here
@@ -522,8 +522,14 @@ void SellState::btnQuickSearchToggle(Action *action)
 * Quick search.
 * @param action Pointer to an action.
 */
-void SellState::btnQuickSearchApply(Action *)
+void SellState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	updateList();
 }
 

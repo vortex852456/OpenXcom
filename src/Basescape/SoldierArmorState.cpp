@@ -147,7 +147,7 @@ SoldierArmorState::SoldierArmorState(Base *base, size_t soldier, SoldierArmorOri
 	}
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&SoldierArmorState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&SoldierArmorState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnCancel->onKeyboardRelease((ActionHandler)&SoldierArmorState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -280,8 +280,14 @@ void SoldierArmorState::btnQuickSearchToggle(Action* action)
  * Quick search.
  * @param action Pointer to an action.
  */
-void SoldierArmorState::btnQuickSearchApply(Action*)
+void SoldierArmorState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	updateList();
 }
 

@@ -271,7 +271,7 @@ TransferItemsState::TransferItemsState(Base *baseFrom, Base *baseTo, DebriefingS
 	_cbxCategory->onKeyboardPress((ActionHandler)&TransferItemsState::btnTransferAllClick, Options::keyTransferAll);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&TransferItemsState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&TransferItemsState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOk->onKeyboardRelease((ActionHandler)&TransferItemsState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -398,8 +398,14 @@ void TransferItemsState::btnQuickSearchToggle(Action *action)
 * Quick search.
 * @param action Pointer to an action.
 */
-void TransferItemsState::btnQuickSearchApply(Action *)
+void TransferItemsState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	updateList();
 }
 

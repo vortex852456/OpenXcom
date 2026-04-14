@@ -98,7 +98,7 @@ namespace OpenXcom
 		_cbxFilter->onChange((ActionHandler)&UfopaediaSelectState::cbxFilterChange);
 
 		_btnQuickSearch->setText(""); // redraw
-		_btnQuickSearch->onEnter((ActionHandler)&UfopaediaSelectState::btnQuickSearchApply);
+		_btnQuickSearch->onChange((ActionHandler)&UfopaediaSelectState::btnQuickSearchApply);
 		_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 		_btnOk->onKeyboardRelease((ActionHandler)&UfopaediaSelectState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -189,8 +189,14 @@ namespace OpenXcom
 	* Quick search.
 	* @param action Pointer to an action.
 	*/
-	void UfopaediaSelectState::btnQuickSearchApply(Action *)
+	void UfopaediaSelectState::btnQuickSearchApply(Action *action)
 	{
+		if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+		{
+			const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+			if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+				return;
+		}
 		loadSelectionList(false);
 	}
 

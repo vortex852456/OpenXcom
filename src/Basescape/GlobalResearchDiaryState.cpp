@@ -128,7 +128,7 @@ GlobalResearchDiaryState::GlobalResearchDiaryState() : _doNotReset(false)
 	_itemOrder = RESEARCH_DIARY_SORT_NONE;
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&GlobalResearchDiaryState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&GlobalResearchDiaryState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOk->onKeyboardRelease((ActionHandler)&GlobalResearchDiaryState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -197,8 +197,14 @@ void GlobalResearchDiaryState::btnQuickSearchToggle(Action *action)
 /**
 * Quick search.
 */
-void GlobalResearchDiaryState::btnQuickSearchApply(Action *)
+void GlobalResearchDiaryState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	initList();
 }
 

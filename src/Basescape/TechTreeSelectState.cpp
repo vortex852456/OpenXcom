@@ -80,7 +80,7 @@ TechTreeSelectState::TechTreeSelectState(TechTreeViewerState *parent) : _parent(
 
 	_btnQuickSearch->setText(""); // redraw
 	_btnQuickSearch->setDrawBackground(false);
-	_btnQuickSearch->onEnter((ActionHandler)&TechTreeSelectState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&TechTreeSelectState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(true);
 	_btnQuickSearch->setFocus(true);
 
@@ -132,8 +132,14 @@ void TechTreeSelectState::btnQuickSearchToggle(Action *action)
 * Quick search.
 * @param action Pointer to an action.
 */
-void TechTreeSelectState::btnQuickSearchApply(Action *)
+void TechTreeSelectState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	initLists();
 }
 

@@ -129,7 +129,7 @@ NewResearchListState::NewResearchListState(Base *base, bool sortByCost) : _base(
 	_lstResearch->onMouseClick((ActionHandler)&NewResearchListState::onClick, SDL_BUTTON_MIDDLE);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&NewResearchListState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&NewResearchListState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOK->onKeyboardRelease((ActionHandler)&NewResearchListState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -261,8 +261,14 @@ void NewResearchListState::btnQuickSearchToggle(Action *action)
 * Quick search.
 * @param action Pointer to an action.
 */
-void NewResearchListState::btnQuickSearchApply(Action *)
+void NewResearchListState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	fillProjectList(false);
 }
 
@@ -382,7 +388,10 @@ void NewResearchListState::fillProjectList(bool markAllAsSeen)
 		//  - for now, handling "requires" via zero-cost helpers (e.g. STR_LEADER_PLUS)... is enough
 		if (rule->getRequirements().empty())
 		{
-			_lstResearch->addRow(1, tr(rule->getName()).c_str());
+			std::stringstream ss;
+			ss << tr(rule->getName()) << " (" << rule->getCost() << ")";
+
+			_lstResearch->addRow(1, ss.str().c_str());
 			if (markAllAsSeen)
 			{
 				// mark all (filtered) research items as normal

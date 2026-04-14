@@ -111,7 +111,7 @@ SoldierTransformState::SoldierTransformState(Base* base, size_t soldier) : _base
 	}
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&SoldierTransformState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&SoldierTransformState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnCancel->onKeyboardRelease((ActionHandler)&SoldierTransformState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -236,8 +236,14 @@ void SoldierTransformState::btnQuickSearchToggle(Action* action)
  * Quick search.
  * @param action Pointer to an action.
  */
-void SoldierTransformState::btnQuickSearchApply(Action*)
+void SoldierTransformState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	updateList();
 }
 

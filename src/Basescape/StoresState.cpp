@@ -167,7 +167,7 @@ StoresState::StoresState(Base *base) : _base(base)
 	_itemOrder = ITEM_SORT_NONE;
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&StoresState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&StoresState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOk->onKeyboardRelease((ActionHandler)&StoresState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -211,8 +211,14 @@ void StoresState::btnQuickSearchToggle(Action *action)
 /**
 * Quick search.
 */
-void StoresState::btnQuickSearchApply(Action *)
+void StoresState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	initList();
 }
 

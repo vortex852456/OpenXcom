@@ -135,7 +135,7 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base), _sho
 	_cbxCategory->setOptions(_catStrings, true);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&NewManufactureListState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&NewManufactureListState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOk->onKeyboardRelease((ActionHandler)&NewManufactureListState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -336,8 +336,14 @@ void NewManufactureListState::btnQuickSearchToggle(Action *action)
 * Quick search.
 * @param action Pointer to an action.
 */
-void NewManufactureListState::btnQuickSearchApply(Action *)
+void NewManufactureListState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	fillProductionList(false);
 }
 

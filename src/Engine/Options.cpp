@@ -458,6 +458,8 @@ void createAdvancedOptionsOXCE()
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceQuickSearchButton", &oxceQuickSearchButton, false, "", "HIDDEN"));
 #endif
 
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceInstantQuickSearch", &oxceInstantQuickSearch, false));
+
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceHighlightNewTopics", &oxceHighlightNewTopics, true, "STR_HIGHLIGHT_NEW", "STR_GENERAL"));
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxcePediaShowClipSize", &oxcePediaShowClipSize, false, "STR_PEDIA_SHOW_CLIP_SIZE", "STR_GENERAL"));
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxcePediaSortResistances", &oxcePediaSortResistances, 0, "STR_PEDIA_SORT_RESISTANCES", "HIDDEN"));
@@ -1105,7 +1107,7 @@ bool isPasswordCorrect()
 	if (_passwordCheck < 0)
 	{
 		std::string md5hash = md5(Options::password);
-		if (md5hash == "52bd8e15118862c40fc0d6107e197f42")
+		if (md5hash == "52bd8e15118862c40fc0d6107e197f42") // Password: "openxcom"
 			_passwordCheck = 1;
 		else
 			_passwordCheck = 0;

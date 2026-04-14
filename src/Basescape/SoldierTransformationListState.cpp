@@ -142,7 +142,7 @@ SoldierTransformationListState::SoldierTransformationListState(Base *base, Combo
 	_lstTransformations->onMouseClick((ActionHandler)&SoldierTransformationListState::lstTransformationsClick, SDL_BUTTON_MIDDLE);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&SoldierTransformationListState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&SoldierTransformationListState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOK->onKeyboardRelease((ActionHandler)&SoldierTransformationListState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -308,8 +308,14 @@ void SoldierTransformationListState::btnQuickSearchToggle(Action *action)
  * Quick search.
  * @param action Pointer to an action.
  */
-void SoldierTransformationListState::btnQuickSearchApply(Action *)
+void SoldierTransformationListState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	initList();
 }
 

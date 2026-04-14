@@ -112,7 +112,7 @@ SoldierMemorialState::SoldierMemorialState()
 	_lstSoldiers->onMouseClick((ActionHandler)&SoldierMemorialState::lstSoldiersClick);
 
 	_btnQuickSearch->setText(""); // redraw
-	_btnQuickSearch->onEnter((ActionHandler)&SoldierMemorialState::btnQuickSearchApply);
+	_btnQuickSearch->onChange((ActionHandler)&SoldierMemorialState::btnQuickSearchApply);
 	_btnQuickSearch->setVisible(Options::oxceQuickSearchButton);
 
 	_btnOk->onKeyboardRelease((ActionHandler)&SoldierMemorialState::btnQuickSearchToggle, Options::keyToggleQuickSearch);
@@ -169,8 +169,14 @@ void SoldierMemorialState::btnQuickSearchToggle(Action *action)
  * Quick search.
  * @param action Pointer to an action.
  */
-void SoldierMemorialState::btnQuickSearchApply(Action *)
+void SoldierMemorialState::btnQuickSearchApply(Action *action)
 {
+	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
+	{
+		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
+			return;
+	}
 	fillMemorialList();
 }
 
