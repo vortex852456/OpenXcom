@@ -1133,11 +1133,7 @@ void TechTreeViewerState::initLists()
 				}
 			}
 		}
-		bool showDetails = false;
-		if (Options::isPasswordCorrect() && _game->isAltPressed())
-		{
-			showDetails = true;
-		}
+		bool showDetails = Options::oxceAlwaysTechTreeDetails || Options::isPasswordCorrect();
 		if (showDetails)
 		{
 			auto addGameProgressionEntry = [&](const std::unordered_set<std::string>& list, const std::string& label)

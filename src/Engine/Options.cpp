@@ -460,6 +460,7 @@ void createAdvancedOptionsOXCE()
 
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceInstantQuickSearch", &oxceInstantQuickSearch, false));
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceIgnoreNewUFOs", &oxceIgnoreNewUFOs, false));
+	_info.push_back(OptionInfo(OPTION_OXCE, "oxceAlwaysTechTreeDetails", &oxceAlwaysTechTreeDetails, false));
 
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxceHighlightNewTopics", &oxceHighlightNewTopics, true, "STR_HIGHLIGHT_NEW", "STR_GENERAL"));
 	_info.push_back(OptionInfo(OPTION_OXCE, "oxcePediaShowClipSize", &oxcePediaShowClipSize, false, "STR_PEDIA_SHOW_CLIP_SIZE", "STR_GENERAL"));
