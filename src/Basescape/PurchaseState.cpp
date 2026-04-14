@@ -51,6 +51,7 @@
 #include "../Battlescape/CannotReequipState.h"
 #include "../Savegame/Country.h"
 #include "../Mod/RuleCountry.h"
+#include "TechTreeViewerState.h"
 
 namespace OpenXcom
 {
@@ -1005,7 +1006,19 @@ void PurchaseState::lstItemsMousePress(Action *action)
 	}
 	else if (_game->isMiddleClick(action, true))
 	{
-		if (getRow().type == TRANSFER_ITEM)
+		if (_game->isCtrlPressed())
+		{
+			RuleItem *rule = (RuleItem*)getRow().rule;
+			if (rule != 0)
+			{
+				const RuleResearch* selectedTopic = _game->getMod()->getResearch(rule->getType());
+				if (selectedTopic)
+				{
+					_game->pushState(new TechTreeViewerState(selectedTopic, 0));
+				}
+			}
+		}
+		else if (getRow().type == TRANSFER_ITEM)
 		{
 			RuleItem *rule = (RuleItem*)getRow().rule;
 			if (rule != 0)
