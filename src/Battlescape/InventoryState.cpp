@@ -111,12 +111,6 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 	_txtPosition = new Text(70, 9, 65, 95);
 	_txtNameStatic = new Text(210, 17, 28, 6);
 	_txtName = new TextEdit(this, 210, 17, 28, 6);
-	_txtTus = new Text(40, 9, 245, 24);
-	_txtWeight = new Text(70, 9, 245, 24);
-	_txtStatLine1 = new Text(70, 9, 245, 32);
-	_txtStatLine2 = new Text(70, 9, 245, 40);
-	_txtStatLine3 = new Text(70, 9, 245, 48);
-	_txtStatLine4 = new Text(70, 9, 245, 56);
 	_txtItem = new Text(160, 9, 128, 140);
 	_txtAmmo = new Text(66, 24, 254, 64);
 	_btnOk = new BattlescapeButton(35, 22, 237, 1);
@@ -139,6 +133,12 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 	}
 	_selAmmo = new Surface(RuleInventory::HAND_W * RuleInventory::SLOT_W, RuleInventory::HAND_H * RuleInventory::SLOT_H, 272, 88);
 	_inv = new Inventory(_game, 320, 200, 0, 0, _parent == 0);
+	_txtTus = new Text(40, 9, 213, 24);
+	_txtWeight = new Text(70, 9, 213, 24);
+	_txtStatLine1 = new Text(70, 9, 213, 32);
+	_txtStatLine2 = new Text(70, 9, 213, 40);
+	_txtStatLine3 = new Text(70, 9, 213, 48);
+	_txtStatLine4 = new Text(70, 9, 213, 56);
 	_btnQuickSearch = new TextEdit(this, 40, 9, 244, 140);
 
 	// Set palette
@@ -154,12 +154,6 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 	add(_btnQuickSearch, "textItem", "inventory");
 	add(_txtNameStatic, "textName", "inventory", _bg);
 	add(_txtName, "textName", "inventory", _bg);
-	add(_txtTus, "textTUs", "inventory", _bg);
-	add(_txtWeight, "textWeight", "inventory", _bg);
-	add(_txtStatLine1, "textStatLine1", "inventory", _bg);
-	add(_txtStatLine2, "textStatLine2", "inventory", _bg);
-	add(_txtStatLine3, "textStatLine3", "inventory", _bg);
-	add(_txtStatLine4, "textStatLine4", "inventory", _bg);
 	add(_txtItem, "textItem", "inventory", _bg);
 	add(_txtAmmo, "textAmmo", "inventory", _bg);
 	add(_btnOk, "buttonOK", "inventory", _bg);
@@ -173,6 +167,12 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent, Base *base, bo
 	add(_btnLinks, "buttonLinks", "inventory", _bg);
 	add(_selAmmo);
 	add(_inv);
+	add(_txtTus, "textTUs", "inventory", _bg);
+	add(_txtWeight, "textWeight", "inventory", _bg);
+	add(_txtStatLine1, "textStatLine1", "inventory", _bg);
+	add(_txtStatLine2, "textStatLine2", "inventory", _bg);
+	add(_txtStatLine3, "textStatLine3", "inventory", _bg);
+	add(_txtStatLine4, "textStatLine4", "inventory", _bg);
 	add(_txtPosition, "textSlot", "inventory", _bg);
 
 	// move the TU display down to make room for the weight display
