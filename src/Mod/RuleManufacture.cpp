@@ -18,6 +18,7 @@
  */
 #include <algorithm>
 #include "RuleManufacture.h"
+#include "../Engine/Options.h"
 #include "RuleManufactureShortcut.h"
 #include "RuleResearch.h"
 #include "RuleCraft.h"
@@ -278,6 +279,7 @@ bool RuleManufacture::haveEnoughMoneyForOneMoreUnit(int64_t funds) const
  */
 bool RuleManufacture::getRefund() const
 {
+	if (Options::oxceAlwaysRefundProductionCosts) return true;
 	return _refund;
 }
 
