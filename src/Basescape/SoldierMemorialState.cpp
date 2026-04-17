@@ -18,6 +18,7 @@
  */
 #include "SoldierMemorialState.h"
 #include <sstream>
+#include "../Engine/Action.h"
 #include "../Engine/Game.h"
 #include "../Mod/Mod.h"
 #include "../Engine/LocalizedText.h"
@@ -173,7 +174,7 @@ void SoldierMemorialState::btnQuickSearchApply(Action *action)
 {
 	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
 	{
-		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		const SDLKey sym = action->getDetails()->key.keysym.sym;
 		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
 			return;
 	}

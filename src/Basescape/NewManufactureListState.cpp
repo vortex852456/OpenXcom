@@ -26,6 +26,7 @@
 #include "../Interface/TextEdit.h"
 #include "../Interface/TextList.h"
 #include "../Interface/ComboBox.h"
+#include "../Engine/Action.h"
 #include "../Engine/CrossPlatform.h"
 #include "../Engine/Game.h"
 #include "../Engine/LocalizedText.h"
@@ -379,7 +380,7 @@ void NewManufactureListState::btnQuickSearchApply(Action *action)
 {
 	if (!Options::oxceInstantQuickSearch && action && action->getDetails()->type == SDL_KEYDOWN)
 	{
-		const SDL_Keycode sym = action->getDetails()->key.keysym.sym;
+		const SDLKey sym = action->getDetails()->key.keysym.sym;
 		if (sym != SDLK_RETURN && sym != SDLK_KP_ENTER && sym != SDLK_ESCAPE)
 			return;
 	}
