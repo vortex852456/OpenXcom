@@ -26,6 +26,8 @@ Schnelle Orientierung fuer Build, Packaging und typische Fehlerbilder.
   - Post-Build kopiert DLLs nach Build-Ausgabe.
 - **Linux/Unix**
   - Abhaengigkeiten ueber `pkg-config` (SDL 1.2 Familie, zlib, etc.).
+  - Ubuntu/Debian-Pakete: `libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-gfx1.2-dev libgl-dev zlib1g-dev`.
+  - Build: `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc)` (`build/` ist gitignored; Vollbuild dauert mehrere Minuten).
 - **macOS**
   - Buildpfad in `README-macOS.md` beschrieben.
   - Optional App-Bundle-Flow via CMake/CPack.

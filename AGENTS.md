@@ -61,6 +61,7 @@ Bei neuen stabilen Erkenntnissen soll der Agent `AGENTS.md` aktualisieren.
 
 ## Quickstart fuer Agenten
 - Lies zuerst diese Datei.
+- Build-Abhaengigkeiten und Linux-Build-Befehl: `docs/architecture/build.md` (Plattform-Hinweise).
 - Ermittle dann nur die minimal noetigen Dateien fuer den Task.
 - Fuehre kleine, pruefbare Schritte aus.
 - Wenn neue dauerhafte Erkenntnisse entstehen: `AGENTS.md` knapp aktualisieren.
