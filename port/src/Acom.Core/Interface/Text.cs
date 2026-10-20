@@ -257,6 +257,12 @@ public class Text : InteractiveSurface
 	/// <summary>The text after processing (code points, inserted line breaks and indentation); for tests.</summary>
 	internal string ProcessedText => new([.. _processedText]);
 
+	/// <summary>Measured width of every line (also when not wrapping); for tests.</summary>
+	internal IReadOnlyList<int> LineWidths => _lineWidth;
+
+	/// <summary>Measured height of every line; for tests.</summary>
+	internal IReadOnlyList<int> LineHeights => _lineHeight;
+
 	/// <summary>Unicode::convUtf8ToUtf32: one entry per code point; code points outside the BMP become '?'.</summary>
 	private static void ToCodePoints(string text, List<char> result)
 	{
@@ -459,12 +465,12 @@ public class Text : InteractiveSurface
 		if (Options.debugUi)
 		{
 			var r = new SDL_Rect(0, 0, Width, Height);
-			DrawRect(r, 5);
+			DrawRect(ref r, 5);
 			r.w -= 2;
 			r.h -= 2;
 			r.x++;
 			r.y++;
-			DrawRect(r, 0);
+			DrawRect(ref r, 0);
 		}
 
 		int x, y = 0, line = 0, height;

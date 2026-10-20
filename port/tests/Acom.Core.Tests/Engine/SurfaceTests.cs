@@ -25,6 +25,25 @@ public class SurfaceTests
 	}
 
 	[Fact]
+	public void DrawRect_stores_the_clipped_rectangle_like_SDL_FillRect()
+	{
+		var s = new Surface(10, 8, 0, 0, 2);
+		var r = new SDL_Rect(-2, 3, 20, 10);
+		s.DrawRect(ref r, 7);
+		Assert.Equal((0, 3, 10, 5), ((int)r.x, (int)r.y, (int)r.w, (int)r.h));
+		Assert.Equal(7, s.GetPixel(9, 7));
+		Assert.Equal(0, s.GetPixel(9, 2));
+		// no overlap: SDL_IntersectRect still stores the (empty) intersection
+		var outside = new SDL_Rect(12, 1, 4, 4);
+		s.DrawRect(ref outside, 7);
+		Assert.Equal((12, 1, 0, 4), ((int)outside.x, (int)outside.y, (int)outside.w, (int)outside.h));
+		// empty rectangles return before SDL_FillRect and stay unchanged
+		var empty = new SDL_Rect(-5, -5, 0, 3);
+		s.DrawRect(ref empty, 7);
+		Assert.Equal((-5, -5, 0, 3), ((int)empty.x, (int)empty.y, (int)empty.w, (int)empty.h));
+	}
+
+	[Fact]
 	public void Hidden_or_invisible_surfaces_are_not_blit()
 	{
 		var dest = new Surface(4, 4, 0, 0, 1);

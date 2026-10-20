@@ -53,7 +53,7 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 			PreferredBackBufferHeight = Screen.ORIGINAL_HEIGHT * RenderScale,
 			SynchronizeWithVerticalRetrace = true,
 		};
-		IsMouseVisible = true;
+		IsMouseVisible = false; // the game draws its own cursor (Interface/Cursor); C++ shows an invisible hardware cursor
 		IsFixedTimeStep = true;
 		TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 60);
 		Window.AllowUserResizing = true;

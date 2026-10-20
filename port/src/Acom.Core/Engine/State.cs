@@ -56,9 +56,8 @@ public class State
 	/// </summary>
 	public State()
 	{
-		// Deviation: tolerates a missing game or cursor (C++ dereferences both), so states can be
-		// created in tests and while Interface/Cursor is not ported.
-		_cursorColor = s_game?.Cursor?.Color ?? 0;
+		// Deviation: tolerates a missing game (C++ dereferences it), so states can be created in tests.
+		_cursorColor = s_game?.Cursor.Color ?? 0;
 	}
 
 	/// <summary>The game this state belongs to (static, as in the C++ code).</summary>
@@ -69,9 +68,6 @@ public class State
 
 	/// <summary>The loaded mod; C++ dereferences <c>_game->getMod()</c> without a check.</summary>
 	private static Mod GameMod => _game.Mod ?? throw new InvalidOperationException("No mod loaded");
-
-	/// <summary>The game cursor (null while Interface/Cursor is not ported).</summary>
-	private static Cursor GameCursor => _game.Cursor ?? throw new InvalidOperationException("No cursor");
 
 	/// <summary>Sets the game object pointer.</summary>
 	public static void SetGamePtr(Game? game) => s_game = game;
@@ -260,21 +256,12 @@ public class State
 	public virtual void Init()
 	{
 		_game.Screen.SetPalette(_palette);
-		// Deviation: skips a missing cursor / fps counter (see Game.Cursor); C++ always has both.
-		var cursor = _game.Cursor;
-		if (cursor != null)
-		{
-			cursor.SetPalette(_palette);
-			cursor.SetColor(_cursorColor);
-			cursor.Draw();
-		}
-		var fpsCounter = _game.FpsCounter;
-		if (fpsCounter != null)
-		{
-			fpsCounter.SetPalette(_palette);
-			fpsCounter.SetColor(_cursorColor);
-			fpsCounter.Draw();
-		}
+		_game.Cursor.SetPalette(_palette);
+		_game.Cursor.SetColor(_cursorColor);
+		_game.Cursor.Draw();
+		_game.FpsCounter.SetPalette(_palette);
+		_game.FpsCounter.SetColor(_cursorColor);
+		_game.FpsCounter.Draw();
 
 		// Highest priority: custom sound set explicitly in the code
 		// Medium priority: sound defined by the interface ruleset
@@ -464,19 +451,10 @@ public class State
 	/// <summary>Set palette for helper surfaces like cursor or fps counter.</summary>
 	public void SetModPalette()
 	{
-		// Deviation: skips a missing cursor / fps counter, as in Init().
-		var cursor = _game.Cursor;
-		if (cursor != null)
-		{
-			cursor.SetPalette(_palette);
-			cursor.Draw();
-		}
-		var fpsCounter = _game.FpsCounter;
-		if (fpsCounter != null)
-		{
-			fpsCounter.SetPalette(_palette);
-			fpsCounter.Draw();
-		}
+		_game.Cursor.SetPalette(_palette);
+		_game.Cursor.Draw();
+		_game.FpsCounter.SetPalette(_palette);
+		_game.FpsCounter.Draw();
 	}
 
 	/// <summary>Loads palettes from the game resources into the state.</summary>
@@ -534,9 +512,9 @@ public class State
 
 #pragma warning disable CA1822 // instance members as in C++; they only reach the static game pointer
 	/// <summary>Gets cursor X coordinate.</summary>
-	public int CursorX => GameCursor.X;
+	public int CursorX => _game.Cursor.X;
 
 	/// <summary>Gets cursor Y coordinate.</summary>
-	public int CursorY => GameCursor.Y;
+	public int CursorY => _game.Cursor.Y;
 #pragma warning restore CA1822
 }

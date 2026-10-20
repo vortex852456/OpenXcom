@@ -193,7 +193,7 @@ public class Window : Surface
 			color = unchecked((byte)(_color + 1 * mul));
 			for (int i = 0; i < 5; ++i)
 			{
-				DrawRect(square, color);
+				DrawRect(ref square, color);
 
 				if (i % 2 == 0)
 				{
@@ -226,7 +226,7 @@ public class Window : Surface
 		{
 			for (int i = 0; i < 5; ++i)
 			{
-				DrawRect(square, color);
+				DrawRect(ref square, color);
 				if (i < 2)
 					color = unchecked((byte)(color - 1 * mul));
 				else
@@ -244,7 +244,7 @@ public class Window : Surface
 					square.h = 1;
 			}
 			if (_innerColor != 0)
-				DrawRect(square, _innerColor);
+				DrawRect(ref square, _innerColor);
 		}
 
 		if (_bg != null)

@@ -515,13 +515,22 @@ public class Surface
 		}
 	}
 
-	/// <summary>Draws a filled rectangle (logical coordinates, clipped).</summary>
-	public void DrawRect(SDL_Rect rect, byte color)
+	/// <summary>
+	/// Draws a filled rectangle (logical coordinates, clipped). Like SDL_FillRect in SDL 1.2, the clipped
+	/// rectangle is stored back into <paramref name="rect"/> (also when it is empty); widgets that keep
+	/// shrinking the same rectangle rely on that.
+	/// </summary>
+	public void DrawRect(ref SDL_Rect rect, byte color)
 	{
 		if (rect.w == 0 || rect.h == 0)
 			return;
 		int x0 = Math.Max(0, (int)rect.x), y0 = Math.Max(0, (int)rect.y);
 		int x1 = Math.Min(_width, rect.x + rect.w), y1 = Math.Min(_height, rect.y + rect.h);
+		// SDL_IntersectRect(rect, clip_rect, rect)
+		rect.x = (short)x0;
+		rect.y = (short)y0;
+		rect.w = (ushort)Math.Max(0, x1 - x0);
+		rect.h = (ushort)Math.Max(0, y1 - y0);
 		if (x0 >= x1 || y0 >= y1)
 			return;
 		int pitch = PhysicalWidth;
@@ -534,7 +543,8 @@ public class Surface
 	{
 		if (w == 0 || h == 0)
 			return;
-		DrawRect(new SDL_Rect(x, y, (ushort)w, (ushort)h), color);
+		var rect = new SDL_Rect(x, y, (ushort)w, (ushort)h);
+		DrawRect(ref rect, color);
 	}
 
 	/// <summary>Fills a logical rectangle that lies inside the surface (no clipping).</summary>

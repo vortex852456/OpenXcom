@@ -172,7 +172,7 @@ public class TextButton : InteractiveSurface
 
 		for (int i = 0; i < 5; ++i)
 		{
-			DrawRect(square, unchecked((byte)color));
+			DrawRect(ref square, unchecked((byte)color));
 
 			if (i % 2 == 0)
 			{

@@ -108,6 +108,13 @@ public sealed class Language
 			_wrap = Options.wordwrap;
 	}
 
+	/// <summary>Blank language with a fixed text direction and wrapping (the original has no RTL language); for tests.</summary>
+	internal Language(TextDirection direction, TextWrapping wrap) : this()
+	{
+		_direction = direction;
+		_wrap = wrap;
+	}
+
 	/// <summary>Gets all the languages found in the Data folder (common layer) and their human-readable names.</summary>
 	/// <param name="ids">List of language ids (sorted).</param>
 	/// <param name="names">List of language human-readable names.</param>

@@ -122,29 +122,29 @@ public class Bar : Surface
 		square.h = (ushort)Height;
 
 		if (_borderColor != 0)
-			DrawRect(square, _borderColor);
+			DrawRect(ref square, _borderColor);
 		else
-			DrawRect(square, unchecked((byte)(_color + 4)));
+			DrawRect(ref square, unchecked((byte)(_color + 4)));
 
 		square.y++;
 		square.w--;
 		square.h -= 2;
 
-		DrawRect(square, 0);
+		DrawRect(ref square, 0);
 
 		if (_secondOnTop)
 		{
 			square.w = ToUint16(_scale * _value);
-			DrawRect(square, _color);
+			DrawRect(ref square, _color);
 			square.w = ToUint16(_scale * _value2);
-			DrawRect(square, _color2);
+			DrawRect(ref square, _color2);
 		}
 		else
 		{
 			square.w = ToUint16(_scale * _value2);
-			DrawRect(square, _color2);
+			DrawRect(ref square, _color2);
 			square.w = ToUint16(_scale * _value);
-			DrawRect(square, _color);
+			DrawRect(ref square, _color);
 		}
 	}
 

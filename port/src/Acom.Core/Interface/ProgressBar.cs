@@ -69,19 +69,19 @@ public class ProgressBar : Surface
 		// border
 		var square = new SDL_Rect(0, 0, Width, Height);
 		if (_borderColor != 0)
-			DrawRect(square, _borderColor);
+			DrawRect(ref square, _borderColor);
 		else
-			DrawRect(square, unchecked((byte)(_color + 4)));
+			DrawRect(ref square, unchecked((byte)(_color + 4)));
 
 		// transparent inner content
 		square.x++;
 		square.y++;
 		square.w -= 2;
 		square.h -= 2;
-		DrawRect(square, 0);
+		DrawRect(ref square, 0);
 
 		// non-transparent inner content
 		square.w = unchecked((ushort)(square.w * _value / 100));
-		DrawRect(square, _color);
+		DrawRect(ref square, _color);
 	}
 }

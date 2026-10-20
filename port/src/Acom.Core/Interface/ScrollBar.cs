@@ -211,19 +211,19 @@ public class ScrollBar : InteractiveSurface
 		square.w--;
 		square.h--;
 
-		_thumb.DrawRect(square, (byte)color);
+		_thumb.DrawRect(ref square, (byte)color);
 
 		square.x++;
 		square.y++;
 		color = _color + 5;
 
-		_thumb.DrawRect(square, (byte)color);
+		_thumb.DrawRect(ref square, (byte)color);
 
 		square.w--;
 		square.h--;
 		color = _color + 4;
 
-		_thumb.DrawRect(square, (byte)color);
+		_thumb.DrawRect(ref square, (byte)color);
 
 		_thumb.SetPixel(_thumbRect.x, _thumbRect.y, (byte)(_color + 1));
 		_thumb.SetPixel(_thumbRect.x, _thumbRect.y + _thumbRect.h - 1, (byte)(_color + 4));
@@ -239,19 +239,19 @@ public class ScrollBar : InteractiveSurface
 			square.w -= 3;
 			square.h -= 3;
 
-			_thumb.DrawRect(square, (byte)color);
+			_thumb.DrawRect(ref square, (byte)color);
 
 			square.x++;
 			square.y++;
 			color = _color + 2;
 
-			_thumb.DrawRect(square, (byte)color);
+			_thumb.DrawRect(ref square, (byte)color);
 
 			square.w--;
 			square.h--;
 			color = 0;
 
-			_thumb.DrawRect(square, (byte)color);
+			_thumb.DrawRect(ref square, (byte)color);
 
 			_thumb.SetPixel(_thumbRect.x + 2 + _thumbRect.w - 1 - 4, _thumbRect.y + 2 + _thumbRect.h - 1 - 4, (byte)(_color + 1));
 			_thumb.SetPixel(_thumbRect.x + 2, _thumbRect.y + 2 + _thumbRect.h - 1 - 4, (byte)(_color + 4));

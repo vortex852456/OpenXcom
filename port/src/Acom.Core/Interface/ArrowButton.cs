@@ -83,7 +83,7 @@ public class ArrowButton : ImageButton
 	public void SetTextList(TextList list) => _list = list;
 
 	/// <summary>Draws a filled rectangle; the colour is truncated to a palette index like the C++ Uint8 parameter.</summary>
-	private void Fill(SDL_Rect square, int color) => DrawRect(square, unchecked((byte)color));
+	private void Fill(ref SDL_Rect square, int color) => DrawRect(ref square, unchecked((byte)color));
 
 	/// <summary>Draws the button with the specified arrow shape.</summary>
 	public override void Draw()
@@ -100,19 +100,19 @@ public class ArrowButton : ImageButton
 		square.w = unchecked((ushort)(Width - 1));
 		square.h = unchecked((ushort)(Height - 1));
 
-		Fill(square, color);
+		Fill(ref square, color);
 
 		square.x++;
 		square.y++;
 		color = _color + 5;
 
-		Fill(square, color);
+		Fill(ref square, color);
 
 		square.w--;
 		square.h--;
 		color = _color + 4;
 
-		Fill(square, color);
+		Fill(ref square, color);
 
 		SetPixel(0, 0, unchecked((byte)(_color + 1)));
 		SetPixel(0, Height - 1, unchecked((byte)(_color + 4)));
@@ -129,7 +129,7 @@ public class ArrowButton : ImageButton
 				square.w = 3;
 				square.h = 3;
 
-				Fill(square, color);
+				Fill(ref square, color);
 
 				// Draw arrow triangle
 				square.x = 2;
@@ -139,11 +139,11 @@ public class ArrowButton : ImageButton
 
 				for (; square.w > 1; square.w -= 2)
 				{
-					Fill(square, color);
+					Fill(ref square, color);
 					square.x++;
 					square.y--;
 				}
-				Fill(square, color);
+				Fill(ref square, color);
 				break;
 			case ArrowShape.ARROW_BIG_DOWN:
 				// Draw arrow square
@@ -152,7 +152,7 @@ public class ArrowButton : ImageButton
 				square.w = 3;
 				square.h = 3;
 
-				Fill(square, color);
+				Fill(ref square, color);
 
 				// Draw arrow triangle
 				square.x = 2;
@@ -162,11 +162,11 @@ public class ArrowButton : ImageButton
 
 				for (; square.w > 1; square.w -= 2)
 				{
-					Fill(square, color);
+					Fill(ref square, color);
 					square.x++;
 					square.y++;
 				}
-				Fill(square, color);
+				Fill(ref square, color);
 				break;
 			case ArrowShape.ARROW_SMALL_UP:
 				// Draw arrow triangle 1
@@ -177,11 +177,11 @@ public class ArrowButton : ImageButton
 
 				for (; square.w > 1; square.w -= 2)
 				{
-					Fill(square, color + 2);
+					Fill(ref square, color + 2);
 					square.x++;
 					square.y--;
 				}
-				Fill(square, color + 2);
+				Fill(ref square, color + 2);
 
 				// Draw arrow triangle 2
 				square.x = 2;
@@ -191,11 +191,11 @@ public class ArrowButton : ImageButton
 
 				for (; square.w > 1; square.w -= 2)
 				{
-					Fill(square, color);
+					Fill(ref square, color);
 					square.x++;
 					square.y--;
 				}
-				Fill(square, color);
+				Fill(ref square, color);
 				break;
 			case ArrowShape.ARROW_SMALL_DOWN:
 				// Draw arrow triangle 1
@@ -206,11 +206,11 @@ public class ArrowButton : ImageButton
 
 				for (; square.w > 1; square.w -= 2)
 				{
-					Fill(square, color + 2);
+					Fill(ref square, color + 2);
 					square.x++;
 					square.y++;
 				}
-				Fill(square, color + 2);
+				Fill(ref square, color + 2);
 
 				// Draw arrow triangle 2
 				square.x = 2;
@@ -220,11 +220,11 @@ public class ArrowButton : ImageButton
 
 				for (; square.w > 1; square.w -= 2)
 				{
-					Fill(square, color);
+					Fill(ref square, color);
 					square.x++;
 					square.y++;
 				}
-				Fill(square, color);
+				Fill(ref square, color);
 				break;
 			case ArrowShape.ARROW_SMALL_LEFT:
 				// Draw arrow triangle 1
@@ -235,12 +235,12 @@ public class ArrowButton : ImageButton
 
 				for (; square.h < 5; square.h += 2)
 				{
-					Fill(square, color + 2);
+					Fill(ref square, color + 2);
 					square.x += 2;
 					square.y--;
 				}
 				square.w = 1;
-				Fill(square, color + 2);
+				Fill(ref square, color + 2);
 
 				// Draw arrow triangle 2
 				square.x = 3;
@@ -250,12 +250,12 @@ public class ArrowButton : ImageButton
 
 				for (; square.h < 5; square.h += 2)
 				{
-					Fill(square, color);
+					Fill(ref square, color);
 					square.x += 2;
 					square.y--;
 				}
 				square.w = 1;
-				Fill(square, color);
+				Fill(ref square, color);
 				break;
 			case ArrowShape.ARROW_SMALL_RIGHT:
 				// Draw arrow triangle 1
@@ -266,13 +266,13 @@ public class ArrowButton : ImageButton
 
 				for (; square.h < 5; square.h += 2)
 				{
-					Fill(square, color + 2);
+					Fill(ref square, color + 2);
 					square.x -= 2;
 					square.y--;
 				}
 				square.x++;
 				square.w = 1;
-				Fill(square, color + 2);
+				Fill(ref square, color + 2);
 
 				// Draw arrow triangle 2
 				square.x = 6;
@@ -282,13 +282,13 @@ public class ArrowButton : ImageButton
 
 				for (; square.h < 5; square.h += 2)
 				{
-					Fill(square, color);
+					Fill(ref square, color);
 					square.x -= 2;
 					square.y--;
 				}
 				square.x++;
 				square.w = 1;
-				Fill(square, color);
+				Fill(ref square, color);
 				break;
 			default:
 				break;

@@ -168,22 +168,22 @@ public class ComboBox : InteractiveSurface
 
 		for (; square.w > 1; square.w -= 2)
 		{
-			_arrow.DrawRect(square, (byte)(color + 2));
+			_arrow.DrawRect(ref square, (byte)(color + 2));
 			square.x++;
 			square.y++;
 		}
-		_arrow.DrawRect(square, (byte)(color + 2));
+		_arrow.DrawRect(ref square, (byte)(color + 2));
 
 		// Draw arrow triangle 2
 		square = new SDL_Rect(2, 2, 7, 1);
 
 		for (; square.w > 1; square.w -= 2)
 		{
-			_arrow.DrawRect(square, (byte)color);
+			_arrow.DrawRect(ref square, (byte)color);
 			square.x++;
 			square.y++;
 		}
-		_arrow.DrawRect(square, (byte)color);
+		_arrow.DrawRect(ref square, (byte)color);
 	}
 
 	/// <summary>Enables/disables high contrast color. Mostly used for Battlescape UI.</summary>

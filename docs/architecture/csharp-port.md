@@ -98,7 +98,7 @@ dotnet build                                   # alles bauen (Warnungen = Fehler
 dotnet test --project tests/Acom.Core.Tests # Tests
 dotnet run --project src/Acom.Desktop       # Spiel/Demo starten
 xvfb-run -a dotnet run --project src/Acom.Desktop -- --screenshot out.png --frames 60   # headless prüfen
-tools/golden/generate.sh                       # Golden-Dateien aus C++ neu erzeugen (g++, SDL-1.2- und SDL_image-Pakete)
+tools/golden/generate.sh                       # Golden-Dateien aus C++ neu erzeugen (g++, Dev-Pakete SDL 1.2, SDL_image, SDL_gfx, SDL_mixer)
 python3 tools/port-status.py [Bereich]         # Fortschritt / offene Units
 dotnet run --project tools/Acom.AssetSpec -- --data <Originaldaten> --game ufo   # Asset-Liste nach content/spec/ (nur Metadaten)
 ```

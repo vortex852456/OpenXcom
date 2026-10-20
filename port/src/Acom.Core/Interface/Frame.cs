@@ -99,9 +99,9 @@ public class Frame : Surface
 		for (int i = 0; i < _thickness; ++i)
 		{
 			if (_thickness > 5 && (i == 0 || i == _thickness - 1))
-				DrawRect(square, darkest);
+				DrawRect(ref square, darkest);
 			else
-				DrawRect(square, color);
+				DrawRect(ref square, color);
 			if (i < _thickness / 2)
 				color = unchecked((byte)(color - 1 * mul));
 			else
@@ -118,6 +118,6 @@ public class Frame : Surface
 			else
 				square.h = 1;
 		}
-		DrawRect(square, _bg);
+		DrawRect(ref square, _bg);
 	}
 }

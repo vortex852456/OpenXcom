@@ -222,7 +222,7 @@ public class TextEdit : InteractiveSurface
 		if (_enter != null && _drawBackground)
 		{
 			var square = new SDL_Rect(0, 0, Width, Height);
-			DrawRect(square, Color);
+			DrawRect(ref square, Color);
 		}
 
 		_text.Blit(this);

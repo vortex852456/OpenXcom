@@ -55,14 +55,14 @@ public sealed class Game
 	private static readonly ApplicationState[] s_stateRun = [ApplicationState.SLOWED, ApplicationState.PAUSED, ApplicationState.PAUSED, ApplicationState.PAUSED];
 
 	private readonly Screen _screen;
-	private readonly Cursor? _cursor;
+	private readonly Cursor _cursor;
 	private Language _lang;
 	private readonly List<State> _states = [];
 	private readonly List<State> _deleted = [];
 	private SavedGame? _save;
 	private Mod? _mod;
 	private bool _quit, _init, _update;
-	private readonly FpsCounter? _fpsCounter;
+	private readonly FpsCounter _fpsCounter;
 	private bool _mouseActive = true;
 	private bool _ctrl, _alt, _shift, _rmb, _mmb;
 	private int _scrollStep = 1;
@@ -97,10 +97,10 @@ public sealed class Game
 		_screen = screen;
 
 		// Create cursor
-		_cursor = CreateOptional(() => new Cursor(9, 13));
+		_cursor = new Cursor(9, 13);
 
 		// Create fps counter
-		_fpsCounter = CreateOptional(() => new FpsCounter(15, 5, 0, 0));
+		_fpsCounter = new FpsCounter(15, 5, 0, 0);
 
 		// Create blank language
 		_lang = new Language();
@@ -108,31 +108,14 @@ public sealed class Game
 		State.SetGamePtr(this);
 	}
 
-	/// <summary>
-	/// Bridge while Interface/Cursor and Interface/FpsCounter are generated stubs (their constructors throw):
-	/// the game runs without them until they are ported. Remove together with the nullability of
-	/// <see cref="Cursor"/> and <see cref="FpsCounter"/>.
-	/// </summary>
-	private static T? CreateOptional<T>(Func<T> create) where T : class
-	{
-		try
-		{
-			return create();
-		}
-		catch (NotImplementedException)
-		{
-			return null;
-		}
-	}
-
 	/// <summary>The display screen used by the game.</summary>
 	public Screen Screen => _screen;
 
-	/// <summary>The game's cursor (null while Interface/Cursor is not ported).</summary>
-	public Cursor? Cursor => _cursor;
+	/// <summary>The game's cursor.</summary>
+	public Cursor Cursor => _cursor;
 
-	/// <summary>The FpsCounter (null while Interface/FpsCounter is not ported).</summary>
-	public FpsCounter? FpsCounter => _fpsCounter;
+	/// <summary>The FpsCounter.</summary>
+	public FpsCounter FpsCounter => _fpsCounter;
 
 	/// <summary>The currently loaded language.</summary>
 	public Language Language => _lang;
@@ -263,7 +246,7 @@ public sealed class Game
 		if (_runningState != ApplicationState.PAUSED)
 		{
 			_states[^1].Think();
-			_fpsCounter?.Think();
+			_fpsCounter.Think();
 		}
 	}
 
@@ -274,7 +257,7 @@ public sealed class Game
 		if (_quit || !_init || _states.Count == 0 || _runningState == ApplicationState.PAUSED)
 			return false;
 
-		_fpsCounter?.AddFrame();
+		_fpsCounter.AddFrame();
 		_screen.Clear();
 		// start at the topmost full-screen state
 		int first = _states.Count - 1;
@@ -282,8 +265,8 @@ public sealed class Game
 			--first;
 		for (int i = first; i < _states.Count; ++i)
 			_states[i].Blit();
-		_fpsCounter?.Blit(_screen.Surface);
-		_cursor?.Blit(_screen.Surface);
+		_fpsCounter.Blit(_screen.Surface);
+		_cursor.Blit(_screen.Surface);
 		_screen.Flip();
 		return true;
 	}
@@ -306,8 +289,8 @@ public sealed class Game
 	{
 		var action = CreateAction(ev);
 		// missing: _screen->handle(&action) (debug slow motion, Alt+Enter, screenshot key)
-		_cursor?.Handle(action);
-		_fpsCounter?.Handle(action);
+		_cursor.Handle(action);
+		_fpsCounter.Handle(action);
 		if (action.Details.type == SDLEventType.SDL_KEYDOWN)
 		{
 			var sym = action.Details.key.keysym.sym;
@@ -550,8 +533,7 @@ public sealed class Game
 	public void SetMouseActive(bool active)
 	{
 		_mouseActive = active;
-		if (_cursor != null)
-			_cursor.Visible = active;
+		_cursor.Visible = active;
 	}
 
 	/// <summary>Is <paramref name="state"/> the current (topmost) state?</summary>
