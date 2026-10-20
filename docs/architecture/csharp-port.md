@@ -29,6 +29,12 @@ port/
 5. **Golden-Tests:** Deterministische Logik (Zufall, Regeln, Pfadsuche, Sichtlinien, Saves) wird gegen das Original geprüft. `port/tools/golden/golden.cpp` kompiliert die Original-Quellen und schreibt Referenzwerte nach `tests/.../Golden/`; die C#-Tests vergleichen bitgenau.
 6. **Bewusst nicht portiert:** steht mit Begründung in `port/tools/port-skip.txt` (z. B. Software-Scaler, OpenGL, Template-Blitmaschinerie).
 
+## YAML
+`Engine/Yaml.cs` liest mit dem Event-Parser von YamlDotNet in einen eigenen Knotenbaum, damit das Verhalten von rapidyaml erhalten bleibt: doppelte Schlüssel erlaubt (erster Treffer gewinnt), Merge-Schlüssel `<<` wie `Tree::resolve()`, Zahlen/Bools wie c4core (`0x`, `True`, ...). Die Selbsttests aus `src/Engine/Yaml.cpp` sind in `YamlTests` übernommen; `RepoYamlTests` liest alle `.rul`/`.yml` des Repos.
+
+## Generierter Code
+`Options.Values.cs` und `Options.Create.cs` erzeugt `port/tools/gen/gen_options.py` aus `Options.inc.h`/`Options.cpp` (C-Präprozessor mit Desktop-Defines). Neue Optionen im C++-Stil dort ergänzen und neu generieren, nicht von Hand editieren.
+
 ## Hauptschleife
 C++ `Game::run()` wird aufgeteilt, weil MonoGame die Schleife besitzt:
 - `Game.Update()` – Zustände aufräumen, aktiven State initialisieren, Ereignisse abarbeiten, `think()`.
@@ -48,7 +54,7 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | Phase | Inhalt | Prüfung |
 |---|---|---|
 | 0 ✅ | Gerüst, RNG, Pluralregeln, Palette, Surface (HD), Action, InteractiveSurface, State, Game-Loop, Screen, MonoGame-Host | Golden-Tests, Headless-Screenshot |
-| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
+| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert), CrossPlatform-Ordner, Language/LocalizedText) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
 | 2 | `Mod/` (Rule*, Laden/Mergen von Rulesets) und `Savegame/` (Modell + YAML-Saves) | Rulesets/Saves in C++ und C# laden, Dumps vergleichen |
 | 3 | `Menu/`, `Geoscape/`, `Basescape/`, `Ufopaedia/` | Bedienbare Kampagne mit Testinhalten |
 | 4 | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine) | Golden-Tests Pfadsuche/LOS/Schaden mit festem Seed |
@@ -57,7 +63,6 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 
 ## Offene Entscheidungen
 - PNG/GIF-Decoder, der Palettenindizes erhält (eigener Decoder oder Bibliothek mit kompatibler Lizenz).
-- YAML: YamlDotNet vs. eigener Reader mit rapidyaml-Semantik (Merge-Verhalten der Rulesets muss gleich bleiben).
 - Skript-Engine: portieren oder ersetzen.
 
 ## Befehle
