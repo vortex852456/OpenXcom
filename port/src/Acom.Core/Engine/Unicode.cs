@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Unicode.h, src/Engine/Unicode.cpp
-// Port status: partial (text tokens and character classes; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
+// Port status: partial (text tokens, character classes and naturalCompare; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
 
 namespace Acom;
 
@@ -45,4 +45,54 @@ public static class Unicode
 	public static bool IsSeparator(char c) => c == '-' || c == '/';
 
 	public static bool IsPrintable(char c) => c > 32 && c != TOK_NBSP;
+
+	/// <summary>
+	/// Compares two strings in natural order (ignoring case, runs of digits compared by value), like
+	/// <c>naturalCompare</c> does on Windows (<c>StrCmpLogicalW</c>). The C++ fallback on other systems is a
+	/// locale-dependent compare; the port uses the Windows order everywhere so that numbered files
+	/// ("2.png" before "10.png") load in the same order on all systems.
+	/// </summary>
+	/// <returns>Negative if <paramref name="a"/> comes first, positive if <paramref name="b"/> does, 0 if equal.</returns>
+	public static int NaturalComparison(string a, string b)
+	{
+		int i = 0, j = 0;
+		while (i < a.Length && j < b.Length)
+		{
+			if (char.IsAsciiDigit(a[i]) && char.IsAsciiDigit(b[j]))
+			{
+				int si = i, sj = j;
+				while (si < a.Length && a[si] == '0')
+					++si;
+				while (sj < b.Length && b[sj] == '0')
+					++sj;
+				int ei = si, ej = sj;
+				while (ei < a.Length && char.IsAsciiDigit(a[ei]))
+					++ei;
+				while (ej < b.Length && char.IsAsciiDigit(b[ej]))
+					++ej;
+				if (ei - si != ej - sj)
+					return ei - si < ej - sj ? -1 : 1;
+				int c = string.CompareOrdinal(a, si, b, sj, ei - si);
+				if (c != 0)
+					return c;
+				i = ei;
+				j = ej;
+				continue;
+			}
+			int d = char.ToUpperInvariant(a[i]).CompareTo(char.ToUpperInvariant(b[j]));
+			if (d != 0)
+				return d;
+			++i;
+			++j;
+		}
+		int r = (a.Length - i).CompareTo(b.Length - j);
+		if (r != 0)
+			return r;
+		// equal in natural order (e.g. "a01" and "a1"): keep a deterministic total order
+		r = string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+		return r != 0 ? r : string.CompareOrdinal(a, b);
+	}
+
+	/// <summary>Compares two strings in natural order: true if <paramref name="a"/> comes before <paramref name="b"/> (C++ naturalCompare).</summary>
+	public static bool NaturalCompare(string a, string b) => NaturalComparison(a, b) < 0;
 }
