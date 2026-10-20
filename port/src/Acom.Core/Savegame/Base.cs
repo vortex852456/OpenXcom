@@ -93,7 +93,6 @@ public class BaseSumDailyRecovery
 public class Base : Target
 {
 	private const int BASE_SIZE = 6;
-	/// <summary>Number of bits of C++ <c>RuleBaseFacilityFunctions</c>.</summary>
 
 	private readonly Mod _mod;
 	private readonly List<BaseFacility> _facilities = [];

@@ -423,23 +423,10 @@ public class Craft : MovingTarget
 	}
 
 	/// <summary>
-	/// C++ <c>serializeDouble</c> (src/Savegame/SerializationHelper.cpp): ostream with precision DBL_DIG + 2, i.e. %.17g.
+	/// C++ <c>serializeDouble</c> (src/Savegame/SerializationHelper.cpp): ostream with precision DBL_DIG + 2, i.e. %.17g
+	/// (including "nan"/"inf" like the C++ stream; shared with <see cref="MovingTarget"/>).
 	/// </summary>
-	internal static string SerializeDouble(double value)
-	{
-		string s = value.ToString("G17", CultureInfo.InvariantCulture);
-		int e = s.IndexOf('E', StringComparison.Ordinal);
-		if (e < 0)
-			return s;
-		// %g writes the exponent with at least two digits and a lowercase 'e': 1e-05, 1.5e+20
-		string mantissa = s[..e];
-		string exponent = s[(e + 1)..];
-		char sign = exponent[0] == '-' ? '-' : '+';
-		string digits = exponent.TrimStart('+', '-');
-		if (digits.Length < 2)
-			digits = "0" + digits;
-		return mantissa + "e" + sign + digits;
-	}
+	internal static string SerializeDouble(double value) => SerializationHelper.SerializeDouble(value);
 
 	/// <summary>Loads a craft unique identifier from YAML.</summary>
 	public static (string first, int second) LoadId(YamlNodeReader reader)

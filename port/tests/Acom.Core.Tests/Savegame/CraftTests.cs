@@ -12,6 +12,8 @@ public class CraftTests
 	[InlineData(1e-5, "1.0000000000000001e-05")]
 	[InlineData(1e20, "1e+20")]
 	[InlineData(123456789012345678.0, "1.2345678901234568e+17")]
+	[InlineData(double.PositiveInfinity, "inf")]
+	[InlineData(double.NegativeInfinity, "-inf")]
 	public void SerializeDouble_matches_printf_17g(double value, string expected)
 	{
 		Assert.Equal(expected, Craft.SerializeDouble(value));
