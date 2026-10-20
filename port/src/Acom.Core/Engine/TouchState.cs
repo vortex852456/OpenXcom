@@ -36,7 +36,7 @@ public class TouchState : State
 	protected TextButton _btnLMB;
 	protected TextButton _btnRMB;
 	protected TextButton _btnMMB;
-	protected TextButton _ownerLRM;
+	protected System.Runtime.CompilerServices.StrongBox<TextButton> _ownerLRM;
 	protected ToggleTextButton _btnCtrl;
 	protected ToggleTextButton _btnAlt;
 	protected ToggleTextButton _btnShift;

@@ -41,5 +41,8 @@ public static class Unicode
 
 	public static bool IsSpace(char c) => c == ' ' || c == TOK_NBSP;
 
+	/// <summary>Checks if a character is a word separator (where text can be wrapped).</summary>
+	public static bool IsSeparator(char c) => c == '-' || c == '/';
+
 	public static bool IsPrintable(char c) => c > 32 && c != TOK_NBSP;
 }

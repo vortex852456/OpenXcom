@@ -47,7 +47,7 @@ public class OptionsBaseState : State
 	protected TextButton _btnDefault;
 	protected Text _txtTooltip;
 	protected string _currentTooltip;
-	protected TextButton _group;
+	protected System.Runtime.CompilerServices.StrongBox<TextButton> _group;
 	public OptionsBaseState(OptionsOrigin origin) => throw new NotImplementedException();
 	public static void Restart(OptionsOrigin origin) => throw new NotImplementedException();
 	public override void Init() => throw new NotImplementedException();
