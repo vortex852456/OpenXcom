@@ -62,6 +62,8 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. E
 | Eingebettete Assets (`exe:standard.zip`) | optional | entfällt | Inhalte kommen als Dateien/Zip |
 | Bildformate (`loadImage`) | alles, was SDL_image kann (auch BMP, LBM, PCX, ...) | nur PNG und GIF | Mods nutzen praktisch nur PNG/GIF; weitere Leser bei Bedarf |
 | Palettenalpha auf dem SDL_image-Weg | SDL 1.2: `unused` = 0, sdl12-compat: 255 | 255 | Byte ist in SDL 1.2 unbenutzt; Transparenz kommt dort aus dem Colour Key |
+| `Timer`-Spielzeit (`slowTick`) | erster Aufruf springt einmalig, 32-Bit-Überlauf nach 74 h | gleichmäßig, 64 Bit | Offensichtlicher Fehler ohne gewollte Wirkung |
+| Font-Zeichen außerhalb der BMP (z. B. Emoji) | eigene Glyphe | belegen ihren Platz, sind aber nicht abrufbar | Text ist im Port UTF-16 (`char`) |
 | Abgeschnittene GIF-Dateien | SDL_image hängt in Erweiterungen bzw. liest alte Pufferbytes | Fehler bzw. Bildende | Kein Hänger, kein Datenmüll |
 
 ## Phasen
@@ -70,7 +72,7 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | Phase | Inhalt | Prüfung |
 |---|---|---|
 | 0 ✅ | Gerüst, RNG, Pluralregeln, Palette, Surface (HD), Action, InteractiveSurface, State, Game-Loop, Screen, MonoGame-Host | Golden-Tests, Headless-Screenshot |
-| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert, Golden-Test gegen C++-`options.cfg`), CrossPlatform-Ordner, Language/LocalizedText, FileMap/ModInfo inkl. Zip-Mods, `Surface.LoadImage` mit eigenem PNG/GIF-Leser) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
+| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert, Golden-Test gegen C++-`options.cfg`), CrossPlatform-Ordner, Language/LocalizedText, FileMap/ModInfo inkl. Zip-Mods, `Surface.LoadImage` mit eigenem PNG/GIF-Leser, SurfaceCrop, Timer, Font inkl. DOS-Terminalschrift) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
 | 2 | `Mod/` (Rule*, Laden/Mergen von Rulesets) und `Savegame/` (Modell + YAML-Saves) | Rulesets/Saves in C++ und C# laden, Dumps vergleichen |
 | 3 | `Menu/`, `Geoscape/`, `Basescape/`, `Ufopaedia/` | Bedienbare Kampagne mit Testinhalten |
 | 4 | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine) | Golden-Tests Pfadsuche/LOS/Schaden mit festem Seed |

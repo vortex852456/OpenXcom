@@ -18,9 +18,9 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Surface.h, src/Engine/Surface.cpp
-// Port status: partial (missing: loadImage of formats other than PNG/GIF (LBM, BMP, ...), drawLine/Circle/Polygon/TexturedPolygon/String, SurfaceCrop, GraphSubset blit).
+// Port status: partial (missing: loadImage of formats other than PNG/GIF (LBM, BMP, ...), drawLine/Circle/Polygon/TexturedPolygon/String, GraphSubset blit).
 
-#pragma warning disable CA1815 // SDL_Rect mirrors SDL 1.2; equality is not needed.
+#pragma warning disable CA1815 // SDL_Rect mirrors SDL 1.2, SurfaceCrop is a blit helper; equality is not needed.
 
 namespace Acom.Engine;
 
@@ -461,6 +461,30 @@ public class Surface
 		}
 	}
 
+	/// <summary>Gets a helper to blit a part of this surface, positioned at this surface's position.</summary>
+	public SurfaceCrop GetCrop() => new(this);
+
+	/// <summary>
+	/// Blits the rectangle <paramref name="crop"/> of this surface (whole surface if empty) to
+	/// <paramref name="dest"/> with its top-left corner at (x, y); index 0 is transparent.
+	/// </summary>
+	internal void BlitCrop(Surface dest, int x, int y, SDL_Rect crop)
+	{
+		ArgumentNullException.ThrowIfNull(dest);
+		int sx0 = 0, sy0 = 0, sx1 = _width, sy1 = _height;
+		if (crop.w != 0 || crop.h != 0)
+		{
+			sx0 = Math.Max(0, (int)crop.x);
+			sy0 = Math.Max(0, (int)crop.y);
+			sx1 = Math.Min(_width, crop.x + crop.w);
+			sy1 = Math.Min(_height, crop.y + crop.h);
+			x -= crop.x;
+			y -= crop.y;
+		}
+		if (sx0 < sx1 && sy0 < sy1)
+			BlitRect(dest, x, y, sx0, sy0, sx1, sy1, new KeyedCopyOp());
+	}
+
 	/// <summary>Copies the part of another surface lying under this surface (including transparent pixels).</summary>
 	public void Copy(Surface surface)
 	{
@@ -578,17 +602,26 @@ public class Surface
 	}
 
 	/// <summary>
-	/// Core blit loop: applies <paramref name="op"/> to every destination pixel covered by this
-	/// surface placed at logical (x, y), source columns starting at logical <paramref name="begX"/>.
-	/// Handles different pixel densities by nearest-neighbour mapping.
+	/// Applies <paramref name="op"/> to every destination pixel covered by this surface
+	/// placed at logical (x, y), source columns starting at logical <paramref name="begX"/>.
 	/// </summary>
 	private void BlitPixels<TOp>(Surface dest, int x, int y, int begX, TOp op) where TOp : struct, IPixelOp
+	{
+		BlitRect(dest, x, y, begX, 0, _width, _height, op);
+	}
+
+	/// <summary>
+	/// Core blit loop: applies <paramref name="op"/> to every destination pixel covered by the logical source
+	/// rectangle [sx0, sx1) x [sy0, sy1) (inside this surface); source pixel (c, r) lands on (x + c, y + r).
+	/// Handles different pixel densities by nearest-neighbour mapping.
+	/// </summary>
+	private void BlitRect<TOp>(Surface dest, int x, int y, int sx0, int sy0, int sx1, int sy1, TOp op) where TOp : struct, IPixelOp
 	{
 		int ds = dest._scale, ss = _scale;
 		int dpw = dest.PhysicalWidth, dph = dest.PhysicalHeight, spw = PhysicalWidth;
 		// Destination area in destination buffer pixels, clipped.
-		int dx0 = Math.Max(0, (x + begX) * ds), dy0 = Math.Max(0, y * ds);
-		int dx1 = Math.Min(dpw, (x + _width) * ds), dy1 = Math.Min(dph, (y + _height) * ds);
+		int dx0 = Math.Max(0, (x + sx0) * ds), dy0 = Math.Max(0, (y + sy0) * ds);
+		int dx1 = Math.Min(dpw, (x + sx1) * ds), dy1 = Math.Min(dph, (y + sy1) * ds);
 		if (dx0 >= dx1 || dy0 >= dy1)
 			return;
 		var dpix = dest._pixels;
@@ -620,4 +653,32 @@ public class Surface
 				System.Buffers.ArrayPool<int>.Shared.Return(rented);
 		}
 	}
+}
+
+/// <summary>Helper used to blit part of a surface to another one.</summary>
+public struct SurfaceCrop
+{
+	/// <summary>Crop rectangle in the surface; empty = whole surface.</summary>
+	public SDL_Rect Crop;
+
+	/// <summary>Creates a crop helper positioned at the surface's position.</summary>
+	public SurfaceCrop(Surface surf)
+	{
+		ArgumentNullException.ThrowIfNull(surf);
+		Surface = surf;
+		X = surf.X;
+		Y = surf.Y;
+	}
+
+	/// <summary>Gets the surface.</summary>
+	public readonly Surface? Surface { get; }
+
+	/// <summary>Position on the destination in the X axis.</summary>
+	public int X { get; set; }
+
+	/// <summary>Position on the destination in the Y axis.</summary>
+	public int Y { get; set; }
+
+	/// <summary>Blits the cropped surface to another surface.</summary>
+	public readonly void Blit(Surface dest) => Surface?.BlitCrop(dest, X, Y, Crop);
 }
