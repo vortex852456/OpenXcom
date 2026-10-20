@@ -52,6 +52,8 @@ public class Soldier
 {
 	public const string ScriptName = "GeoscapeSoldier";
 	public Soldier(RuleSoldier rules, Armor armor, int nationality, int id = 0) => throw new NotImplementedException();
+	public void Load(YamlNodeReader reader, Mod mod, SavedGame save, bool soldierTemplate = false) => throw new NotImplementedException();
+	public void Save(YamlNodeWriter writer) => throw new NotImplementedException();
 	public string GetName(bool statstring = false, uint maxLength = 20) => throw new NotImplementedException();
 	public void SetName(string name) => throw new NotImplementedException();
 	public void GenName() => throw new NotImplementedException();

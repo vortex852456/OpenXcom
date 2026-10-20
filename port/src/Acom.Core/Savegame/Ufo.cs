@@ -36,6 +36,8 @@ public class Ufo : MovingTarget
 	public static readonly string[] ALTITUDE_STRING = ["STR_GROUND", "STR_VERY_LOW", "STR_LOW_UC", "STR_HIGH_UC", "STR_VERY_HIGH"];
 	public const string ScriptName = "Ufo";
 	public Ufo(RuleUfo rules, int uniqueId, int hunterKillerPercentage = 0, int huntMode = 0, int huntBehavior = 0) => throw new NotImplementedException();
+	public void Load(YamlNodeReader reader, Mod ruleset, SavedGame game) => throw new NotImplementedException();
+	public void Save(YamlNodeWriter writer, bool newBattle) => throw new NotImplementedException();
 	protected override void CalculateSpeed() => throw new NotImplementedException();
 	public void FinishLoading(YamlNodeReader reader, SavedGame save) => throw new NotImplementedException();
 	public override void SaveId(YamlNodeWriter writer) => throw new NotImplementedException();

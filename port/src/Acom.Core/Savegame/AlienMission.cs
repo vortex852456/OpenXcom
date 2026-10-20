@@ -26,6 +26,7 @@ namespace Acom;
 
 public class AlienMission
 {
+	public AlienMission(RuleAlienMission rule) => throw new NotImplementedException();
 	public void Load(YamlNodeReader reader, SavedGame game, Mod mod) => throw new NotImplementedException();
 	public void Save(YamlNodeWriter writer) => throw new NotImplementedException();
 	public RuleAlienMission Rules { get => throw new NotImplementedException(); }
