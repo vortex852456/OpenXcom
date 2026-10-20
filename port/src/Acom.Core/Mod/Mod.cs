@@ -142,6 +142,10 @@ public class Mod
 	public void LoadUnorderedNamesToInts(string parent, SortedDictionary<string, List<int>> names, YamlNodeReader reader) => throw new NotImplementedException();
 	public void LoadUnorderedNamesToNamesToInt(string parent, SortedDictionary<string, SortedDictionary<string, int>> names, YamlNodeReader reader) => throw new NotImplementedException();
 	public void LoadKillCriteria(string parent, List<List<(int first, List<string> second)>> names, YamlNodeReader reader) => throw new NotImplementedException();
+	// C++ linkRule templates (Mod.h): resolve the name(s) with get<Rule>(name, true), then clear the name(s).
+	public void LinkRule<T>(ref T rule, ref string name) where T : class => throw new NotImplementedException();
+	public void LinkRule<T>(List<T> rule, List<string> names) where T : class => throw new NotImplementedException();
+	public void LinkRule<T>(List<List<T>> rule, List<List<string>> names) where T : class => throw new NotImplementedException();
 	public void LoadAll() => throw new NotImplementedException();
 	public SavedGame NewSave(GameDifficulty diff) => throw new NotImplementedException();
 	public RuleCountry GetCountry(string id, bool error = false) => throw new NotImplementedException();

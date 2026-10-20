@@ -150,6 +150,8 @@ public class RuleItemUseCostRule
 	public RuleItemUseCostRule() => throw new NotImplementedException();
 	public RuleItemUseCostRule(NullableValue tu, NullableValue rest) => throw new NotImplementedException();
 	public void LoadCost(YamlNodeReader reader, string name) => throw new NotImplementedException();
+	// C++ free function getDefault(const RuleItemUseRuleBase<NullableValue<T>>&, ...)
+	public RuleItemUseCost GetDefault() => throw new NotImplementedException();
 }
 
 public class RuleItemUseFlatRule
@@ -157,6 +159,8 @@ public class RuleItemUseFlatRule
 	public RuleItemUseFlatRule() => throw new NotImplementedException();
 	public RuleItemUseFlatRule(NullableValue tu, NullableValue rest) => throw new NotImplementedException();
 	public void LoadFlat(YamlNodeReader reader, string name) => throw new NotImplementedException();
+	// C++ free function getDefault(const RuleItemUseRuleBase<NullableValue<T>>&, ...)
+	public RuleItemUseFlat GetDefault() => throw new NotImplementedException();
 }
 
 public class RuleItemAction
