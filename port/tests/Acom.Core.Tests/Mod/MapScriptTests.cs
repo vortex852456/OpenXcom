@@ -5,8 +5,6 @@ namespace Acom.Tests.Mod;
 #pragma warning restore CA1716
 
 /// <summary>Runs alone: map block selection draws from the global RNG that RngTests replays.</summary>
-[CollectionDefinition(nameof(GlobalRng), DisableParallelization = true)]
-public class GlobalRng;
 
 public class MapScriptTests
 {
