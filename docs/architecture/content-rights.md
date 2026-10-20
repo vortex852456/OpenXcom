@@ -48,9 +48,9 @@ Grundregel: Neue Inhalte dürfen die **Funktion** des Originals erfüllen, aber 
 - Originaldaten lokal zum Testen der Kompatibilität der Engine (Lader, Golden-Tests) – nie ins Repo, nie in Releases.
 
 **Ablauf je Asset:**
-1. Eintrag in der Asset-Liste (Zweck, Maße, Frames) – aus Fakten, nicht aus Bildern.
+1. Eintrag in der Asset-Liste (Zweck, Maße, Frames) – aus Fakten, nicht aus Bildern. Die Liste erzeugt `port/tools/Acom.AssetSpec` nach `content/spec/` (siehe dortige README).
 2. Eigener Entwurf als Text (Aussehen, Farben, Silhouette), bewusst anders als das Original.
-3. Generieren mit einem Werkzeug, dessen Bedingungen kommerzielle Nutzung erlauben; Prompt, Werkzeug, Version und Datum in `content/ASSETS.md`.
+3. Generieren mit einem Werkzeug, dessen Bedingungen erlauben, die Ergebnisse unter freier Lizenz weiterzugeben (CC-BY-SA erlaubt auch Dritten kommerzielle Nutzung – das gilt auch bei einem Hobbyprojekt); Prompt, Werkzeug, Version und Datum in `content/ASSETS.md`.
 4. Nachbearbeiten (Palette, Pixeldichte 4, Frames), menschliche Prüfung auf Ähnlichkeit zum Original; im Zweifel verwerfen.
 
 **Hinweis:** Rein KI-generierte Inhalte sind in DE/US meist nicht urheberrechtlich geschützt (es fehlt die menschliche Schöpfung). Andere dürfen sie dann frei nutzen – das passt zum Ziel „frei nutzbar“. Menschliche Nachbearbeitung kann Schutz begründen; dann gilt die gewählte Lizenz (CC-BY-SA 4.0).

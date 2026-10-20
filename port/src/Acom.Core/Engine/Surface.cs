@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Surface.h, src/Engine/Surface.cpp
-// Port status: partial (missing: image loaders, drawLine/Circle/Polygon/TexturedPolygon/String, SurfaceCrop, GraphSubset blit).
+// Port status: partial (missing: loadImage (PNG/GIF/LBM), drawLine/Circle/Polygon/TexturedPolygon/String, SurfaceCrop, GraphSubset blit).
 
 #pragma warning disable CA1815 // SDL_Rect mirrors SDL 1.2; equality is not needed.
 
@@ -184,6 +184,123 @@ public class Surface
 		int pitch = PhysicalWidth;
 		for (int py = 0; py < _scale; ++py)
 			_pixels.AsSpan((y * _scale + py) * pitch + x * _scale, _scale).Fill(pixel);
+	}
+
+	/// <summary>
+	/// Sets a pixel and moves the position to the next one, row by row
+	/// (used by the image decoders).
+	/// </summary>
+	public void SetPixelIterative(ref int x, ref int y, byte pixel)
+	{
+		SetPixel(x, y, pixel);
+		x++;
+		if (x == _width)
+		{
+			y++;
+			x = 0;
+		}
+	}
+
+	/// <summary>Loads raw palette indices, row by row (extra bytes are ignored).</summary>
+	public void LoadRaw(ReadOnlySpan<byte> bytes)
+	{
+		if (_scale == 1)
+		{
+			bytes[..Math.Min(bytes.Length, _pixels.Length)].CopyTo(_pixels);
+			return;
+		}
+		int x = 0, y = 0;
+		foreach (byte b in bytes[..Math.Min(bytes.Length, _width * _height)])
+			SetPixelIterative(ref x, ref y, b);
+	}
+
+	/// <summary>Loads an X-Com SCR image: uncompressed palette indices.</summary>
+	public void LoadScr(Stream stream)
+	{
+		ArgumentNullException.ThrowIfNull(stream);
+		using var buffer = new MemoryStream();
+		stream.CopyTo(buffer);
+		LoadRaw(buffer.GetBuffer().AsSpan(0, (int)buffer.Length));
+	}
+
+	/// <summary>
+	/// Loads an X-Com SPK image: 16-bit commands, 0xFFFF n = 2n transparent pixels,
+	/// 0xFFFE n = 2n literal pixels, 0xFFFD = end.
+	/// </summary>
+	public void LoadSpk(Stream stream)
+	{
+		ArgumentNullException.ThrowIfNull(stream);
+		var data = ReadAll(stream);
+		int pos = 0, x = 0, y = 0;
+		while (pos < data.Length - 1)
+		{
+			int flag = ReadLE16(data, ref pos);
+			if (flag == 0xFFFF)
+			{
+				int n = ReadLE16(data, ref pos);
+				for (int i = 0; i < n * 2; ++i)
+					SetPixelIterative(ref x, ref y, 0);
+			}
+			else if (flag == 0xFFFE)
+			{
+				int n = ReadLE16(data, ref pos);
+				for (int i = 0; i < n * 2; ++i)
+					SetPixelIterative(ref x, ref y, pos < data.Length ? data[pos++] : (byte)0);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Loads an X-Com BDY image: byte-wise run length encoding,
+	/// values &gt;= 129 repeat the next byte 257-n times, otherwise n+1 literal bytes follow.
+	/// </summary>
+	public void LoadBdy(Stream stream)
+	{
+		ArgumentNullException.ThrowIfNull(stream);
+		var data = ReadAll(stream);
+		int pos = 0, x = 0, y = 0;
+		while (pos < data.Length)
+		{
+			byte dataByte = data[pos++];
+			if (dataByte >= 129)
+			{
+				int pixelCnt = 257 - dataByte;
+				dataByte = pos < data.Length ? data[pos++] : (byte)0;
+				int currentRow = y;
+				for (int i = 0; i < pixelCnt; ++i)
+				{
+					SetPixelIterative(ref x, ref y, dataByte);
+					if (currentRow != y) // avoid overscan into next row
+						break;
+				}
+			}
+			else
+			{
+				int pixelCnt = 1 + dataByte;
+				int currentRow = y;
+				for (int i = 0; i < pixelCnt; ++i)
+				{
+					dataByte = pos < data.Length ? data[pos++] : (byte)0;
+					if (currentRow == y) // avoid overscan into next row
+						SetPixelIterative(ref x, ref y, dataByte);
+				}
+			}
+		}
+	}
+
+	private static byte[] ReadAll(Stream stream)
+	{
+		using var buffer = new MemoryStream();
+		stream.CopyTo(buffer);
+		return buffer.ToArray();
+	}
+
+	private static int ReadLE16(byte[] data, ref int pos)
+	{
+		int lo = pos < data.Length ? data[pos] : 0;
+		int hi = pos + 1 < data.Length ? data[pos + 1] : 0;
+		pos += 2;
+		return lo | (hi << 8);
 	}
 
 	/// <summary>Clears the surface to transparent.</summary>

@@ -19,6 +19,7 @@ dotnet test --project tests/Acom.Core.Tests --filter-method "*RngTests*"   # ein
 xvfb-run -a dotnet run --project src/Acom.Desktop -- --screenshot out.png --frames 60   # headless Screenshot
 tools/golden/generate.sh                        # Golden-Referenzwerte aus dem C++-Original neu erzeugen
 python3 tools/port-status.py [Bereich]          # Fortschritt / offene C++-Units
+dotnet run --project tools/Acom.AssetSpec -- --data <Originaldaten> --game ufo   # Metadaten-Asset-Liste -> content/spec/
 ```
 - .NET 10 SDK im Container: `apt-get install dotnet-sdk-10.0` (dot.net-Downloads sind geblockt).
 - Jede portierte Datei: GPL-Header (`port/tools/license-header.txt`) + `// Ported from: src/...`, bei Lücken `// Port status: partial (missing: ...)`.
