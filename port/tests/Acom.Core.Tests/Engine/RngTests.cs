@@ -2,6 +2,7 @@ using System.Globalization;
 
 namespace Acom.Tests.Engine;
 
+[Collection(nameof(Mod.GlobalRng))] // seeds and checks the global generator; other tests use it too
 public class RngTests
 {
 	/// <summary>Replays every recorded C++ sequence in golden/rng.txt and compares bit by bit.</summary>
