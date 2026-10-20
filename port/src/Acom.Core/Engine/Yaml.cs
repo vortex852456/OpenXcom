@@ -525,7 +525,7 @@ internal static class YamlConvert
 		{
 			if (node.Kind != YamlKind.Scalar || !TryParseFloat(node.Value, out double d))
 				return false;
-			value = type == typeof(float) ? (float)d : d;
+			value = type == typeof(float) ? (object)(float)d : d;
 			return true;
 		}
 		if (type.IsGenericType)
