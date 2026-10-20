@@ -23,7 +23,7 @@
 | `bin/common/Resources` (3 PNG) | OpenXcom-UI-Hilfsgrafiken | vermutlich OpenXcom-eigen | Prüfen, sonst neu zeichnen |
 | `bin/common/SoldierName/*.nam` | Namenslisten | geringes Risiko | Prüfen; ggf. neu generieren |
 | `bin/common/Shaders` | OpenGL-Shader (diverse Lizenzen) | nicht benötigt | Entfällt (MonoGame) |
-| Projektname „OpenXcom“, Fenstertitel, Logos | Markenbezug | **ersetzen** | Neuer Name (Arbeitstitel „Bulwark“) |
+| Projektname „OpenXcom“, Fenstertitel, Logos | Markenbezug | **ersetzen** | Neuer Name **ACOM**; Untertitel „Artificial XCOM Port“ enthält die Marke „XCOM“ (Take-Two) → im Code nicht verwendet, Alternative wählen |
 
 ## Eigenes Inhaltspaket (Plan)
 - **Form:** ein OXCE-kompatibler Mod (`metadata.yml`, `Rulesets/*.rul`, `Language/*.yml`, `Resources/…`), damit Engine und Mod-Werkzeuge unverändert funktionieren. Arbeitsort: `content/` (noch anzulegen).
@@ -32,3 +32,25 @@
 - **Lizenz:** Empfehlung **CC-BY-SA 4.0** (passt zu den vorhandenen CC-BY-SA-Grafiken) oder CC0 für Beiträge ohne Namensnennungswunsch.
 - **Herkunftsnachweis:** jede Datei mit Autor, Quelle und Lizenz in `content/ASSETS.md`. Bei KI-generierten Inhalten das Werkzeug und dessen Nutzungsbedingungen (kommerzielle Nutzung erlaubt?) vermerken.
 - **Reihenfolge:** zuerst Platzhalter (prozedural erzeugt), damit der Port ohne Originaldaten testbar ist; danach schrittweise endgültige Grafiken.
+
+## KI-gestützte Inhalte
+Grundregel: Neue Inhalte dürfen die **Funktion** des Originals erfüllen, aber nicht dessen **konkrete Gestaltung** übernehmen. Eine KI-Nachbildung ist rechtlich eine Bearbeitung, sobald das Original als Vorlage in das Ergebnis einfließt oder das Ergebnis ihm erkennbar ähnelt (DE: § 23 UrhG, „hinreichender Abstand“ nötig).
+
+**Nicht erlaubt** (erzeugt abgeleitete Werke):
+- Originalgrafiken, -karten, -sounds oder -texte als KI-Eingabe: Bild-zu-Bild, Upscaling (ESRGAN o. ä.), Nachzeichnen, Umschreiben.
+- Stil-Prompts mit Spieltiteln oder Figurennamen („im Stil von X-COM“, „Sectoid“), eigene Modelle/LoRAs, die auf Originaldaten trainiert sind.
+- Ergebnisse übernehmen, die einem Original erkennbar ähneln, auch wenn sie ohne Vorlage entstanden sind.
+
+**Erlaubt:**
+- Aus den eigenen Originaldaten nur **technische Fakten** lesen: Bildgrößen, Anzahl Frames und Blickrichtungen, Kachelmaße, Palettenaufbau, welche Grafik-IDs die Engine braucht. Daraus entsteht eine Asset-Liste (Spezifikation), keine Pixel.
+- KI mit **reinen Textbeschreibungen eigener Entwürfe** (eigenes Setting, eigene Namen) und Vorgaben wie Größe, Perspektive, Palette.
+- Genre-Ideen (Außerirdische, Transportflugzeug, Basisbau, Rundenkampf): Ideen sind nicht geschützt, nur ihre konkrete Ausführung.
+- Originaldaten lokal zum Testen der Kompatibilität der Engine (Lader, Golden-Tests) – nie ins Repo, nie in Releases.
+
+**Ablauf je Asset:**
+1. Eintrag in der Asset-Liste (Zweck, Maße, Frames) – aus Fakten, nicht aus Bildern.
+2. Eigener Entwurf als Text (Aussehen, Farben, Silhouette), bewusst anders als das Original.
+3. Generieren mit einem Werkzeug, dessen Bedingungen kommerzielle Nutzung erlauben; Prompt, Werkzeug, Version und Datum in `content/ASSETS.md`.
+4. Nachbearbeiten (Palette, Pixeldichte 4, Frames), menschliche Prüfung auf Ähnlichkeit zum Original; im Zweifel verwerfen.
+
+**Hinweis:** Rein KI-generierte Inhalte sind in DE/US meist nicht urheberrechtlich geschützt (es fehlt die menschliche Schöpfung). Andere dürfen sie dann frei nutzen – das passt zum Ziel „frei nutzbar“. Menschliche Nachbearbeitung kann Schutz begründen; dann gilt die gewählte Lizenz (CC-BY-SA 4.0).

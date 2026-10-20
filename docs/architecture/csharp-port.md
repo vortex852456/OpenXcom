@@ -1,4 +1,4 @@
-# C#-Port (Arbeitstitel „Bulwark“)
+# C#-Port: ACOM
 
 ## Entscheidungen (2026-10)
 | Thema | Entscheidung | Folge |
@@ -6,20 +6,20 @@
 | Lizenz | GPLv3-Port (GPL-3.0-or-later) | C++-Code darf 1:1 übersetzt werden; Quellcode bleibt offen. Copyright-Hinweise der OpenXcom-Entwickler bleiben in jeder Datei. |
 | Technik | .NET 10 + MonoGame DesktopGL | Läuft auf Windows/Linux/macOS; Mobilgeräte später möglich. |
 | Inhalte | OXCE-Datenformat, eigenes Setting | `.rul`/YAML, PNG/GIF, MAP/RMP bleiben ladbar; Inhalte, Namen und Texte werden neu erstellt (siehe `content-rights.md`). |
-| Grafik | HD | Logisches 320×200-Layout bleibt, Grafiken in höherer Pixeldichte (siehe unten). |
-| Name | „Bulwark“ ist nur Arbeitstitel | Umbenennen = Namespace/Projektnamen ersetzen. |
+| Grafik | HD als Pixelart mit 256-Farben-Palette (bestätigt) | Logisches 320×200-Layout bleibt, Grafiken in höherer Pixeldichte (siehe unten). |
+| Name | **ACOM** (Namespaces `Acom.*`, Programm `acom`) | Untertitel ohne Fremdmarke wählen, siehe `content-rights.md`. |
 
 ## Struktur
 ```
 port/
-  Bulwark.slnx, Directory.Build.props, Directory.Packages.props, global.json
-  src/Bulwark.Core      Spiel + Engine, plattformunabhängig (Namespaces spiegeln src/: Bulwark.Engine, später Bulwark.Mod, ...)
-  src/Bulwark.Desktop   MonoGame-Host: Fenster, Hauptschleife, SDL2-Eingabe, GPU-Ausgabe
-  tests/Bulwark.Core.Tests  xUnit v3 (Microsoft.Testing.Platform), Golden-Dateien unter Golden/
+  Acom.slnx, Directory.Build.props, Directory.Packages.props, global.json
+  src/Acom.Core      Spiel + Engine, plattformunabhängig (Namespaces spiegeln src/: Acom.Engine, später Acom.Mod, ...)
+  src/Acom.Desktop   MonoGame-Host: Fenster, Hauptschleife, SDL2-Eingabe, GPU-Ausgabe
+  tests/Acom.Core.Tests  xUnit v3 (Microsoft.Testing.Platform), Golden-Dateien unter Golden/
   tools/                golden/ (C++-Referenz), port-status.py, port-skip.txt, license-header.txt
 ```
 - **Ein Core-Assembly statt eines pro Ordner:** `Engine`, `Mod`, `Savegame` und `Battlescape` inkludieren sich in C++ gegenseitig (z. B. Engine → Savegame, Savegame → Battlescape). Assemblies dürfen keine Zyklen haben.
-- `Bulwark.Core` kennt MonoGame nicht. Der Host übergibt Eingaben als SDL-1.2-artige Ereignisse und bekommt fertige RGBA-Frames.
+- `Acom.Core` kennt MonoGame nicht. Der Host übergibt Eingaben als SDL-1.2-artige Ereignisse und bekommt fertige RGBA-Frames.
 
 ## Portierungsregeln
 1. **Verhalten vor Idiomatik.** Erst gleich verhalten wie C++, dann aufräumen. Abweichungen im Code kommentieren.
@@ -56,7 +56,6 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | parallel | Eigenes Inhaltspaket (Setting, Texte, HD-Grafik, Sound, Karten) | siehe `content-rights.md` |
 
 ## Offene Entscheidungen
-- Endgültiger Projektname.
 - PNG/GIF-Decoder, der Palettenindizes erhält (eigener Decoder oder Bibliothek mit kompatibler Lizenz).
 - YAML: YamlDotNet vs. eigener Reader mit rapidyaml-Semantik (Merge-Verhalten der Rulesets muss gleich bleiben).
 - Skript-Engine: portieren oder ersetzen.
@@ -65,9 +64,9 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 ```sh
 cd port
 dotnet build                                   # alles bauen (Warnungen = Fehler)
-dotnet test --project tests/Bulwark.Core.Tests # Tests
-dotnet run --project src/Bulwark.Desktop       # Spiel/Demo starten
-xvfb-run -a dotnet run --project src/Bulwark.Desktop -- --screenshot out.png --frames 60   # headless prüfen
+dotnet test --project tests/Acom.Core.Tests # Tests
+dotnet run --project src/Acom.Desktop       # Spiel/Demo starten
+xvfb-run -a dotnet run --project src/Acom.Desktop -- --screenshot out.png --frames 60   # headless prüfen
 tools/golden/generate.sh                       # Golden-Dateien aus C++ neu erzeugen (g++, SDL-1.2-Header)
 python3 tools/port-status.py [Bereich]         # Fortschritt / offene Units
 ```

@@ -10,20 +10,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Architektur-Detailwissen: `docs/architecture/README.md`, `build.md`, `runtime-paths.md`, `csharp-port.md`, `content-rights.md` (dort pflegen, nicht hier).
 
 ## C#-Port (`port/`)
-GPLv3-Port nach .NET 10 + MonoGame (Arbeitstitel „Bulwark“), Details: `docs/architecture/csharp-port.md`.
+Projekt **ACOM**: GPLv3-Port nach .NET 10 + MonoGame, Details: `docs/architecture/csharp-port.md`. Neue Inhalte (auch KI-generiert) nur nach den Regeln in `docs/architecture/content-rights.md`.
 ```sh
 cd port
 dotnet build                                    # Warnungen sind Fehler
-dotnet test --project tests/Bulwark.Core.Tests  # xUnit v3 via Microsoft.Testing.Platform (global.json)
-dotnet test --project tests/Bulwark.Core.Tests --filter-method "*RngTests*"   # einzelne Tests
-xvfb-run -a dotnet run --project src/Bulwark.Desktop -- --screenshot out.png --frames 60   # headless Screenshot
+dotnet test --project tests/Acom.Core.Tests  # xUnit v3 via Microsoft.Testing.Platform (global.json)
+dotnet test --project tests/Acom.Core.Tests --filter-method "*RngTests*"   # einzelne Tests
+xvfb-run -a dotnet run --project src/Acom.Desktop -- --screenshot out.png --frames 60   # headless Screenshot
 tools/golden/generate.sh                        # Golden-Referenzwerte aus dem C++-Original neu erzeugen
 python3 tools/port-status.py [Bereich]          # Fortschritt / offene C++-Units
 ```
 - .NET 10 SDK im Container: `apt-get install dotnet-sdk-10.0` (dot.net-Downloads sind geblockt).
 - Jede portierte Datei: GPL-Header (`port/tools/license-header.txt`) + `// Ported from: src/...`, bei Lücken `// Port status: partial (missing: ...)`.
 - Verhalten 1:1 zum C++-Code; deterministische Logik per Golden-Test gegen das Original prüfen.
-- `Bulwark.Core` ohne MonoGame-Abhängigkeit; Plattformcode nur in `Bulwark.Desktop`.
+- `Acom.Core` ohne MonoGame-Abhängigkeit; Plattformcode nur in `Acom.Desktop`.
 
 ## Build (Linux)
 ```sh

@@ -3,7 +3,7 @@
 set -e
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../../.." && pwd)
-out="$root/port/tests/Bulwark.Core.Tests/Golden"
+out="$root/port/tests/Acom.Core.Tests/Golden"
 tmp=$(mktemp -d)
 g++ -std=c++17 -O1 -I"$root/src" $(pkg-config --cflags sdl) \
 	"$here/golden.cpp" "$root/src/Engine/RNG.cpp" "$root/src/Engine/LanguagePlurality.cpp" \

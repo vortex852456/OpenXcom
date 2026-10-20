@@ -8,8 +8,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <Product>Bulwark</Product>
-    <Copyright>Copyright 2010-2026 OpenXcom Developers; C# port by the Bulwark contributors</Copyright>
+    <Product>ACOM</Product>
+    <Copyright>Copyright 2010-2026 OpenXcom Developers; C# port by the ACOM contributors</Copyright>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>
 </Project>

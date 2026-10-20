@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Acom.Tests</RootNamespace>
+    <!-- Test method names use underscores for readability. -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Acom.Core\Acom.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Reference values produced by port/tools/golden/generate.sh from the original C++ code. -->
+    <None Include="Golden/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

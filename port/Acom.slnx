@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Acom.Core/Acom.Core.csproj" />
+    <Project Path="src/Acom.Desktop/Acom.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Acom.Core.Tests/Acom.Core.Tests.csproj" />
+  </Folder>
+</Solution>
