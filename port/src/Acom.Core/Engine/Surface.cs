@@ -18,9 +18,11 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Surface.h, src/Engine/Surface.cpp
-// Port status: partial (missing: loadImage of formats other than PNG/GIF (LBM, BMP, ...), drawLine/Circle/Polygon/TexturedPolygon/String, GraphSubset blit).
+// Port status: partial (missing: loadImage of formats other than PNG/GIF (LBM, BMP, ...)).
 
 #pragma warning disable CA1815 // SDL_Rect mirrors SDL 1.2, SurfaceCrop is a blit helper; equality is not needed.
+
+using System.Text;
 
 namespace Acom;
 
@@ -468,7 +470,13 @@ public class Surface
 	/// Blits the rectangle <paramref name="crop"/> of this surface (whole surface if empty) to
 	/// <paramref name="dest"/> with its top-left corner at (x, y); index 0 is transparent.
 	/// </summary>
-	internal void BlitCrop(Surface dest, int x, int y, SDL_Rect crop)
+	internal void BlitCrop(Surface dest, int x, int y, SDL_Rect crop) => BlitCrop(dest, x, y, crop, new KeyedCopyOp());
+
+	/// <summary>
+	/// Applies <paramref name="op"/> to the rectangle <paramref name="crop"/> of this surface (whole surface if empty)
+	/// placed on <paramref name="dest"/> with its top-left corner at (x, y), like <c>ShaderCrop</c> in C++.
+	/// </summary>
+	internal void BlitCrop<TOp>(Surface dest, int x, int y, SDL_Rect crop, TOp op) where TOp : struct, IPixelOp
 	{
 		ArgumentNullException.ThrowIfNull(dest);
 		int sx0 = 0, sy0 = 0, sx1 = _width, sy1 = _height;
@@ -482,7 +490,7 @@ public class Surface
 			y -= crop.y;
 		}
 		if (sx0 < sx1 && sy0 < sy1)
-			BlitRect(dest, x, y, sx0, sy0, sx1, sy1, new KeyedCopyOp());
+			BlitRect(dest, x, y, sx0, sy0, sx1, sy1, op);
 	}
 
 	/// <summary>Copies the part of another surface lying under this surface (including transparent pixels).</summary>
@@ -529,6 +537,83 @@ public class Surface
 		DrawRect(new SDL_Rect(x, y, (ushort)w, (ushort)h), color);
 	}
 
+	/// <summary>Fills a logical rectangle that lies inside the surface (no clipping).</summary>
+	internal void FillLogical(int x, int y, int w, int h, byte color)
+	{
+		int pitch = PhysicalWidth;
+		if (_scale == 1 && w == 1 && h == 1)
+		{
+			_pixels[y * pitch + x] = color;
+			return;
+		}
+		for (int py = y * _scale; py < (y + h) * _scale; ++py)
+			_pixels.AsSpan(py * pitch + x * _scale, w * _scale).Fill(color);
+	}
+
+	// The following primitives come from SDL_gfx in the original (see GfxPrimitives); the coordinates
+	// are Sint16 there, so the int arguments are truncated like at the C++ call sites.
+
+	/// <summary>Draws a line on the surface (logical coordinates, clipped, both end points included).</summary>
+	/// <param name="x1">Start x coordinate in pixels.</param>
+	/// <param name="y1">Start y coordinate in pixels.</param>
+	/// <param name="x2">End x coordinate in pixels.</param>
+	/// <param name="y2">End y coordinate in pixels.</param>
+	/// <param name="color">Color of the line.</param>
+	public void DrawLine(int x1, int y1, int x2, int y2, byte color)
+	{
+		GfxPrimitives.LineColor(this, (short)x1, (short)y1, (short)x2, (short)y2, color);
+	}
+
+	/// <summary>Draws a filled circle on the surface.</summary>
+	/// <param name="x">X coordinate in pixels.</param>
+	/// <param name="y">Y coordinate in pixels.</param>
+	/// <param name="r">Radius in pixels.</param>
+	/// <param name="color">Color of the circle.</param>
+	public void DrawCircle(int x, int y, int r, byte color)
+	{
+		GfxPrimitives.FilledCircleColor(this, (short)x, (short)y, (short)r, color);
+	}
+
+	/// <summary>Draws a filled polygon on the surface.</summary>
+	/// <param name="x">Array of x coordinates.</param>
+	/// <param name="y">Array of y coordinates.</param>
+	/// <param name="n">Number of points.</param>
+	/// <param name="color">Color of the polygon.</param>
+	public void DrawPolygon(ReadOnlySpan<short> x, ReadOnlySpan<short> y, int n, byte color)
+	{
+		GfxPrimitives.FilledPolygonColor(this, x, y, n, color);
+	}
+
+	/// <summary>Draws a textured polygon on the surface; the texture repeats and its index 0 is transparent.</summary>
+	/// <param name="x">Array of x coordinates.</param>
+	/// <param name="y">Array of y coordinates.</param>
+	/// <param name="n">Number of points.</param>
+	/// <param name="texture">Texture for polygon.</param>
+	/// <param name="dx">X offset of texture relative to the screen.</param>
+	/// <param name="dy">Y offset of texture relative to the screen.</param>
+	public void DrawTexturedPolygon(ReadOnlySpan<short> x, ReadOnlySpan<short> y, int n, Surface texture, int dx, int dy)
+	{
+		ArgumentNullException.ThrowIfNull(texture);
+		GfxPrimitives.TexturedPolygon(this, x, y, n, texture, dx, dy);
+	}
+
+	/// <summary>Draws a text string with SDL_gfx's built-in 8x8 font; each UTF-8 byte is one character, as in C++.</summary>
+	/// <param name="x">X coordinate in pixels.</param>
+	/// <param name="y">Y coordinate in pixels.</param>
+	/// <param name="s">Character string to draw.</param>
+	/// <param name="color">Color of string.</param>
+	public void DrawString(int x, int y, string s, byte color)
+	{
+		ArgumentNullException.ThrowIfNull(s);
+		DrawString(x, y, Encoding.UTF8.GetBytes(s), color);
+	}
+
+	/// <summary>Draws a zero-terminated byte string with SDL_gfx's built-in 8x8 font (code page 437 glyphs).</summary>
+	public void DrawString(int x, int y, ReadOnlySpan<byte> s, byte color)
+	{
+		GfxPrimitives.StringColor(this, (short)x, (short)y, s, color);
+	}
+
 	/// <summary>
 	/// Blits this surface onto another one with shading and optional colour replacement.
 	/// </summary>
@@ -552,8 +637,53 @@ public class Surface
 		}
 	}
 
+	/// <summary>
+	/// Specific blit function to blit battlescape terrain data in different shades in a fast way
+	/// (C++ takes raw buffers; the port blits surfaces, see <see cref="BlitNShade(Surface, int, int, int, bool, int)"/>).
+	/// </summary>
+	public static void BlitRaw(Surface dest, Surface src, int x, int y, int shade, bool half = false, int newBaseColor = 0)
+	{
+		ArgumentNullException.ThrowIfNull(src);
+		src.BlitNShade(dest, x, y, shade, half, newBaseColor);
+	}
+
+	/// <summary>
+	/// Blits this surface onto another one with shading, limited to an area of the destination.
+	/// </summary>
+	/// <param name="surface">Destination.</param>
+	/// <param name="x">Logical X offset in the destination.</param>
+	/// <param name="y">Logical Y offset in the destination.</param>
+	/// <param name="shade">Shade offset.</param>
+	/// <param name="range">Area of the destination (logical pixels) that limits drawing.</param>
+	public void BlitNShade(Surface surface, int x, int y, int shade, GraphSubset range)
+	{
+		ArgumentNullException.ThrowIfNull(surface);
+		// Source rectangle whose destination lies inside the range.
+		int sx0 = Math.Max(0, range.beg_x - x), sy0 = Math.Max(0, range.beg_y - y);
+		int sx1 = Math.Min(_width, range.end_x - x), sy1 = Math.Min(_height, range.end_y - y);
+		if (sx0 < sx1 && sy0 < sy1)
+			BlitRect(surface, x, y, sx0, sy0, sx1, sy1, new StandardShadeOp(shade));
+	}
+
 	/// <summary>Sets whether the surface needs to be redrawn.</summary>
 	public void Invalidate(bool valid = true) => _redraw = valid;
+
+	/// <summary>Initializes the surface's various text resources (fonts and language); used by text widgets.</summary>
+	public virtual void InitText(Font big, Font small, Language lang)
+	{
+	}
+
+#pragma warning disable CA1822 // instance methods like C++ lock()/unlock(), so drawing code ports 1:1
+	/// <summary>Locks the surface for pixel access; nothing to do in the port (kept for 1:1 drawing code).</summary>
+	public void Lock()
+	{
+	}
+
+	/// <summary>Unlocks the surface after <see cref="Lock"/>; nothing to do in the port.</summary>
+	public void Unlock()
+	{
+	}
+#pragma warning restore CA1822
 
 	/// <summary>Sets the main color of a widget; ignored by plain surfaces.</summary>
 	public virtual void SetColor(byte color)
@@ -581,13 +711,13 @@ public class Surface
 	}
 
 	/// <summary>Per-pixel blit operation; a struct type parameter lets the JIT inline it into the loop.</summary>
-	private interface IPixelOp
+	internal interface IPixelOp
 	{
 		void Apply(ref byte dest, byte src);
 	}
 
 	/// <summary>Copy with colour key 0 (transparent), like SDL_BlitSurface in the original.</summary>
-	private readonly struct KeyedCopyOp : IPixelOp
+	internal readonly struct KeyedCopyOp : IPixelOp
 	{
 		public void Apply(ref byte dest, byte src)
 		{
@@ -620,7 +750,7 @@ public class Surface
 	/// rectangle [sx0, sx1) x [sy0, sy1) (inside this surface); source pixel (c, r) lands on (x + c, y + r).
 	/// Handles different pixel densities by nearest-neighbour mapping.
 	/// </summary>
-	private void BlitRect<TOp>(Surface dest, int x, int y, int sx0, int sy0, int sx1, int sy1, TOp op) where TOp : struct, IPixelOp
+	internal void BlitRect<TOp>(Surface dest, int x, int y, int sx0, int sy0, int sx1, int sy1, TOp op) where TOp : struct, IPixelOp
 	{
 		int ds = dest._scale, ss = _scale;
 		int dpw = dest.PhysicalWidth, dph = dest.PhysicalHeight, spw = PhysicalWidth;
@@ -686,4 +816,7 @@ public struct SurfaceCrop
 
 	/// <summary>Blits the cropped surface to another surface.</summary>
 	public readonly void Blit(Surface dest) => Surface?.BlitCrop(dest, X, Y, Crop);
+
+	/// <summary>Applies a pixel operation to the cropped surface placed on another surface (ShaderDraw with ShaderCrop).</summary>
+	internal readonly void Blit<TOp>(Surface dest, TOp op) where TOp : struct, Surface.IPixelOp => Surface?.BlitCrop(dest, X, Y, Crop, op);
 }
