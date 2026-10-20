@@ -111,4 +111,13 @@ public class RuleSmallTests
 		var fromEmpty = RuleEvent.EmitDescendants(new YamlRootNodeReader("{rank: 1}", "test").ToBase(), new YamlRootNodeReader("", "empty").ToBase());
 		Assert.Equal(1, new YamlRootNodeReader(fromEmpty, "x").ToBase()["rank"].ReadVal<int>());
 	}
+
+	[Fact]
+	public void Refreshing_map_data_sets_with_the_current_skin_does_nothing()
+	{
+		// C++ returns before the mod is used when the skin did not change
+		var terrain = new RuleTerrain("TERRAIN");
+		terrain.RefreshMapDataSets(0, null);
+		Assert.Empty(terrain.MapDataSets);
+	}
 }

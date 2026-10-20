@@ -133,8 +133,9 @@ public class MapDataSet
 
 		// Load terrain sprites/surfaces/PCK files into a surfaceset
 		_surfaceSet = new SurfaceSet(32, 40);
-		using var pck = FileMap.GetStream("TERRAIN/" + _name + ".PCK");
+		// SurfaceSet::loadPck opens the TAB before the PCK (which file is reported missing first)
 		using var tab = FileMap.GetStream("TERRAIN/" + _name + ".TAB");
+		using var pck = FileMap.GetStream("TERRAIN/" + _name + ".PCK");
 		_surfaceSet.LoadPck(pck, tab);
 	}
 

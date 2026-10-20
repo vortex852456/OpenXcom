@@ -132,11 +132,11 @@ public class RuleTerrain
 	/// <summary>Refreshes the terrain's mapdatafiles. Use for craft skins ONLY!</summary>
 	public void RefreshMapDataSets(int craftSkinIndex, Mod mod)
 	{
-		ArgumentNullException.ThrowIfNull(mod);
 		if (_lastCraftSkinIndex == craftSkinIndex)
 		{
 			return;
 		}
+		ArgumentNullException.ThrowIfNull(mod); // C++ only touches the mod after the early return
 
 		var newNames = new List<string>();
 		foreach (var item in _mapDataSets)
