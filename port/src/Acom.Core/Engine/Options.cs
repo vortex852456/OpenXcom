@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Options.h, src/Engine/Options.cpp
-// Port status: partial (missing: refreshMods/updateMods/getActiveMods/getModInfos (need FileMap/ModInfo), logging to file)
+// Port status: partial (missing: logging to file, embedded standard.zip)
 // Option declarations and registrations are generated: Options.Values.cs, Options.Create.cs (port/tools/gen/gen_options.py).
 
 using System.Security.Cryptography;
@@ -229,7 +229,211 @@ public static partial class Options
 		Logger.Info($"User folder is: {_userFolder}");
 		Logger.Info($"Config folder is: {_configFolder}");
 		Logger.Info("Options loaded successfully.");
+
+		FileMap.Clear(false, oxceEmbeddedOnly);
 		return true;
+	}
+
+	private static SortedDictionary<string, ModInfo> _modInfos = new(StringComparer.Ordinal);
+
+	/// <summary>All mods that can be loaded (after <see cref="RefreshMods"/>).</summary>
+	public static IReadOnlyDictionary<string, ModInfo> GetModInfos() => _modInfos;
+
+	/// <summary>Creates the user folder for each master mod (saves are stored per master).</summary>
+	private static void UserSplitMasters()
+	{
+		foreach (var (id, info) in _modInfos)
+		{
+			if (info.IsMaster)
+			{
+				string masterFolder = _userFolder + id;
+				if (!CrossPlatform.FolderExists(masterFolder))
+					CrossPlatform.CreateFolder(masterFolder);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Scans the standard and user mod folders, updates the mod list (removes missing mods, adds new
+	/// ones, keeps masters in front) and makes sure exactly one master is active.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">No master mod is available.</exception>
+	public static void RefreshMods()
+	{
+		if (reload)
+			_masterMod = "";
+		_modInfos.Clear();
+		Logger.Info($"Scanning standard mods in '{GetDataFolder()}'...");
+		FileMap.ScanModDir(GetDataFolder(), "standard", true);
+		Logger.Info($"Scanning user mods in '{GetUserFolder()}'...");
+		FileMap.ScanModDir(GetUserFolder(), "mods", false);
+
+		// Check mods' dependencies on other mods and extResources (UFO, TFTD, etc),
+		// also breaks circular dependency loops.
+		FileMap.CheckModsDependencies();
+
+		// Now we can get the list of ModInfos from the FileMap -
+		// those are the mods that can possibly be loaded.
+		_modInfos = FileMap.GetModInfos();
+
+		// remove mods from list that no longer exist
+		bool nonMasterModFound = false;
+		var corruptedMasters = new SortedDictionary<string, bool>(StringComparer.Ordinal);
+		for (int i = 0; i < mods.Count;)
+		{
+			if (!_modInfos.TryGetValue(mods[i].Id, out var info))
+			{
+				Logger.Verbose("removing references to missing mod: " + mods[i].Id);
+				mods.RemoveAt(i);
+				continue;
+			}
+			if (info.IsMaster)
+			{
+				if (nonMasterModFound)
+				{
+					Logger.Error($"Removing master mod '{mods[i].Id}' from the list, because it is on a wrong position. It will be re-added automatically.");
+					corruptedMasters[mods[i].Id] = mods[i].Active;
+					mods.RemoveAt(i);
+					continue;
+				}
+			}
+			else
+			{
+				nonMasterModFound = true;
+			}
+			++i;
+		}
+		// re-insert corrupted masters at the beginning of the list
+		foreach (var (id, active) in corruptedMasters)
+			mods.Insert(0, new ModToggle(id, active));
+
+		// add in any new mods picked up from the scan and ensure there is but a single master active
+		string activeMaster = "";
+		string inactiveMaster = "";
+		foreach (var (id, info) in _modInfos)
+		{
+			var existing = mods.FirstOrDefault(m => m.Id == id);
+			if (existing != null)
+			{
+				if (info.IsMaster)
+				{
+					if (_masterMod.Length > 0)
+						existing.Active = _masterMod == existing.Id;
+					if (existing.Active)
+					{
+						if (activeMaster.Length > 0)
+						{
+							Logger.Warning("Too many active masters detected; turning off " + existing.Id);
+							existing.Active = false;
+						}
+						else
+						{
+							activeMaster = existing.Id;
+						}
+					}
+					else if (inactiveMaster.Length == 0 || existing.Id is "xcom1" or "xcom2")
+					{
+						// prefer activating standard masters over a possibly broken third party master
+						inactiveMaster = existing.Id;
+					}
+				}
+				continue;
+			}
+			// not active by default
+			var newMod = new ModToggle(id, false);
+			if (info.IsMaster)
+			{
+				// it doesn't matter what order the masters are in since only one can be active at a time anyway
+				mods.Insert(0, newMod);
+				if (inactiveMaster.Length == 0)
+					inactiveMaster = id;
+			}
+			else
+			{
+				mods.Add(newMod);
+			}
+		}
+
+		if (activeMaster.Length == 0)
+		{
+			if (inactiveMaster.Length == 0)
+			{
+				Logger.Error("no mod masters available");
+				throw new InvalidOperationException("No game content found: no master mod available");
+			}
+			Logger.Info("no master already active; activating " + inactiveMaster);
+			mods.First(m => m.Id == inactiveMaster && !m.Active).Active = true;
+			_masterMod = inactiveMaster;
+		}
+		else
+		{
+			_masterMod = activeMaster;
+		}
+		Save();
+	}
+
+	/// <summary>Is the mod incompatible with the engine or its master (ModConfirmExtendedState::isModNotValid)?</summary>
+	private static bool IsModNotValid(ModInfo modInfo, ModInfo masterInfo) =>
+		!modInfo.IsMaster && (!modInfo.IsEngineOk || !modInfo.IsParentMasterOk(masterInfo));
+
+	/// <summary>Rescans the mods and sets up the virtual file system for the active ones.</summary>
+	/// <exception cref="InvalidOperationException">An active mod needs a newer engine.</exception>
+	public static void UpdateMods()
+	{
+		SetDataFolder(CrossPlatform.DirFilename(CrossPlatform.SearchDataFolder("common")));
+		// pick up stuff in common before-hand
+		FileMap.Clear(false, oxceEmbeddedOnly);
+		RefreshMods();
+
+		// check active mods that don't meet the enforced OXCE requirements
+		var masterInf = GetActiveMasterInfo();
+		var activeModsList = GetActiveMods();
+		bool forceQuit = false;
+		foreach (var modInf in activeModsList)
+		{
+			if (!IsModNotValid(modInf, masterInf))
+				continue;
+			Logger.Error($"- {modInf.Id} v{modInf.Version}");
+			if (!modInf.IsEngineOk)
+			{
+				forceQuit = true;
+				if (modInf.RequiredExtendedEngine != Acom.Version.OPENXCOM_VERSION_ENGINE)
+					Logger.Error($"Mod '{modInf.Name}' require OXC {modInf.RequiredExtendedEngine} engine to run");
+				else
+					Logger.Error($"Mod '{modInf.Name}' enforces at least OXC {Acom.Version.OPENXCOM_VERSION_ENGINE} v{modInf.RequiredExtendedVersion}");
+			}
+			if (!modInf.IsParentMasterOk(masterInf))
+				Logger.Error($"Mod '{modInf.Name}' require version {modInf.RequiredMasterVersion} of master mod to run (current one is {masterInf.Version})");
+		}
+		if (forceQuit)
+			throw new InvalidOperationException("Incompatible mods are active. Please upgrade ACOM.");
+
+		FileMap.Setup(activeModsList, oxceEmbeddedOnly);
+		UserSplitMasters();
+
+		Logger.Info("Active mods:");
+		foreach (var modInf in GetActiveMods())
+			Logger.Info($"- {modInf.Id} v{modInf.Version}");
+	}
+
+	public static ModInfo GetActiveMasterInfo() => _modInfos[_masterMod];
+
+	/// <summary>The xcom1 or xcom2 base ruleset, if available.</summary>
+	public static ModInfo? GetXcomRulesetInfo() => _modInfos.GetValueOrDefault("xcom1") ?? _modInfos.GetValueOrDefault("xcom2");
+
+	/// <summary>Active mods (in load order) that can run with the active master.</summary>
+	public static List<ModInfo> GetActiveMods()
+	{
+		var activeMods = new List<ModInfo>();
+		foreach (var pair in mods)
+		{
+			if (!pair.Active)
+				continue;
+			var info = _modInfos[pair.Id];
+			if (info.CanActivate(_masterMod))
+				activeMods.Add(info);
+		}
+		return activeMods;
 	}
 
 	/// <summary>Checks the developer password from options.cfg.</summary>

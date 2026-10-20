@@ -48,13 +48,23 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. E
 - **Palettenmodell bleibt (8 Bit, 16 Farbgruppen × 16 Schattierungen):** Schattierung, Umfärben (`blitNShade`), Invertieren und Palettenwechsel arbeiten auf Indizes und bleiben exakt wie im Original. HD-Grafiken sind daher **hochauflösende Pixelart mit 256-Farben-Palette**. Erst `Screen.Flip()` wandelt in Echtfarben um, die GPU skaliert aufs Fenster.
 - **Spätere Erweiterung (nach dem Port):** eine Echtfarb-Ebene für einzelne Grafiken (Hintergründe, Porträts), deren Schattierung über Paletten-Rampen nachgebildet wird. Bis dahin gilt das Palettenmodell für alle Grafiken.
 
+## Bewusste Abweichungen vom Original
+| Stelle | Original | ACOM | Grund |
+|---|---|---|---|
+| Benutzer-/Konfig-/Datenordner | `openxcom`/`OpenXcom` | `acom`/`ACOM` | Eigenes Projekt, keine Vermischung mit OpenXcom-Installationen |
+| Ordnerinhalte (`getFolderContents`) | Reihenfolge des Dateisystems (Linux zufällig) | sortiert, Groß/Klein ignoriert (wie NTFS) | Deterministische Ruleset-Reihenfolge auf allen Systemen |
+| `oxceUpdateCheck` | nur Windows, prüft OXCE-Server | entfällt | Kein Update-Check gegen fremde Server |
+| Palette `setColors`/`setColor` | +1 auf doppelte Schwarztöne | entfällt | Workaround für SDL-1.2-Farbabgleich, der hier nicht stattfindet |
+| YAML-Suche mit Duplikaten | ohne Index: Suche ab letzter Fundstelle | immer erster Treffer | Einfacher, deckt sich mit der indizierten Suche des Originals |
+| Eingebettete Assets (`exe:standard.zip`) | optional | entfällt | Inhalte kommen als Dateien/Zip |
+
 ## Phasen
 Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilweise/fertig).
 
 | Phase | Inhalt | Prüfung |
 |---|---|---|
 | 0 ✅ | Gerüst, RNG, Pluralregeln, Palette, Surface (HD), Action, InteractiveSurface, State, Game-Loop, Screen, MonoGame-Host | Golden-Tests, Headless-Screenshot |
-| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert), CrossPlatform-Ordner, Language/LocalizedText) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
+| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert, Golden-Test gegen C++-`options.cfg`), CrossPlatform-Ordner, Language/LocalizedText, FileMap/ModInfo inkl. Zip-Mods) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
 | 2 | `Mod/` (Rule*, Laden/Mergen von Rulesets) und `Savegame/` (Modell + YAML-Saves) | Rulesets/Saves in C++ und C# laden, Dumps vergleichen |
 | 3 | `Menu/`, `Geoscape/`, `Basescape/`, `Ufopaedia/` | Bedienbare Kampagne mit Testinhalten |
 | 4 | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine) | Golden-Tests Pfadsuche/LOS/Schaden mit festem Seed |

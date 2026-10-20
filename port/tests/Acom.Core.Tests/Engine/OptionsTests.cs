@@ -105,3 +105,35 @@ public sealed class OptionsTests : IDisposable
 		Assert.Equal(1920, Options.displayWidth);
 	}
 }
+
+[Collection(nameof(OptionsTests))]
+public sealed class OptionsGoldenTests : IDisposable
+{
+	private readonly string _dir = Directory.CreateTempSubdirectory("acom-options-golden-").FullName + "/";
+
+	public void Dispose() => Directory.Delete(_dir, recursive: true);
+
+	/// <summary>
+	/// Golden/options-defaults.cfg was written by the original C++ game on first start (Linux build).
+	/// Every option and every default value must match.
+	/// </summary>
+	[Fact]
+	public void Default_options_match_cpp_options_cfg()
+	{
+		Options.SetFoldersForTest(_dir, _dir, _dir);
+		Options.Create();
+		Options.ResetDefault(includeMods: false);
+		Options.mods = [];
+		Assert.True(Options.Save(reset: true));
+
+		var expected = new YamlRootNodeReader(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Golden", "options-defaults.cfg")), "cpp")["options"];
+		var actual = YamlRootNodeReader.FromFile(_dir + "options.cfg")["options"];
+		var expectedMap = expected.Children().ToDictionary(c => c.Key, c => c.Val);
+		var actualMap = actual.Children().ToDictionary(c => c.Key, c => c.Val);
+		Assert.Equal(expectedMap.Keys.Order(StringComparer.Ordinal), actualMap.Keys.Order(StringComparer.Ordinal));
+		var differences = expectedMap.Where(e => actualMap[e.Key] != e.Value).Select(e => $"{e.Key}: C++ '{e.Value}' vs C# '{actualMap[e.Key]}'").ToList();
+		Assert.Empty(differences);
+		// same order as the C++ save (sorted by id)
+		Assert.Equal(expected.Children().Select(c => c.Key), actual.Children().Select(c => c.Key));
+	}
+}

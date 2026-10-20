@@ -18,8 +18,9 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/CrossPlatform.h, src/Engine/CrossPlatform.cpp
-// Port status: partial (command line, folder discovery, basic file helpers; missing: screenshots, zip/embedded assets,
-// save headers, error dialogs, timestamps, path conversions).
+// Port status: partial (command line, folder discovery, file/path helpers, versions; missing: screenshots, embedded assets,
+// save headers, error dialogs, path conversions).
+// Deviation: folder listings are sorted case-insensitively (like NTFS); the C++ code uses the unspecified readdir order.
 // Deviation: ACOM uses its own folder names ("acom"/"ACOM") instead of "openxcom"/"OpenXcom",
 // so it never touches an existing OpenXcom installation.
 
@@ -214,6 +215,109 @@ public static class CrossPlatform
 			return true;
 		return Directory.EnumerateFileSystemEntries(path).Take(size).Count() >= size;
 	}
+
+	/// <summary>Entries of a folder (no dot files), optionally filtered by extension; sorted case-insensitively.</summary>
+	public static List<(string Name, bool IsFolder, DateTime Modified)> GetFolderContents(string path, string ext = "")
+	{
+		if (!Directory.Exists(path))
+			throw new IOException("Failed to open directory: " + path);
+		var files = new List<(string Name, bool IsFolder, DateTime Modified)>();
+		foreach (var entry in new DirectoryInfo(path).EnumerateFileSystemInfos())
+		{
+			string filename = entry.Name;
+			// skip ".", "..", ".git", ".svn", ...
+			if (filename.StartsWith('.') || !CompareExt(filename, ext))
+				continue;
+			files.Add((filename, entry is DirectoryInfo, entry.LastWriteTimeUtc));
+		}
+		files.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase) is var c && c != 0 ? c : string.CompareOrdinal(a.Name, b.Name));
+		return files;
+	}
+
+	/// <summary>File name without the folders ("a/b/c.txt" → "c.txt"; a trailing slash is ignored).</summary>
+	public static string BaseFilename(string path)
+	{
+		int sep = path.LastIndexOf('/');
+		if (sep < 0)
+			return path;
+		if (sep == path.Length - 1)
+			return BaseFilename(path[..^1]);
+		return path[(sep + 1)..];
+	}
+
+	/// <summary>Folder part of a path including the trailing slash ("a/b/c.txt" → "a/b/").</summary>
+	public static string DirFilename(string path)
+	{
+		int sep = path.LastIndexOf('/');
+		if (sep < 0)
+			return string.Empty;
+		if (sep == path.Length - 1)
+			return DirFilename(path[..^1]);
+		return path[..(sep + 1)];
+	}
+
+	/// <summary>File name without the last extension.</summary>
+	public static string NoExt(string filename)
+	{
+		int dot = filename.LastIndexOf('.');
+		return dot < 0 ? filename : filename[..dot];
+	}
+
+	/// <summary>Last extension including the dot, or empty.</summary>
+	public static string GetExt(string filename)
+	{
+		int dot = filename.LastIndexOf('.');
+		return dot < 0 ? string.Empty : filename[dot..];
+	}
+
+	/// <summary>Case-insensitive extension check (without dot); an empty extension matches everything.</summary>
+	public static bool CompareExt(string filename, string extension)
+	{
+		if (extension.Length == 0)
+			return true;
+		int j = filename.Length - extension.Length;
+		if (j <= 0 || filename[j - 1] != '.')
+			return false;
+		return string.Compare(filename, j, extension, 0, extension.Length, StringComparison.OrdinalIgnoreCase) == 0;
+	}
+
+	/// <summary>Parses "a.b.c.d" into four numbers (missing or invalid parts are 0, like std::stoi).</summary>
+	public static int[] ParseVersion(string newVersion)
+	{
+		var version = new int[4];
+		var parts = (newVersion ?? string.Empty).Split('.');
+		for (int j = 0; j < parts.Length && j < version.Length; ++j)
+		{
+			var s = parts[j].AsSpan().TrimStart();
+			int len = 0;
+			if (len < s.Length && (s[len] == '-' || s[len] == '+'))
+				len++;
+			while (len < s.Length && char.IsAsciiDigit(s[len]))
+				len++;
+			if (int.TryParse(s[..len], System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out int i))
+				version[j] = i;
+		}
+		return version;
+	}
+
+	/// <summary>Is <paramref name="newVersion"/> higher than <paramref name="ver"/> (component-wise from the left)?</summary>
+	public static bool IsHigherThanCurrentVersion(IReadOnlyList<int> newVersion, IReadOnlyList<int> ver)
+	{
+		for (int k = 0; k < ver.Count; ++k)
+		{
+			if (newVersion[k] > ver[k])
+				return true;
+			if (newVersion[k] < ver[k])
+				break;
+		}
+		return false;
+	}
+
+	/// <summary>Is the given version higher than the OXCE version this port is based on?</summary>
+	public static bool IsHigherThanCurrentVersion(string newVersion) => IsHigherThanCurrentVersion(ParseVersion(newVersion), Acom.Version.OPENXCOM_VERSION_NUMBER);
+
+	/// <summary>Reads a whole file.</summary>
+	public static byte[] ReadFileRaw(string filename) => File.ReadAllBytes(filename);
 
 	/// <summary>Writes a text file (UTF-8 without BOM).</summary>
 	public static bool WriteFile(string filename, string data)
