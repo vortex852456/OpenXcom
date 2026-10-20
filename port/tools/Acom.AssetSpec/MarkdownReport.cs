@@ -157,7 +157,10 @@ internal static class MarkdownReport
 
 	private static void Other(StringBuilder md, AssetSpecification spec)
 	{
-		var rest = spec.Files.Where(f => f.Category is not ("sprites" or "images" or "terrain" or "maps" or "routes") && f.SoundDetails == null).ToList();
+		var rest = spec.Files.Where(f => f.Category is not ("sprites" or "images" or "terrain" or "maps" or "routes" or "program") && f.SoundDetails == null).ToList();
+		var programs = spec.Files.Where(f => f.Category == "program").ToList();
+		if (programs.Count > 0)
+			md.Append(Inv, $"DOS-Programme/Treiber (für ACOM ohne Bedeutung): {string.Join(", ", programs.Select(p => p.Path))}\n\n");
 		if (rest.Count == 0)
 			return;
 		md.Append("## Musik, Videos, Paletten, Schriften, Texte, Daten\n\n| Datei | Kategorie | Format | Details | Zweck | Verwendung |\n|---|---|---|---|---|---|\n");

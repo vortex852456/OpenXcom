@@ -112,7 +112,16 @@ internal sealed class DataScanner
 					return Cat(path, name, bytes);
 				case "FLI":
 				case "FLC":
+				case "VID":
 					return Video(path, bytes);
+				case "IDX" when _files.ContainsKey(path[..^3] + "VID"):
+					return new AssetEntry { Path = path, Category = "video", Format = ext, Bytes = bytes, Purpose = "Index zur gleichnamigen VID-Datei" };
+				case "COM":
+				case "EXE":
+				case "CFG":
+				case "PAT":
+				case "BAT":
+					return new AssetEntry { Path = path, Category = "program", Format = ext, Bytes = bytes, Purpose = "DOS-Programm, -Treiber oder -Konfiguration (für ACOM ohne Bedeutung)" };
 				case "WAV":
 				case "VOC":
 				case "MID":
@@ -356,7 +365,9 @@ internal sealed class DataScanner
 		{
 			// FLI/FLC header: size u32, magic u16 (0xAF11/0xAF12), frames u16, width u16, height u16
 			ushort magic = BinaryPrimitives.ReadUInt16LittleEndian(header[4..]);
-			if (magic is 0xAF11 or 0xAF12)
+			if (magic is not (0xAF11 or 0xAF12))
+				entry.Notes.Add("Kein FLI/FLC-Kopf erkannt (eigenes Videoformat); nur Größe erfasst");
+			else
 			{
 				entry.Frames = BinaryPrimitives.ReadUInt16LittleEndian(header[6..]);
 				entry.Width = BinaryPrimitives.ReadUInt16LittleEndian(header[8..]);

@@ -32,19 +32,44 @@ public sealed class AssetSpecTests : IDisposable
 		Write(path + ".TAB", [.. tab]);
 	}
 
-	private static string RulesDir()
+	private static string RulesDir(string ruleset)
 	{
 		var dir = new DirectoryInfo(AppContext.BaseDirectory);
 		while (dir != null && !File.Exists(Path.Combine(dir.FullName, "port", "Acom.slnx")))
 			dir = dir.Parent;
-		return Path.Combine(dir!.FullName, "bin", "standard", "xcom1");
+		return Path.Combine(dir!.FullName, "bin", "standard", ruleset);
 	}
 
-	private AssetSpecification Run()
+	private AssetSpecification Run(string game = "ufo")
 	{
-		var spec = new AssetSpecification { Game = "ufo", Rules = "bin/standard/xcom1", HdScale = 4, Files = new DataScanner(_data, 4).ScanAll() };
-		Merger.Apply(spec, RulesetIndex.Load(RulesDir()));
+		string ruleset = game == "ufo" ? "xcom1" : "xcom2";
+		var spec = new AssetSpecification { Game = game, Rules = "bin/standard/" + ruleset, HdScale = 4, Files = new DataScanner(_data, 4).ScanAll() };
+		Merger.Apply(spec, RulesetIndex.Load(RulesDir(ruleset)));
 		return spec;
+	}
+
+	private static byte[] FlcHeader(ushort frames) =>
+		[.. BitConverter.GetBytes(128), .. BitConverter.GetBytes((ushort)0xAF12), .. BitConverter.GetBytes(frames),
+		 .. BitConverter.GetBytes((ushort)320), .. BitConverter.GetBytes((ushort)200), .. new byte[8]];
+
+	[Fact]
+	public void Videos_referenced_with_folder_are_resolved()
+	{
+		Write("UFOINTRO/UFOINT.FLI", FlcHeader(10));
+		var ufo = Assert.Single(Run().Files, f => f.Path == "UFOINTRO/UFOINT.FLI");
+		Assert.Contains(ufo.UsedBy, u => u.StartsWith("cutscenes/", StringComparison.Ordinal));
+
+		Write("ANIMS/INTRO.VID", FlcHeader(42));
+		Write("ANIMS/INTRO.IDX", new byte[16]);
+		Write("SOUND/SOUNDRV.COM", new byte[16]);
+		var tftd = Run("tftd");
+		var vid = Assert.Single(tftd.Files, f => f.Path == "ANIMS/INTRO.VID");
+		Assert.Equal(("video", 42, 320), (vid.Category, vid.Frames, vid.Width));
+		Assert.Contains(vid.UsedBy, u => u.StartsWith("cutscenes/intro", StringComparison.Ordinal));
+		Assert.Equal("video", Assert.Single(tftd.Files, f => f.Path == "ANIMS/INTRO.IDX").Category);
+		Assert.Equal("program", Assert.Single(tftd.Files, f => f.Path == "SOUND/SOUNDRV.COM").Category);
+		Assert.DoesNotContain(tftd.UnresolvedReferences, r => r.StartsWith("INTRO.VID", StringComparison.Ordinal));
+		Assert.DoesNotContain(tftd.UnresolvedReferences, r => r.Contains("INFOBUTTON", StringComparison.Ordinal));
 	}
 
 	[Fact]

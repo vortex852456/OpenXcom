@@ -83,7 +83,7 @@ internal static class Purposes
 			("GEOGRAPH", ".SPK") when name.StartsWith("UP", StringComparison.Ordinal) => "Enzyklopädie-Bild",
 			("GEOGRAPH", ".SCR") or ("GEOGRAPH", ".SPK") or ("GEOGRAPH", ".BDY") => "Vollbild-Grafik (Hintergrund, Menü, Ereignis)",
 			("GEOGRAPH", ".LBM") => "Vollbild-Grafik im LBM-Format",
-			("UFOINTRO", _) or ("FLOP_INT", _) or ("ANIMS", _) => "Video-Sequenz",
+			("UFOINTRO", _) or ("FLOP_INT", _) or ("ANIMS", ".VID") or ("ANIMS", ".FLI") or ("ANIMS", ".FLC") => "Video-Sequenz",
 			("SOUND", ".CAT") => "Soundeffekte",
 			_ => "",
 		};

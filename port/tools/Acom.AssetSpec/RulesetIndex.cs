@@ -107,9 +107,12 @@ internal sealed class RulesetIndex
 		return values.Where(v => !string.IsNullOrEmpty(v)).Select(v => v!);
 	}
 
+	/// <summary>Rulesets may name files with their folder (e.g. ANIMS/INTRO.VID); the index uses the bare file name.</summary>
+	private static string BareName(string name) => name[(name.LastIndexOfAny(['/', '\\']) + 1)..].ToUpperInvariant();
+
 	private void AddFile(string bareName, string user)
 	{
-		bareName = bareName.ToUpperInvariant();
+		bareName = BareName(bareName);
 		if (!FileUsers.TryGetValue(bareName, out var list))
 			FileUsers[bareName] = list = [];
 		list.Add(user);
@@ -117,7 +120,7 @@ internal sealed class RulesetIndex
 
 	private void AddFrame(string bareName, int frame, string user)
 	{
-		bareName = bareName.ToUpperInvariant();
+		bareName = BareName(bareName);
 		if (!FrameUsers.TryGetValue(bareName, out var frames))
 			FrameUsers[bareName] = frames = [];
 		if (!frames.TryGetValue(frame, out var list))

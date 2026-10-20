@@ -120,7 +120,7 @@ namespace Acom.AssetSpec
 			{
 				if (byName.TryGetValue(name, out var entries))
 					entries.ForEach(e => e.UsedBy.AddRange(users));
-				else if (name.Contains('.', StringComparison.Ordinal))
+				else if (LooksLikeFileName(name))
 					unresolved.Add($"{name} ← {string.Join("; ", users.Distinct())}");
 			}
 
@@ -128,7 +128,7 @@ namespace Acom.AssetSpec
 			{
 				if (!byName.TryGetValue(name, out var entries))
 				{
-					if (name.Contains('.', StringComparison.Ordinal))
+					if (LooksLikeFileName(name))
 						unresolved.Add($"{name} ← {frames.Count} Frame-Verweise");
 					continue;
 				}
@@ -175,6 +175,9 @@ namespace Acom.AssetSpec
 
 			spec.UnresolvedReferences.AddRange(unresolved);
 		}
+
+		/// <summary>OXCE sprite set names like "BACK08.SCR-INFOBUTTON" or "Touch" are not original files.</summary>
+		private static bool LooksLikeFileName(string name) => System.Text.RegularExpressions.Regex.IsMatch(name, @"^[A-Z0-9_]+\.[A-Z0-9]{2,4}$");
 
 		/// <summary>
 		/// Maps a logical sound set onto its physical archive. UFO uses one of two archives (Windows or DOS
