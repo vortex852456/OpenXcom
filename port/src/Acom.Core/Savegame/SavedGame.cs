@@ -467,14 +467,6 @@ public class SavedGame
 		return (local.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), local.ToString("HH:mm", CultureInfo.InvariantCulture));
 	}
 
-	/// <summary>Reads a string-keyed map and keeps the byte-wise key order of C++ std::map.</summary>
-	private static void TryReadMap<TValue>(YamlNodeReader reader, string key, ref SortedDictionary<string, TValue> map)
-	{
-		SortedDictionary<string, TValue> read = null;
-		if (reader.TryRead(key, ref read))
-			map = new SortedDictionary<string, TValue>(read, StringComparer.Ordinal);
-	}
-
 	/// <summary>Loads a saved game's contents from a YAML file.</summary>
 	/// <remarks>Assumes the saved game is blank.</remarks>
 	/// <param name="filename">YAML filename.</param>
@@ -520,7 +512,7 @@ public class SavedGame
 		reader.TryRead("globeLon", ref _globeLon);
 		reader.TryRead("globeLat", ref _globeLat);
 		reader.TryRead("globeZoom", ref _globeZoom);
-		TryReadMap(reader, "ids", ref _ids);
+		reader.TryRead("ids", ref _ids);
 
 		foreach (var country in reader["countries"].Children())
 		{
@@ -705,13 +697,13 @@ public class SavedGame
 			}
 		}
 
-		TryReadMap(reader, "generatedEvents", ref _generatedEvents);
+		reader.TryRead("generatedEvents", ref _generatedEvents);
 		LoadUfopediaRuleStatus(reader["ufopediaRuleStatus"]);
-		TryReadMap(reader, "manufactureRuleStatus", ref _manufactureRuleStatus);
-		TryReadMap(reader, "researchRuleStatus", ref _researchRuleStatus);
-		TryReadMap(reader, "monthlyPurchaseLimitLog", ref _monthlyPurchaseLimitLog);
-		TryReadMap(reader, "hiddenPurchaseItems", ref _hiddenPurchaseItemsMap);
-		TryReadMap(reader, "customRuleCraftDeployments", ref _customRuleCraftDeployments);
+		reader.TryRead("manufactureRuleStatus", ref _manufactureRuleStatus);
+		reader.TryRead("researchRuleStatus", ref _researchRuleStatus);
+		reader.TryRead("monthlyPurchaseLimitLog", ref _monthlyPurchaseLimitLog);
+		reader.TryRead("hiddenPurchaseItems", ref _hiddenPurchaseItemsMap);
+		reader.TryRead("customRuleCraftDeployments", ref _customRuleCraftDeployments);
 
 		foreach (var @base in reader["bases"].Children())
 		{
@@ -835,9 +827,7 @@ public class SavedGame
 	/// <summary>Loads the ufopedia rule status map from a node.</summary>
 	public void LoadUfopediaRuleStatus(YamlNodeReader reader)
 	{
-		SortedDictionary<string, int> read = null;
-		if (reader.TryReadVal(ref read))
-			_ufopediaRuleStatus = new SortedDictionary<string, int>(read, StringComparer.Ordinal);
+		reader.TryReadVal(ref _ufopediaRuleStatus);
 	}
 
 	private static void SaveVector<T>(YamlNodeWriter writer, List<T> vector, string key, Action<T, YamlNodeWriter> save)
@@ -2464,7 +2454,7 @@ public class SavedGame
 		{
 			return found;
 		}
-		Logger.Error(string.Create(CultureInfo.InvariantCulture, $"Failed to find a region at location [{lon:G6}, {lat:G6}]."));
+		Logger.Error($"Failed to find a region at location [{LocalizedText.FormatLikeOstream(lon)}, {LocalizedText.FormatLikeOstream(lat)}].");
 		return null;
 	}
 

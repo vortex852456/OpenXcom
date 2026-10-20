@@ -207,6 +207,19 @@ public class YamlTests
 	}
 
 	[Fact]
+	public void String_keyed_maps_sort_ordinally_and_keep_the_first_duplicate()
+	{
+		// C++ std::map<std::string, ...> sorts byte-wise and emplace keeps the first of duplicate keys
+		var reader = Root("map: {b: 1, B: 2, a: 3, _x: 4, b: 5}").ToBase();
+		var sorted = reader["map"].ReadVal<SortedDictionary<string, int>>();
+		Assert.Same(StringComparer.Ordinal, sorted.Comparer);
+		Assert.Equal(["B", "_x", "a", "b"], sorted.Keys);
+		Assert.Equal(1, sorted["b"]);
+		Assert.Equal(1, reader["map"].ReadVal<Dictionary<string, int>>()["b"]);
+		Assert.Equal("x", Root("m: {1: x, 1: y}")["m"].ReadVal<SortedDictionary<int, string>>()[1]);
+	}
+
+	[Fact]
 	public void Errors_name_file_line_and_column()
 	{
 		var e = Assert.Throws<YamlReadException>(() => new YamlRootNodeReader("a: 1\nb: x", "some/dir/test.rul")["b"].ReadVal<int>());

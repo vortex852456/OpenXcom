@@ -525,7 +525,7 @@ internal static class YamlConvert
 		{
 			if (node.Kind != YamlKind.Scalar || !TryParseFloat(node.Value, out double d))
 				return false;
-			value = type == typeof(float) ? (object)(float)d : d;
+			value = type == typeof(float) ? (float)d : d;
 			return true;
 		}
 		if (type.IsGenericType)
@@ -548,8 +548,9 @@ internal static class YamlConvert
 			}
 			if (def == typeof(Dictionary<,>) || def == typeof(SortedDictionary<,>))
 			{
-				// std::map<std::string, ...> sorts by bytes
-				var map = (System.Collections.IDictionary)(def == typeof(SortedDictionary<,>) && args[0] == typeof(string)
+				// C++ clears the map and emplaces each child: string keys sort ordinally (std::less<std::string>),
+				// and a duplicate key keeps the first value (emplace does not overwrite).
+				var map = (System.Collections.IDictionary)(args[0] == typeof(string)
 					? Activator.CreateInstance(type, StringComparer.Ordinal)
 					: Activator.CreateInstance(type))!;
 				foreach (var child in node.Children)
@@ -561,9 +562,8 @@ internal static class YamlConvert
 					object? v = DefaultOf(args[1]);
 					if (!TryRead(args[0], keyNode, ref k) || !TryRead(args[1], child, ref v))
 						return false;
-					// C++ uses std::map::emplace: a duplicate key keeps the first value
 					if (!map.Contains(k!))
-						map[k!] = v;
+						map.Add(k!, v);
 				}
 				value = map;
 				return true;
