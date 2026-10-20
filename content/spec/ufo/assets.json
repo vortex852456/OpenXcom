@@ -15905,18 +15905,18 @@
     },
     {
       "path": "SOUND/LAPC1.PAT",
-      "category": "unknown",
+      "category": "program",
       "format": "PAT",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 1068,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/MUSIC.COM",
-      "category": "unknown",
+      "category": "program",
       "format": "COM",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 6109,
       "usedBy": [],
       "notes": []
@@ -16958,27 +16958,27 @@
     },
     {
       "path": "SOUND/SNDEND.EXE",
-      "category": "unknown",
+      "category": "program",
       "format": "EXE",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 7756,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/SNDSTART.EXE",
-      "category": "unknown",
+      "category": "program",
       "format": "EXE",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 10970,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/SOUND.CFG",
-      "category": "unknown",
+      "category": "program",
       "format": "CFG",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 18,
       "usedBy": [],
       "notes": []
@@ -17423,18 +17423,18 @@
     },
     {
       "path": "SOUND/SOUNDRV.COM",
-      "category": "unknown",
+      "category": "program",
       "format": "COM",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 4560,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/VECTOR.COM",
-      "category": "unknown",
+      "category": "program",
       "format": "COM",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 400,
       "usedBy": [],
       "notes": []
@@ -42296,7 +42296,9 @@
       "hdWidth": 1280,
       "hdHeight": 800,
       "frames": 890,
-      "usedBy": [],
+      "usedBy": [
+        "cutscenes/intro: videos"
+      ],
       "notes": []
     },
     {
@@ -87388,7 +87390,5 @@
       ]
     }
   },
-  "unresolvedReferences": [
-    "UFOINTRO/UFOINT.FLI \u2190 cutscenes/intro: videos"
-  ]
+  "unresolvedReferences": []
 }

@@ -15,12 +15,14 @@
 | maps | 298 | 0 | 935694 |
 | music | 3 | 66 | 185759 |
 | palette | 2 | 11 | 2706 |
+| program | 6 | 0 | 33185 |
 | routes | 297 | 3223 | 77352 |
 | sounds | 2 | 141 | 1244693 |
 | sprites | 33 | 4847 | 896499 |
 | terrain | 129 | 6462 | 1991073 |
 | text | 9 | 0 | 244719 |
-| unknown | 18 | 0 | 50566162 |
+| unknown | 2 | 0 | 56916 |
+| video | 10 | 2425 | 50476061 |
 
 ## Sprite-Sets
 
@@ -1585,20 +1587,22 @@ Soundeffekte · 123 Einträge
 | 121 | DOS-Rohdaten |  |  |  |
 | 122 | DOS-Rohdaten |  |  | items/STR_GC_HE_AMMO: hitSound (BATTLE.CAT #0); items/STR_GC_P_AMMO: hitSound (BATTLE.CAT #0); items/STR_HJC_HE_AMMO: hitSound (BATTLE.CAT #0); items/STR_HJC_P_AMMO: hitSound (BATTLE.CAT #0); items/STR_SMALL_TORPEDO: hitSound (BATTLE.CAT #0); items/STR_LARGE_TORPEDO: hitSound (BATTLE.CAT #0); items/STR_PHOSPHOROUS_TORPEDO: hitSound (BATTLE.CAT #0); items/STR_DISRUPTOR_AMMO: hitSound (BATTLE.CAT #0); items/STR_THERMAL_SHOK_BOMB: hitSound (BATTLE.CAT #0) |
 
+DOS-Programme/Treiber (für ACOM ohne Bedeutung): SOUND/MUSIC.COM, SOUND/SNDEND.EXE, SOUND/SNDSTART.EXE, SOUND/SOUND.CFG, SOUND/SOUNDRV.COM, SOUND/VECTOR.COM
+
 ## Musik, Videos, Paletten, Schriften, Texte, Daten
 
 | Datei | Kategorie | Format | Details | Zweck | Verwendung |
 |---|---|---|---|---|---|
-| ANIMS/GAMEOVER.IDX | unknown | IDX | 1216 Bytes | Nicht ausgewertet |  |
-| ANIMS/GAMEOVER.VID | unknown | VID | 5540847 Bytes | Nicht ausgewertet |  |
-| ANIMS/INTRO.IDX | unknown | IDX | 4388 Bytes | Nicht ausgewertet |  |
-| ANIMS/INTRO.VID | unknown | VID | 25809984 Bytes | Nicht ausgewertet |  |
-| ANIMS/LOGO.IDX | unknown | IDX | 804 Bytes | Nicht ausgewertet |  |
-| ANIMS/LOGO.VID | unknown | VID | 1111000 Bytes | Nicht ausgewertet |  |
-| ANIMS/OUTRO.IDX | unknown | IDX | 2272 Bytes | Nicht ausgewertet |  |
-| ANIMS/OUTRO.VID | unknown | VID | 11963775 Bytes | Nicht ausgewertet |  |
-| ANIMS/RISE.IDX | unknown | IDX | 1040 Bytes | Nicht ausgewertet |  |
-| ANIMS/RISE.VID | unknown | VID | 6040735 Bytes | Nicht ausgewertet |  |
+| ANIMS/GAMEOVER.IDX | video | IDX | 1216 Bytes | Index zur gleichnamigen VID-Datei |  |
+| ANIMS/GAMEOVER.VID | video | VID | 320×85, 303 Frames, 5540847 Bytes | Video-Sequenz | cutscenes/loseGame: videos |
+| ANIMS/INTRO.IDX | video | IDX | 4388 Bytes | Index zur gleichnamigen VID-Datei |  |
+| ANIMS/INTRO.VID | video | VID | 320×85, 1096 Frames, 25809984 Bytes | Video-Sequenz | cutscenes/intro: videos |
+| ANIMS/LOGO.IDX | video | IDX | 804 Bytes | Index zur gleichnamigen VID-Datei |  |
+| ANIMS/LOGO.VID | video | VID | 320×200, 200 Frames, 1111000 Bytes | Video-Sequenz | cutscenes/intro: videos |
+| ANIMS/OUTRO.IDX | video | IDX | 2272 Bytes | Index zur gleichnamigen VID-Datei |  |
+| ANIMS/OUTRO.VID | video | VID | 320×85, 567 Frames, 11963775 Bytes | Video-Sequenz | cutscenes/winGame: videos |
+| ANIMS/RISE.IDX | video | IDX | 1040 Bytes | Index zur gleichnamigen VID-Datei |  |
+| ANIMS/RISE.VID | video | VID | 320×85, 259 Frames, 6040735 Bytes | Video-Sequenz | cutscenes/tleth: videos |
 | GEODATA/BACKPALS.DAT | palette | DAT | 8 Einträge, 384 Bytes, Nur Struktur erfasst; Farbwerte werden nicht exportiert. | Hintergrund-Farbverläufe für Fenster |  |
 | GEODATA/BIGLETS.DAT | font | DAT | 16×16, 173 Einträge, 44288 Bytes | Große Bitmap-Schrift des Originals (ACOM nutzt eigene Schriften) |  |
 | GEODATA/COS.DAT | data | DAT | 5762 Bytes | Daten (nicht ausgewertet) |  |
@@ -1625,25 +1629,8 @@ Soundeffekte · 123 Einträge
 | SOUND/ADLIB.CAT | music | CAT | 22 Einträge, 62331 Bytes | Musik (AdLib) |  |
 | SOUND/CDSPEED.DAT | data | DAT | 2 Bytes | Daten (nicht ausgewertet) |  |
 | SOUND/GM.CAT | music | CAT | 22 Einträge, 61886 Bytes | Musik (General MIDI) | musics/GMNEWINT: catPos 0; musics/GMSIG: catPos 1; musics/GMWAITLO: catPos 2; musics/GMGEO1: catPos 3; musics/GMGEO2: catPos 4; musics/GMGEO3: catPos 5; musics/GMGEO4: catPos 6; musics/GMGEO5: catPos 7; musics/GMGEO6: catPos 8; musics/GMINTER1: catPos 9; musics/GMINTER2: catPos 10; musics/GMINTER3: catPos 11; musics/GMISPOSH: catPos 12; musics/GMINTER0: catPos 12; musics/GMBIGMAR: catPos 13; musics/GMDEFBAS: catPos 14; musics/GMATTBAS: catPos 15; musics/GMDEBGOO: catPos 16; musics/GMDEBPOR: catPos 17; musics/GMTACWET: catPos 18; musics/GMTACDRY: catPos 19; musics/GMWIN: catPos 20; musics/GMLOSE: catPos 21 |
-| SOUND/MUSIC.COM | unknown | COM | 6043 Bytes | Nicht ausgewertet |  |
 | SOUND/MVOL.DAT | data | DAT | 2 Bytes | Daten (nicht ausgewertet) |  |
 | SOUND/ROLAND.CAT | music | CAT | 22 Einträge, 61542 Bytes | Musik (Roland MT-32) |  |
-| SOUND/SNDEND.EXE | unknown | EXE | 7756 Bytes | Nicht ausgewertet |  |
-| SOUND/SNDSTART.EXE | unknown | EXE | 14170 Bytes | Nicht ausgewertet |  |
-| SOUND/SOUND.CFG | unknown | CFG | 18 Bytes | Nicht ausgewertet |  |
-| SOUND/SOUNDRV.COM | unknown | COM | 4798 Bytes | Nicht ausgewertet |  |
-| SOUND/VECTOR.COM | unknown | COM | 400 Bytes | Nicht ausgewertet |  |
 | TERRAIN/LOFTEMPS.DAT | data | DAT | 114 Einträge, 3648 Bytes | Daten (nicht ausgewertet) |  |
 | TERRAIN/SCANG.DAT | data | DAT | 8784 Bytes | Daten (nicht ausgewertet) |  |
-
-## Verweise ohne Originaldatei
-
-Ruleset-Verweise auf Dateien, die in den Originaldaten fehlen (meist vom Repo/Mod bereitgestellt):
-
-- ANIMS/GAMEOVER.VID ← cutscenes/loseGame: videos
-- ANIMS/INTRO.VID ← cutscenes/intro: videos
-- ANIMS/LOGO.VID ← cutscenes/intro: videos
-- ANIMS/OUTRO.VID ← cutscenes/winGame: videos
-- ANIMS/RISE.VID ← cutscenes/tleth: videos
-- BACK08.SCR-INFOBUTTON ← 1 Frame-Verweise
 

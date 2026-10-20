@@ -15,12 +15,13 @@
 | maps | 168 | 0 | 277816 |
 | music | 5 | 69 | 384840 |
 | palette | 2 | 13 | 4254 |
+| program | 7 | 0 | 30881 |
 | routes | 199 | 1425 | 34236 |
 | sounds | 21 | 212 | 2320637 |
 | sprites | 33 | 3615 | 610151 |
 | terrain | 54 | 2511 | 632352 |
 | text | 7 | 0 | 161102 |
-| unknown | 9 | 0 | 31529 |
+| unknown | 2 | 0 | 648 |
 | video | 1 | 890 | 2474590 |
 
 ## Sprite-Sets
@@ -1223,6 +1224,8 @@ Soundeffekte · 14 Einträge
 | 12 | DOS-Rohdaten |  |  |  |
 | 13 | DOS-Rohdaten |  |  |  |
 
+DOS-Programme/Treiber (für ACOM ohne Bedeutung): SOUND/LAPC1.PAT, SOUND/MUSIC.COM, SOUND/SNDEND.EXE, SOUND/SNDSTART.EXE, SOUND/SOUND.CFG, SOUND/SOUNDRV.COM, SOUND/VECTOR.COM
+
 ## Musik, Videos, Paletten, Schriften, Texte, Daten
 
 | Datei | Kategorie | Format | Details | Zweck | Verwendung |
@@ -1264,21 +1267,8 @@ Soundeffekte · 14 Einträge
 | SOUND/GMSTORY.MID | sounds | MID | 6301 Bytes | Audiodatei (Inhalt wird nicht ausgewertet) |  |
 | SOUND/GMTACTIC.MID | sounds | MID | 20465 Bytes | Audiodatei (Inhalt wird nicht ausgewertet) |  |
 | SOUND/GMWIN.MID | sounds | MID | 18306 Bytes | Audiodatei (Inhalt wird nicht ausgewertet) |  |
-| SOUND/LAPC1.PAT | unknown | PAT | 1068 Bytes | Nicht ausgewertet |  |
-| SOUND/MUSIC.COM | unknown | COM | 6109 Bytes | Nicht ausgewertet |  |
 | SOUND/RINTRO.CAT | music | CAT | 3 Einträge, 14429 Bytes | Soundeffekte |  |
 | SOUND/ROLAND.CAT | music | CAT | 19 Einträge, 93853 Bytes | Musik (Roland MT-32) |  |
-| SOUND/SNDEND.EXE | unknown | EXE | 7756 Bytes | Nicht ausgewertet |  |
-| SOUND/SNDSTART.EXE | unknown | EXE | 10970 Bytes | Nicht ausgewertet |  |
-| SOUND/SOUND.CFG | unknown | CFG | 18 Bytes | Nicht ausgewertet |  |
-| SOUND/SOUNDRV.COM | unknown | COM | 4560 Bytes | Nicht ausgewertet |  |
-| SOUND/VECTOR.COM | unknown | COM | 400 Bytes | Nicht ausgewertet |  |
 | UFOGRAPH/DP_PREFS | unknown |  | 324 Bytes | Nicht ausgewertet |  |
-| UFOINTRO/UFOINT.FLI | video | FLI | 320×200, 890 Frames, 2474590 Bytes | Video-Sequenz |  |
-
-## Verweise ohne Originaldatei
-
-Ruleset-Verweise auf Dateien, die in den Originaldaten fehlen (meist vom Repo/Mod bereitgestellt):
-
-- UFOINTRO/UFOINT.FLI ← cutscenes/intro: videos
+| UFOINTRO/UFOINT.FLI | video | FLI | 320×200, 890 Frames, 2474590 Bytes | Video-Sequenz | cutscenes/intro: videos |
 

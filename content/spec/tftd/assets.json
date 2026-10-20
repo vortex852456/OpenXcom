@@ -7,92 +7,127 @@
   "files": [
     {
       "path": "ANIMS/GAMEOVER.IDX",
-      "category": "unknown",
+      "category": "video",
       "format": "IDX",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Index zur gleichnamigen VID-Datei",
       "bytes": 1216,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "ANIMS/GAMEOVER.VID",
-      "category": "unknown",
+      "category": "video",
       "format": "VID",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Video-Sequenz",
       "bytes": 5540847,
-      "usedBy": [],
+      "width": 320,
+      "height": 85,
+      "hdWidth": 1280,
+      "hdHeight": 340,
+      "frames": 303,
+      "usedBy": [
+        "cutscenes/loseGame: videos"
+      ],
       "notes": []
     },
     {
       "path": "ANIMS/INTRO.IDX",
-      "category": "unknown",
+      "category": "video",
       "format": "IDX",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Index zur gleichnamigen VID-Datei",
       "bytes": 4388,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "ANIMS/INTRO.VID",
-      "category": "unknown",
+      "category": "video",
       "format": "VID",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Video-Sequenz",
       "bytes": 25809984,
-      "usedBy": [],
+      "width": 320,
+      "height": 85,
+      "hdWidth": 1280,
+      "hdHeight": 340,
+      "frames": 1096,
+      "usedBy": [
+        "cutscenes/intro: videos"
+      ],
       "notes": []
     },
     {
       "path": "ANIMS/LOGO.IDX",
-      "category": "unknown",
+      "category": "video",
       "format": "IDX",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Index zur gleichnamigen VID-Datei",
       "bytes": 804,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "ANIMS/LOGO.VID",
-      "category": "unknown",
+      "category": "video",
       "format": "VID",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Video-Sequenz",
       "bytes": 1111000,
-      "usedBy": [],
+      "width": 320,
+      "height": 200,
+      "hdWidth": 1280,
+      "hdHeight": 800,
+      "frames": 200,
+      "usedBy": [
+        "cutscenes/intro: videos"
+      ],
       "notes": []
     },
     {
       "path": "ANIMS/OUTRO.IDX",
-      "category": "unknown",
+      "category": "video",
       "format": "IDX",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Index zur gleichnamigen VID-Datei",
       "bytes": 2272,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "ANIMS/OUTRO.VID",
-      "category": "unknown",
+      "category": "video",
       "format": "VID",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Video-Sequenz",
       "bytes": 11963775,
-      "usedBy": [],
+      "width": 320,
+      "height": 85,
+      "hdWidth": 1280,
+      "hdHeight": 340,
+      "frames": 567,
+      "usedBy": [
+        "cutscenes/winGame: videos"
+      ],
       "notes": []
     },
     {
       "path": "ANIMS/RISE.IDX",
-      "category": "unknown",
+      "category": "video",
       "format": "IDX",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Index zur gleichnamigen VID-Datei",
       "bytes": 1040,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "ANIMS/RISE.VID",
-      "category": "unknown",
+      "category": "video",
       "format": "VID",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "Video-Sequenz",
       "bytes": 6040735,
-      "usedBy": [],
+      "width": 320,
+      "height": 85,
+      "hdWidth": 1280,
+      "hdHeight": 340,
+      "frames": 259,
+      "usedBy": [
+        "cutscenes/tleth: videos"
+      ],
       "notes": []
     },
     {
@@ -23149,9 +23184,9 @@
     },
     {
       "path": "SOUND/MUSIC.COM",
-      "category": "unknown",
+      "category": "program",
       "format": "COM",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 6043,
       "usedBy": [],
       "notes": []
@@ -23962,45 +23997,45 @@
     },
     {
       "path": "SOUND/SNDEND.EXE",
-      "category": "unknown",
+      "category": "program",
       "format": "EXE",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 7756,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/SNDSTART.EXE",
-      "category": "unknown",
+      "category": "program",
       "format": "EXE",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 14170,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/SOUND.CFG",
-      "category": "unknown",
+      "category": "program",
       "format": "CFG",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 18,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/SOUNDRV.COM",
-      "category": "unknown",
+      "category": "program",
       "format": "COM",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 4798,
       "usedBy": [],
       "notes": []
     },
     {
       "path": "SOUND/VECTOR.COM",
-      "category": "unknown",
+      "category": "program",
       "format": "COM",
-      "purpose": "Nicht ausgewertet",
+      "purpose": "DOS-Programm, -Treiber oder -Konfiguration (f\u00FCr ACOM ohne Bedeutung)",
       "bytes": 400,
       "usedBy": [],
       "notes": []
@@ -164666,12 +164701,5 @@
       ]
     }
   },
-  "unresolvedReferences": [
-    "ANIMS/GAMEOVER.VID \u2190 cutscenes/loseGame: videos",
-    "ANIMS/INTRO.VID \u2190 cutscenes/intro: videos",
-    "ANIMS/LOGO.VID \u2190 cutscenes/intro: videos",
-    "ANIMS/OUTRO.VID \u2190 cutscenes/winGame: videos",
-    "ANIMS/RISE.VID \u2190 cutscenes/tleth: videos",
-    "BACK08.SCR-INFOBUTTON \u2190 1 Frame-Verweise"
-  ]
+  "unresolvedReferences": []
 }
