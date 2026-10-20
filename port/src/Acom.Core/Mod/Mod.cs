@@ -176,6 +176,7 @@ public class Mod
 	public RuleTerrain GetTerrain(string name, bool error = false) => throw new NotImplementedException();
 	public List<string> TerrainList { get => throw new NotImplementedException(); }
 	public MapDataSet GetMapDataSet(string name) => throw new NotImplementedException();
+	public List<MapScript> GetMapScript(string id) => throw new NotImplementedException();
 	public RuleSkill GetSkill(string name, bool error = false) => throw new NotImplementedException();
 	public RuleSoldier GetSoldier(string name, bool error = false) => throw new NotImplementedException();
 	public List<string> SoldiersList { get => throw new NotImplementedException(); }
