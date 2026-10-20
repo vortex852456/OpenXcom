@@ -1,0 +1,16 @@
+# C++-Units, die im C#-Port bewusst NICHT portiert werden (Muster relativ zum Repo-Root, ohne Endung).
+# Format: <glob> | <Grund>
+src/Engine/Scalers/* | Software-Scaler (hqx/xBRZ/scale2x) -> Skalierung uebernimmt die GPU (MonoGame)
+src/Engine/OpenGL | OpenGL-Ausgabe -> MonoGame
+src/Engine/Zoom | Software-Zoom des Bildschirms -> GPU
+src/Engine/SDL2Helpers | SDL-Kompatibilitaetsschicht
+src/Engine/ShaderDrawHelper | Template-Blitmaschinerie -> Surface.BlitPixels / C#-Schleifen
+src/Engine/ShaderMove | Template-Blitmaschinerie -> Surface.BlitPixels / C#-Schleifen
+src/Engine/ShaderRepeat | Template-Blitmaschinerie -> Surface.BlitPixels / C#-Schleifen
+src/Engine/Collections | C++-Containerhelfer -> .NET/LINQ
+src/Engine/HelperMeta | C++-Template-Metaprogrammierung
+src/Engine/Exception | -> .NET-Exceptions
+src/md5 | -> System.Security.Cryptography.MD5
+src/fmath | C++-Mathehelfer -> System.Math
+src/fallthrough | C++-Makro
+src/resource | Windows-Ressourcen-IDs

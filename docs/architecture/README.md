@@ -62,3 +62,5 @@ Sie soll Orientierung geben, ohne in API-Details zu gehen.
 ## Weiterlesen
 - Build, Packaging, typische Build-Fehler: `docs/architecture/build.md`
 - Runtime-Pfade und schnelle Laufzeit-Diagnose: `docs/architecture/runtime-paths.md`
+- C#-Port (Ziele, Regeln, HD-Konzept, Phasen): `docs/architecture/csharp-port.md`
+- Inhalte/Rechte-Audit und Plan fuer eigene Assets: `docs/architecture/content-rights.md`

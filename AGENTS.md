@@ -62,6 +62,8 @@ Bei neuen stabilen Erkenntnissen soll der Agent `AGENTS.md` aktualisieren.
 ## Quickstart fuer Agenten
 - Lies zuerst diese Datei.
 - Build-Abhaengigkeiten und Linux-Build-Befehl: `docs/architecture/build.md` (Plattform-Hinweise).
+- C#-Port unter `port/` (.NET 10, MonoGame): Regeln in `docs/architecture/csharp-port.md`; Fortschritt/offene Units mit `python3 port/tools/port-status.py [Bereich]` statt Dateien zu durchsuchen.
+- Keine Original-Spielinhalte (Texte, Namen, Grafiken, Karten aus `bin/standard/xcom1|xcom2`) in neue Inhalte uebernehmen: `docs/architecture/content-rights.md`.
 - Ermittle dann nur die minimal noetigen Dateien fuer den Task.
 - Fuehre kleine, pruefbare Schritte aus.
 - Wenn neue dauerhafte Erkenntnisse entstehen: `AGENTS.md` knapp aktualisieren.

@@ -1,0 +1,10 @@
+# C#-Port: ergaenzt die Repo-.editorconfig (Tabs, Allman).
+[*.cs]
+indent_style = tab
+csharp_new_line_before_open_brace = all
+
+# 1:1-Port-Konventionen (siehe docs/architecture/csharp-port.md):
+# protected Felder (_x, _surfaces, ...) bleiben wie in der C++-Klassenhierarchie,
+# C++/SDL-Konstantennamen (ORIGINAL_WIDTH, SDLK_*, SDL_Rect) bleiben erhalten.
+dotnet_diagnostic.CA1051.severity = none
+dotnet_diagnostic.CA1707.severity = none
