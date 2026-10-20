@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/LanguagePlurality.h, src/Engine/LanguagePlurality.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// Finds plural forms for the different languages.

@@ -20,9 +20,10 @@
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Acom.Engine;
 
 namespace Acom.Desktop;
+
+using GameTime = Microsoft.Xna.Framework.GameTime; // Acom.GameTime is the in-game clock
 
 /// <summary>
 /// MonoGame host: owns the window and main loop, feeds input into the engine and
@@ -36,7 +37,7 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 	private readonly GraphicsDeviceManager _graphics;
 	private SdlInput? _input;
 	private readonly HostOptions _options;
-	private Acom.Engine.Game? _game;
+	private Acom.Game? _game;
 	private Texture2D? _texture;
 	private SpriteBatch? _spriteBatch;
 	private byte[] _upload = [];
@@ -63,7 +64,7 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 	{
 		Surface.DefaultScale = RenderScale;
 		var screen = new Screen(Screen.ORIGINAL_WIDTH, Screen.ORIGINAL_HEIGHT, RenderScale);
-		_game = new Acom.Engine.Game(screen);
+		_game = new Acom.Game(screen);
 		_game.SetState(new DemoState());
 		_input = new SdlInput();
 		Window.ClientSizeChanged += (_, _) => UpdateWindowSize();

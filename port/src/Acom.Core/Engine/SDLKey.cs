@@ -22,7 +22,7 @@
 
 #pragma warning disable CA1069 // SDL defines aliases (SDLK_FIRST == SDLK_UNKNOWN).
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Keyboard symbols with the numeric values of SDL 1.2's <c>SDLKey</c>.</summary>
 public enum SDLKey

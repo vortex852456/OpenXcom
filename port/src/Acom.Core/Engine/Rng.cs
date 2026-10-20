@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/RNG.h, src/Engine/RNG.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// Random Number Generator used throughout the game

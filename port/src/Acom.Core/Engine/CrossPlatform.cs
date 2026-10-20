@@ -24,7 +24,7 @@
 // Deviation: ACOM uses its own folder names ("acom"/"ACOM") instead of "openxcom"/"OpenXcom",
 // so it never touches an existing OpenXcom installation.
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Platform-specific helpers: command line, standard folders and simple file access.</summary>
 public static class CrossPlatform

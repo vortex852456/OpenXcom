@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/ModInfo.h, src/Engine/ModInfo.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Represents mod metadata (metadata.yml).</summary>
 public sealed class ModInfo

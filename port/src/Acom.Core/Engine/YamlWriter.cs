@@ -25,7 +25,7 @@ using System.Runtime.CompilerServices;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Mutable node used while writing YAML.</summary>
 internal sealed class YamlWriteNode

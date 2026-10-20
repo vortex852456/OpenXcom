@@ -22,7 +22,7 @@
 
 #pragma warning disable CA1815 // SDL_Rect mirrors SDL 1.2, SurfaceCrop is a blit helper; equality is not needed.
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Rectangle with the field layout of SDL 1.2.</summary>
 public struct SDL_Rect

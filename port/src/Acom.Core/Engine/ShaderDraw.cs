@@ -20,7 +20,7 @@
 // Ported from: src/Engine/ShaderDraw.h (helper::StandardShade, helper::ColorReplace)
 // The generic ShaderDraw templates are replaced by the blit loop in Surface.BlitPixels.
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// Per-pixel operations used by <see cref="Surface.BlitNShade(Surface, int, int, int, bool, int)"/>.

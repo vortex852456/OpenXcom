@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/DosFont.h
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Codepage 437 (MS-DOS terminal) font: a 288x48 1-bit BMP with 9x16 characters.</summary>
 internal static class DosFont

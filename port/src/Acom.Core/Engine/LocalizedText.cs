@@ -21,7 +21,7 @@
 
 using System.Globalization;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// A string that is already translated. Allows argument substitution in the translated strings:

@@ -22,7 +22,7 @@
 
 #pragma warning disable CA1815 // Plain SDL data structs; equality is not needed.
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Event types with the numeric values of SDL 1.2.</summary>
 public enum SDLEventType : byte

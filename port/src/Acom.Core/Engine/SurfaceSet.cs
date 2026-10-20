@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/SurfaceSet.h, src/Engine/SurfaceSet.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// Container of a set of surfaces.

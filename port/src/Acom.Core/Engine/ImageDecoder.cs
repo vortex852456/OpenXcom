@@ -23,7 +23,7 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>8-bit palette image as read from a file.</summary>
 internal sealed class IndexedImage(int width, int height, Rgba[] palette, int colorKey = 0)

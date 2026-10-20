@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/Action.h, src/Engine/Action.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// Container for all the information associated with a

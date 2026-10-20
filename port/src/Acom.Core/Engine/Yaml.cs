@@ -32,7 +32,7 @@ using System.Text;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Error while reading YAML (C++ YAML::Exception).</summary>
 public sealed class YamlReadException : Exception

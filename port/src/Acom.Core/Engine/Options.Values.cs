@@ -22,7 +22,7 @@
 
 #pragma warning disable CA2211 // Global option variables, as in the C++ code.
 
-namespace Acom.Engine;
+namespace Acom;
 
 public enum ScrollType
 {

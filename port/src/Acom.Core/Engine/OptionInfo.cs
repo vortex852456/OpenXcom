@@ -21,7 +21,7 @@
 
 using System.Globalization;
 
-namespace Acom.Engine;
+namespace Acom;
 
 public enum OptionType
 {

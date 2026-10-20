@@ -22,7 +22,7 @@
 using System.Buffers.Binary;
 using System.Text;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>One image of a font with its character cell size.</summary>
 internal sealed class FontImage(int width, int height, int spacing, Surface surface)

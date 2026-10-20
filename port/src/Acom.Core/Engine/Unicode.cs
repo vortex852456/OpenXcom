@@ -20,7 +20,7 @@
 // Ported from: src/Engine/Unicode.h, src/Engine/Unicode.cpp
 // Port status: partial (text tokens and character classes; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Special characters used in game texts.</summary>
 public static class Unicode

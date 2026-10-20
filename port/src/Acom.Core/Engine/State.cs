@@ -20,7 +20,7 @@
 // Ported from: src/Engine/State.h, src/Engine/State.cpp
 // Port status: partial (missing: interface rulesets, windows/sounds/music in init, text, palettes from mods, resize/recenter).
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// A game state that receives user input and reacts accordingly.

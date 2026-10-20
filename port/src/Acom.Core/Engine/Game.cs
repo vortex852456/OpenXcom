@@ -20,7 +20,7 @@
 // Ported from: src/Engine/Game.h, src/Engine/Game.cpp
 // Port status: partial (state machine and frame loop; missing: Mod, SavedGame, Language, Cursor, FpsCounter, audio, debug shortcuts).
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// The core of the game engine, manages the game's entire contents and structure.

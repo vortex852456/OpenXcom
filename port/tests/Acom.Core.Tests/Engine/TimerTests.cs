@@ -1,5 +1,4 @@
-using Acom.Engine;
-using Timer = Acom.Engine.Timer;
+using Timer = Acom.Timer;
 
 namespace Acom.Tests.Engine;
 

@@ -21,7 +21,7 @@
 
 using System.Diagnostics;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Millisecond clock of SDL 1.2.</summary>
 public static class SDLTimer

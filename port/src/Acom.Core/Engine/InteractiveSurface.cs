@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/InteractiveSurface.h, src/Engine/InteractiveSurface.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Handler for user actions; in C++ a pointer to a State member function.</summary>
 public delegate void ActionHandler(Action action);

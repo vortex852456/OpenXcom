@@ -5,6 +5,7 @@ A C# file declares what it ports with a header line
     // Ported from: src/Engine/RNG.h, src/Engine/RNG.cpp
 and, while incomplete, a line
     // Port status: partial (missing: ...)
+Generated skeletons (tools/gen/gen_skeleton.py) carry "// Port status: stub" and count as open.
 
 Units listed in port/tools/port-skip.txt are intentionally not ported.
 
@@ -53,6 +54,8 @@ def ported():
         text = f.read_text(encoding="utf-8", errors="replace")
         m = re.search(r"^// Ported from: (.+)$", text, re.M)
         if not m:
+            continue
+        if re.search(r"^// Port status: stub", text, re.M):
             continue
         state = "partial" if re.search(r"^// Port status: partial", text, re.M) else "done"
         for path in m.group(1).split(","):

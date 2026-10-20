@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/CatFile.h, src/Engine/CatFile.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// Read-only access to the items of an X-Com CAT archive.
@@ -30,7 +30,7 @@ namespace Acom.Engine;
 /// internal name chunk <c>{int8 size, char[size] name}</c>), so the true item size is calculated
 /// from the offsets only.
 /// </remarks>
-public sealed class CatFile
+public class CatFile
 {
 	private readonly byte[] _data;
 	private readonly List<(int Offset, int Size)> _items = [];

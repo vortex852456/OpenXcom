@@ -1,11 +1,10 @@
-using Acom.Engine;
 
 namespace Acom.Tests.Engine;
 
 public class InteractiveSurfaceTests
 {
 	// Window equals logical screen: scale 1, no black bands.
-	private static Acom.Engine.Action Act(SDL_Event ev) => new(ev, 1.0, 1.0, 0, 0);
+	private static Acom.Action Act(SDL_Event ev) => new(ev, 1.0, 1.0, 0, 0);
 
 	[Fact]
 	public void Click_requires_press_and_release_over_surface()
@@ -67,8 +66,8 @@ public class InteractiveSurfaceTests
 		int clicks = 0;
 		button.OnMouseClick(_ => clicks++);
 		// 4x window scale, 20px pillarbox: logical (105, 55) = window (20 + 420, 220).
-		var down = new Acom.Engine.Action(SDL_Event.MouseButtonDown(SDLMouse.SDL_BUTTON_LEFT, 440, 220), 4.0, 4.0, 0, 20);
-		var up = new Acom.Engine.Action(SDL_Event.MouseButtonUp(SDLMouse.SDL_BUTTON_LEFT, 440, 220), 4.0, 4.0, 0, 20);
+		var down = new Acom.Action(SDL_Event.MouseButtonDown(SDLMouse.SDL_BUTTON_LEFT, 440, 220), 4.0, 4.0, 0, 20);
+		var up = new Acom.Action(SDL_Event.MouseButtonUp(SDLMouse.SDL_BUTTON_LEFT, 440, 220), 4.0, 4.0, 0, 20);
 		button.Handle(down, null);
 		button.Handle(up, null);
 		Assert.Equal(1, clicks);

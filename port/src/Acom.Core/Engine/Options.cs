@@ -24,7 +24,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>One entry of the mod list in options.cfg (C++ std::pair&lt;std::string, bool&gt;).</summary>
 public sealed class ModToggle(string id, bool active)

@@ -22,7 +22,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// A display screen: holds the logical game screen surface and converts it into a true-colour

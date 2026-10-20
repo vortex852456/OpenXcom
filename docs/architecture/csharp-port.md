@@ -13,7 +13,7 @@
 ```
 port/
   Acom.slnx, Directory.Build.props, Directory.Packages.props, global.json
-  src/Acom.Core      Spiel + Engine, plattformunabhängig (Namespaces spiegeln src/: Acom.Engine, später Acom.Mod, ...)
+  src/Acom.Core      Spiel + Engine, plattformunabhängig (Ordner spiegeln src/, ein Namespace `Acom` wie C++ `OpenXcom`)
   src/Acom.Desktop   MonoGame-Host: Fenster, Hauptschleife, SDL2-Eingabe, GPU-Ausgabe
   tests/Acom.Core.Tests  xUnit v3 (Microsoft.Testing.Platform), Golden-Dateien unter Golden/
   tools/                golden/ (C++-Referenz), port-status.py, port-skip.txt, license-header.txt
@@ -28,6 +28,15 @@ port/
 4. **SDL-Nachbildung:** `SDL_Event`, `SDLKey`, `SDLMod`, `SDL_Rect` haben die SDL-1.2-Feldnamen und -Zahlenwerte. So bleibt Eventcode beim Übersetzen fast unverändert, und Tastencodes in bestehenden `options.cfg` bleiben gültig.
 5. **Golden-Tests:** Deterministische Logik (Zufall, Regeln, Pfadsuche, Sichtlinien, Saves) wird gegen das Original geprüft. `port/tools/golden/golden.cpp` kompiliert die Original-Quellen und schreibt Referenzwerte nach `tests/.../Golden/`; die C#-Tests vergleichen bitgenau.
 6. **Bewusst nicht portiert:** steht mit Begründung in `port/tools/port-skip.txt` (z. B. Software-Scaler, OpenGL, Template-Blitmaschinerie).
+
+## Gerüste (generierte API-Stubs)
+`tools/gen/gen_skeleton.py` (libclang, `pip install libclang==18.1.1`) liest alle Header und schreibt für jede offene Unit `Acom.Core/<Bereich>/<Name>.cs` mit der öffentlichen/geschützten API; Rümpfe werfen `NotImplementedException`, Kopfzeile `// Port status: stub`. So kompiliert der Port jederzeit, und Units lassen sich unabhängig (auch parallel) portieren.
+- **Portieren = Gerüst ersetzen:** Signaturen beibehalten, private Member ergänzen, Kopf auf `partial`/fertig setzen. Muss eine Signatur abweichen, Aufrufer mitziehen. Neu erzeugen überschreibt nur Dateien mit Stub-Markierung.
+- **Namen:** `getX()`/`isX()`/`hasX()` ohne Parameter → Property `X`/`IsX`/`HasX`, mit `setX(T)` als Setter; sonst Methoden in PascalCase; Felder/Konstanten behalten C++-Namen; geerbte Member folgen der Basisklasse.
+- **Typen:** `vector`/`list`/`deque` → `List<T>`, `map` mit Wert-Schlüssel → `SortedDictionary` (Reihenfolge wie C++), mit Zeiger-Schlüssel → `Dictionary`, `pair` → `(A first, B second)`, `Uint8` → `byte`, `size_t` → `int`, `SDL_Color` → `Rgba`. Werttypen (`struct`): `VALUE_TYPES` im Generator (z. B. `Position`, `UnitStats`); alle anderen C++-Klassen werden Klassen, Kopien also explizit.
+- **Nullbarkeit:** Spielcode außerhalb von `Engine/` beginnt mit `#nullable disable` (Zeiger wie in C++); Engine-Code bleibt annotiert.
+- **Ohne Gerüst:** Skript-Engine (`Engine/Script*`, `Mod/ModScript`, Phase 5). Skript-Member fehlen in den Gerüsten; portierte Units vermerken sie als `missing: script hooks`.
+- Ein Namespace `Acom` für alles (wie C++ `OpenXcom`); getrennte Namespaces kollidierten mit Klassennamen (`Mod`, `Ufopaedia`).
 
 ## YAML
 `Engine/Yaml.cs` liest mit dem Event-Parser von YamlDotNet in einen eigenen Knotenbaum, damit das Verhalten von rapidyaml erhalten bleibt: doppelte Schlüssel erlaubt (erster Treffer gewinnt), Merge-Schlüssel `<<` wie `Tree::resolve()`, Zahlen/Bools wie c4core (`0x`, `True`, ...). Die Selbsttests aus `src/Engine/Yaml.cpp` sind in `YamlTests` übernommen; `RepoYamlTests` liest alle `.rul`/`.yml` des Repos.

@@ -24,7 +24,7 @@
 using System.IO.Compression;
 using System.Text;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>
 /// Maps canonical (lower-case) names to file paths and maintains the virtual file system for

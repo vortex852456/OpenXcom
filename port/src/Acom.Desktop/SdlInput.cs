@@ -22,7 +22,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using Acom.Engine;
 
 namespace Acom.Desktop;
 
@@ -70,7 +69,7 @@ internal sealed unsafe partial class SdlInput : IDisposable
 	}
 
 	/// <summary>Moves all events received since the last call into the engine's queue.</summary>
-	public void Flush(Acom.Engine.Game game)
+	public void Flush(Acom.Game game)
 	{
 		lock (_lock)
 		{

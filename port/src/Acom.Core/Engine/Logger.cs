@@ -20,7 +20,7 @@
 // Ported from: src/Engine/Logger.h
 // Port status: partial (missing: log file output from CrossPlatform::log; messages go to the configurable Sink).
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Severity levels of information logged by the game.</summary>
 public enum SeverityLevel

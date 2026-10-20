@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/Timer.h, src/Engine/Timer.cpp
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>Action handler of a state, called by a <see cref="Timer"/>.</summary>
 public delegate void StateHandler();

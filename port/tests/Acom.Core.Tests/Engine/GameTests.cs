@@ -1,4 +1,3 @@
-using Acom.Engine;
 
 namespace Acom.Tests.Engine;
 
@@ -18,7 +17,7 @@ public class GameTests
 
 		public override void Think() => log.Add(name + ".think");
 
-		public override void Handle(Acom.Engine.Action action)
+		public override void Handle(Acom.Action action)
 		{
 			log.Add($"{name}.{action.Details.type}");
 			if (action.Details.type == SDLEventType.SDL_KEYDOWN)

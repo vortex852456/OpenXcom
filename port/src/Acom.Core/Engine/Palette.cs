@@ -23,7 +23,7 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 
-namespace Acom.Engine;
+namespace Acom;
 
 /// <summary>One palette entry, layout-compatible with SDL_Color (alpha takes the place of <c>unused</c>).</summary>
 [StructLayout(LayoutKind.Sequential)]

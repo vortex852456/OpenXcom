@@ -22,9 +22,8 @@
 
 using System.Globalization;
 using System.Text;
-using Acom.Savegame;
 
-namespace Acom.Engine;
+namespace Acom;
 
 public enum TextDirection
 {
