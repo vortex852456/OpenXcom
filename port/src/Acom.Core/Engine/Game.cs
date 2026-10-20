@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Game.h, src/Engine/Game.cpp
-// Port status: partial (missing: audio backend (initAudio opens no device, setVolume only records the Mix_Volume levels), Screen::handle, SDL_VIDEORESIZE (Screen::updateScale/resetDisplay), mouse grab (host), frame pacing (Options::FPS/FPSInactive, SDL_Delay: host))
+// Port status: partial (missing: Screen::handle, SDL_VIDEORESIZE (Screen::updateScale/resetDisplay), mouse grab (host), frame pacing (Options::FPS/FPSInactive, SDL_Delay: host))
 
 namespace Acom;
 
@@ -51,6 +51,9 @@ public sealed class Game
 	/// <summary>Number of mixing channels (Mix_AllocateChannels in initAudio).</summary>
 	public const int MIX_CHANNELS = 16;
 
+	/// <summary>Channels reserved from automatic allocation (Mix_ReserveChannels in initAudio).</summary>
+	private const int MIX_RESERVED_CHANNELS = 5;
+
 	private static readonly ApplicationState[] s_kbFocusRun = [ApplicationState.RUNNING, ApplicationState.RUNNING, ApplicationState.SLOWED, ApplicationState.PAUSED];
 	private static readonly ApplicationState[] s_stateRun = [ApplicationState.SLOWED, ApplicationState.PAUSED, ApplicationState.PAUSED, ApplicationState.PAUSED];
 
@@ -73,10 +76,6 @@ public sealed class Game
 	private uint _lastMouseMoveEvent;
 	private short _xrel, _yrel;
 	private int _mouseX, _mouseY;
-
-	// Volumes set through Mix_Volume/Mix_VolumeMusic; the audio backend applies them once ported.
-	private readonly int[] _mixChannelVolume = Enumerable.Repeat(SDL_MIX_MAXVOLUME, MIX_CHANNELS).ToArray();
-	private int _mixMusicVolume = SDL_MIX_MAXVOLUME;
 
 	/// <summary>
 	/// Starts up the engine with the given screen and sets up the cursor.
@@ -146,12 +145,6 @@ public sealed class Game
 
 	/// <summary>The state stack, bottom first.</summary>
 	public IReadOnlyList<State> States => _states;
-
-	/// <summary>Channel volumes as set through Mix_Volume (0..<see cref="SDL_MIX_MAXVOLUME"/>).</summary>
-	public ReadOnlySpan<int> MixChannelVolumes => _mixChannelVolume;
-
-	/// <summary>Music volume as set through Mix_VolumeMusic.</summary>
-	public int MixMusicVolume => _mixMusicVolume;
 
 	/// <summary>Queues an input or window event for the next frame.</summary>
 	public void PushEvent(SDL_Event ev) => _events.Enqueue(ev);
@@ -282,6 +275,7 @@ public sealed class Game
 		Options.Save();
 		Sound.Stop();
 		Music.Stop();
+		Mixer.CloseAudio();
 	}
 
 	/// <summary>Feeds an event to the screen, cursor, fps counter, global shortcuts and the active state.</summary>
@@ -433,30 +427,30 @@ public sealed class Game
 			if (sound >= 0)
 			{
 				sound = (int)(VolumeExponent(sound) * (double)SDL_MIX_MAXVOLUME);
-				MixVolume(-1, sound);
+				Mixer.Volume(-1, sound);
 				var battle = _save?.SavedBattle;
 				if (battle != null)
 				{
-					MixVolume(3, (int)(sound * battle.AmbientVolume));
+					Mixer.Volume(3, (int)(sound * battle.AmbientVolume));
 				}
 				else
 				{
 					// channel 3: reserved for ambient sound effect.
-					MixVolume(3, sound / 2);
+					Mixer.Volume(3, sound / 2);
 				}
 				// channel 4: reserved for unit responses
-				MixVolume(4, sound);
+				Mixer.Volume(4, sound);
 			}
 			if (music >= 0)
 			{
 				music = (int)(VolumeExponent(music) * (double)SDL_MIX_MAXVOLUME);
-				MixVolumeMusic(music);
+				Mixer.VolumeMusic(music);
 			}
 			if (ui >= 0)
 			{
 				ui = (int)(VolumeExponent(ui) * (double)SDL_MIX_MAXVOLUME);
-				MixVolume(1, ui);
-				MixVolume(2, ui);
+				Mixer.Volume(1, ui);
+				Mixer.Volume(2, ui);
 			}
 		}
 	}
@@ -465,25 +459,6 @@ public sealed class Game
 	public static double VolumeExponent(int volume)
 	{
 		return (Math.Exp(Math.Log(VOLUME_GRADIENT + 1.0) * volume / (double)SDL_MIX_MAXVOLUME) - 1.0) / VOLUME_GRADIENT;
-	}
-
-	/// <summary>Mix_Volume: sets one channel (or all for -1); negative volumes are ignored, larger ones clamped.</summary>
-	private void MixVolume(int which, int volume)
-	{
-		if (volume < 0)
-			return;
-		volume = Math.Min(volume, SDL_MIX_MAXVOLUME);
-		if (which == -1)
-			Array.Fill(_mixChannelVolume, volume);
-		else if (which < MIX_CHANNELS)
-			_mixChannelVolume[which] = volume;
-	}
-
-	/// <summary>Mix_VolumeMusic: negative volumes are ignored, larger ones clamped.</summary>
-	private void MixVolumeMusic(int volume)
-	{
-		if (volume >= 0)
-			_mixMusicVolume = Math.Min(volume, SDL_MIX_MAXVOLUME);
 	}
 
 	/// <summary>
@@ -647,16 +622,51 @@ public sealed class Game
 
 	/// <summary>Initializes the audio subsystem.</summary>
 	/// <remarks>
-	/// Port status: there is no audio backend yet, so this behaves like the C++ code when SDL
-	/// finds no sound device (audio disabled through Options::mute).
+	/// The host provides the output through <see cref="Mixer.Device"/>; without one (headless, tests)
+	/// this behaves like the C++ code when SDL finds no sound device (audio disabled through Options::mute).
 	/// </remarks>
-#pragma warning disable CA1822 // instance member as in C++
 	public void InitAudio()
-#pragma warning restore CA1822
 	{
-		Logger.Error("No audio backend in this port yet.");
-		Logger.Warning("No sound device detected, audio disabled.");
-		Options.mute = true;
+		if (Mixer.Device == null)
+		{
+			// SDL_InitSubSystem(SDL_INIT_AUDIO) failed
+			Logger.Error("No audio output available");
+			Logger.Warning("No sound device detected, audio disabled.");
+			Options.mute = true;
+			return;
+		}
+
+		ushort format = Mixer.MIX_DEFAULT_FORMAT;
+		if (Options.audioBitDepth == 8)
+			format = Mixer.AUDIO_S8;
+
+		if (Options.audioSampleRate % 11025 != 0)
+		{
+			Logger.Warning($"Custom sample rate {Options.audioSampleRate}Hz, audio that doesn't match will be distorted!");
+			Logger.Warning("SDL_mixer only supports multiples of 11025Hz.");
+		}
+		int minChunk = Options.audioSampleRate / 11025 * 512;
+		Options.audioChunkSize = Math.Max(minChunk, Options.audioChunkSize);
+
+		if (Mixer.OpenAudio(Options.audioSampleRate, format, Mixer.MIX_DEFAULT_CHANNELS, Options.audioChunkSize) != 0)
+		{
+			Logger.Error(Mixer.GetError());
+			Logger.Warning("Sound device failed, audio disabled.");
+			Options.mute = true;
+		}
+		else
+		{
+			Mixer.AllocateChannels(MIX_CHANNELS);
+			// Set up reserved channels:
+			// 0 = not used?
+			// 1-2 = UI
+			// 3 = ambient
+			// 4 = unit responses (OXCE only)
+			Mixer.ReserveChannels(MIX_RESERVED_CHANNELS);
+			Mixer.GroupChannels(1, 2, 0);
+			Logger.Info("SDL_mixer initialized successfully.");
+			SetVolume(Options.soundVolume, Options.musicVolume, Options.uiVolume);
+		}
 	}
 
 	/// <summary>Is CTRL pressed?</summary>

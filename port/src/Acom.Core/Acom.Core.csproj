@@ -6,6 +6,8 @@
     <InternalsVisibleTo Include="Acom.Core.Tests" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="MeltySynth" />
+    <PackageReference Include="NVorbis" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 </Project>

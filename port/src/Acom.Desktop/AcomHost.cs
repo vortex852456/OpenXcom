@@ -35,6 +35,7 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 	private const int RenderScale = 4;
 
 	private readonly GraphicsDeviceManager _graphics;
+	private readonly MonoGameAudioDevice _audio = new();
 	private SdlInput? _input;
 	private readonly HostOptions _options;
 	private Acom.Game? _game;
@@ -64,6 +65,10 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 	{
 		Surface.DefaultScale = RenderScale;
 		var screen = new Screen(Screen.ORIGINAL_WIDTH, Screen.ORIGINAL_HEIGHT, RenderScale);
+		// No options.cfg is loaded yet: start from the defaults of Options::create (audio format, volumes, ...)
+		Options.Create();
+		Options.ResetDefault(false);
+		Mixer.Device = _audio; // Game.InitAudio opens it (or runs muted without audio hardware)
 		_game = new Acom.Game(screen);
 		_game.SetState(new DemoState());
 		_input = new SdlInput();
@@ -82,6 +87,9 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 
 	protected override void UnloadContent()
 	{
+		Mixer.CloseAudio();
+		Mixer.Device = null;
+		_audio.Dispose();
 		_input?.Dispose();
 		_texture?.Dispose();
 		_spriteBatch?.Dispose();

@@ -21,12 +21,9 @@
 
 namespace Acom;
 
-/// <summary>The SDL_mixer calls used by game code outside the sound classes.</summary>
+/// <summary>The SDL_mixer calls used by game code outside the sound classes (forwarded to <see cref="Mixer"/>).</summary>
 public static class SDLMixer
 {
-	/// <summary>Channel lookup of the audio backend (tag -> free channel or -1); set by the host.</summary>
-	public static Func<int, int> GroupAvailableSource { get; set; } = _ => -1;
-
 	/// <summary>Finds the first available (not playing) channel in a group; -1 if none (Sound.Play then picks any free channel).</summary>
-	public static int Mix_GroupAvailable(int tag) => GroupAvailableSource(tag);
+	public static int Mix_GroupAvailable(int tag) => Mixer.GroupAvailable(tag);
 }

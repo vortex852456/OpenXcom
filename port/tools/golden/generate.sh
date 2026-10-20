@@ -10,6 +10,13 @@ g++ -std=c++17 -O1 -I"$root/src" $(pkg-config --cflags sdl) \
 	-o "$tmp/golden"
 mkdir -p "$out"
 "$tmp/golden" "$out"
+# Adlib emulation (fmopl/adlplayer) driven by register writes and by the AdlibMusic::player loop
+g++ -std=c++17 -O1 -I"$root/src" "$here/adlib.cpp" "$root/src/Engine/Adlib/fmopl.cpp" "$root/src/Engine/Adlib/adlplayer.cpp" \
+	"$root/src/Engine/RNG.cpp" -o "$tmp/adlib"
+"$tmp/adlib" "$out/adlib.txt"
+# SDL_mixer 1.2 channel/music mixing behind Engine/Mixer.cs (needs the SDL_mixer 1.2 dev package; runs with the dummy audio driver)
+g++ -std=c++17 -O1 "$here/mixer.cpp" $(pkg-config --cflags --libs SDL_mixer sdl) -o "$tmp/mixer"
+"$tmp/mixer" "$out/mixer.txt"
 # Surface::loadImage (lodepng + SDL_image) on the repo images and the synthetic test images
 g++ -std=c++17 -O1 -I"$root/src" "$here/images.cpp" "$root/src/lodepng.cpp" \
 	$(pkg-config --cflags --libs SDL_image sdl) -o "$tmp/images"
