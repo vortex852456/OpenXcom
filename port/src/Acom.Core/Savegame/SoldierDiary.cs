@@ -383,11 +383,12 @@ public class SoldierDiary
 			{
 				string critName = critPair.Key;
 				List<int> critDef = critPair.Value;
-				int nextLevel = nextCommendationLevel["noNoun"];
-				int nextLevelThreshold = (nextLevel >= critDef.Count) ? 0 /* just a dummy */ : critDef[nextLevel];
+				// C++ size_t: a negative level (decorationLevel < -1 in a save) counts as past the max award level
+				uint nextLevel = (uint)nextCommendationLevel["noNoun"];
+				int nextLevelThreshold = (nextLevel >= (uint)critDef.Count) ? 0 /* just a dummy */ : critDef[(int)nextLevel];
 
 				// Skip this medal if we have reached its max award level.
-				if (nextLevel >= critDef.Count)
+				if (nextLevel >= (uint)critDef.Count)
 				{
 					awardCommendationBool = false;
 					break;
