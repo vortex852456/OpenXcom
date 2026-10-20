@@ -403,11 +403,11 @@ public class Tile
 		{
 			int tuCost = _objects[p].GetTUCost(unit.MovementType);
 			cost = new BattleActionCost(reserve, unit, unit.GetMainHandWeapon(false));
-			cost.Time += (_save.KneelReserved && !unit.IsKneeled && unit.Armor.AllowsKneeling(unit.Type == "SOLDIER")) ? unit.KneelDownCost : 0;
-			cost.Time += tuCost;
+			cost.Time = (short)(cost.Time + ((_save.KneelReserved && !unit.IsKneeled && unit.Armor.AllowsKneeling(unit.Type == "SOLDIER")) ? unit.KneelDownCost : 0)); // Sint16 like C++
+			cost.Time = (short)(cost.Time + tuCost);
 			if (!rClick)
 			{
-				cost.Energy += tuCost / 2;
+				cost.Energy = (short)(cost.Energy + tuCost / 2);
 			}
 		}
 
