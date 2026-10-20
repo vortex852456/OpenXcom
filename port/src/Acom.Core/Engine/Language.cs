@@ -19,6 +19,7 @@
  */
 // Ported from: src/Engine/Language.h, src/Engine/Language.cpp
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -135,11 +136,18 @@ public sealed class Language
 	/// </summary>
 	public static string FileNameToId(string fileName)
 	{
-		string noExtName = Path.GetFileNameWithoutExtension(fileName);
+		string noExtName = CrossPlatform.NoExt(CrossPlatform.BaseFilename(fileName));
 		int found = noExtName.IndexOf('-', StringComparison.Ordinal);
 		if (found < 0)
 			return noExtName;
-		return noExtName[..(found + 1)] + noExtName[(found + 1)..].ToUpperInvariant();
+		// uppercase it after dash (C toupper: ASCII letters only, UTF-8 bytes stay as they are)
+		var id = noExtName.ToCharArray();
+		for (int i = found + 1; i < id.Length; ++i)
+		{
+			if (char.IsAsciiLetterLower(id[i]))
+				id[i] = (char)(id[i] - 'a' + 'A');
+		}
+		return new string(id);
 	}
 
 	/// <summary>Loads the language from an external file (Ruby-on-Rails YAML format).</summary>
@@ -215,7 +223,8 @@ public sealed class Language
 	/// <summary>Gets a quantity-dependent localized text; <c>{N}</c> is replaced by <paramref name="n"/>.</summary>
 	public LocalizedText GetString(string id, uint n)
 	{
-		ArgumentException.ThrowIfNullOrEmpty(id);
+		// C++ assert(!id.empty()): compiled out in release builds, where an empty id is simply not found.
+		Debug.Assert(!string.IsNullOrEmpty(id));
 		LocalizedText? s = null;
 		// Try specialized form.
 		if (n == 0)

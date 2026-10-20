@@ -150,6 +150,55 @@ public sealed class GameOptionsTests : IDisposable
 		Assert.Equal(ApplicationState.RUNNING, game.RunningState);
 	}
 
+	private sealed class MotionState : State
+	{
+		public List<(int X, int XRel, int YRel)> Motions { get; } = [];
+
+		public override void Handle(Acom.Action action)
+		{
+			if (action.Details.type == SDLEventType.SDL_MOUSEMOTION)
+				Motions.Add((action.Details.motion.x, action.Details.motion.xrel, action.Details.motion.yrel));
+			base.Handle(action);
+		}
+	}
+
+	[Fact]
+	public void Throttled_mouse_motion_is_merged_into_the_next_passing_event()
+	{
+		var oldSource = SDLTimer.Source;
+		uint now = 100;
+		SDLTimer.Source = () => now;
+		try
+		{
+			var game = new Game(new Screen(4, 4));
+			var state = new MotionState();
+			game.PushState(state);
+			game.RunFrame();
+			state.Motions.Clear(); // mouse refresh of the init
+
+			Options.oxceThrottleMouseMoveEvent = 10;
+			// the first event starts the interval and is merged as well (the clock is read when the event is processed)
+			game.PushEvent(SDL_Event.MouseMotion(1, 0, 3, -1));
+			game.RunFrame();
+			now = 105;
+			game.PushEvent(SDL_Event.MouseMotion(2, 0, 4, -2));
+			game.RunFrame();
+			Assert.Empty(state.Motions);
+			now = 110;
+			game.PushEvent(SDL_Event.MouseMotion(3, 0, 5, -3));
+			game.RunFrame();
+			Assert.Equal([(3, 12, -6)], state.Motions);
+			// the interval restarts with the next event
+			game.PushEvent(SDL_Event.MouseMotion(4, 0, 1, 1));
+			game.RunFrame();
+			Assert.Single(state.Motions);
+		}
+		finally
+		{
+			SDLTimer.Source = oldSource;
+		}
+	}
+
 	[Fact]
 	public void Global_shortcuts_toggle_mouse_grab_and_debug_ui()
 	{

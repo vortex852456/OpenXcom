@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Game.h, src/Engine/Game.cpp
-// Port status: partial (missing: audio backend (initAudio opens no device, setVolume only records the Mix_Volume levels), Screen::handle, SDL_VIDEORESIZE (Screen::updateScale/resetDisplay), mouse grab (host))
+// Port status: partial (missing: audio backend (initAudio opens no device, setVolume only records the Mix_Volume levels), Screen::handle, SDL_VIDEORESIZE (Screen::updateScale/resetDisplay), mouse grab (host), frame pacing (Options::FPS/FPSInactive, SDL_Delay: host))
 
 namespace Acom;
 

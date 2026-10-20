@@ -68,6 +68,8 @@ public class LanguageTests
 	[InlineData("en-us.yml", "en-US")]
 	[InlineData("de.yml", "de")]
 	[InlineData("zh-tw.yml", "zh-TW")]
+	[InlineData("Language/pt-br.yml", "pt-BR")]
+	[InlineData("xx-éa.yml", "xx-éA")] // C toupper: only ASCII letters
 	public void File_names_map_to_ids(string file, string id)
 	{
 		Assert.Equal(id, Language.FileNameToId(file));
