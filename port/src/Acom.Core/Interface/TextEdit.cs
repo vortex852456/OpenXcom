@@ -172,15 +172,15 @@ public class TextEdit : InteractiveSurface
 	/// <summary>Changes the color used to render the text.</summary>
 	public override void SetColor(byte color)
 	{
-		_text.Color = color;
-		_caret.Color = color;
+		_text.SetColor(color);
+		_caret.SetColor(color);
 	}
 
 	/// <summary>The color used to render the text.</summary>
 	public byte Color { get => _text.Color; set => SetColor(value); }
 
 	/// <summary>Changes the secondary color used to render the text.</summary>
-	public override void SetSecondaryColor(byte color) => _text.SecondaryColor = color;
+	public override void SetSecondaryColor(byte color) => _text.SetSecondaryColor(color);
 
 	/// <summary>The secondary color used to render the text.</summary>
 	public byte SecondaryColor { get => _text.SecondaryColor; set => SetSecondaryColor(value); }

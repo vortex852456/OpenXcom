@@ -115,10 +115,10 @@ public class Slider : InteractiveSurface
 	/// <summary>Changes the color used to render the slider.</summary>
 	public override void SetColor(byte color)
 	{
-		_txtMinus.Color = color;
-		_txtPlus.Color = color;
+		_txtMinus.SetColor(color);
+		_txtPlus.SetColor(color);
 		_frame.SetColor(color);
-		_button.Color = color;
+		_button.SetColor(color);
 	}
 
 	/// <summary>The color used to render the slider.</summary>

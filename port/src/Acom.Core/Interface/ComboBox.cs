@@ -146,7 +146,7 @@ public class ComboBox : InteractiveSurface
 	{
 		_color = color;
 		DrawArrow();
-		_button.Color = _color;
+		_button.SetColor(_color);
 		_window.SetColor(_color);
 		_list.SetColor(_color);
 	}

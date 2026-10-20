@@ -132,7 +132,7 @@ public class TextList : InteractiveSurface
 	/// <summary>Changes the color of a specific Text object in the list.</summary>
 	public void SetCellColor(int row, int column, byte color)
 	{
-		_texts[row][column].Color = color;
+		_texts[row][column].SetColor(color);
 		_redraw = true;
 	}
 
@@ -141,7 +141,7 @@ public class TextList : InteractiveSurface
 	{
 		foreach (var text in _texts[row])
 		{
-			text.Color = color;
+			text.SetColor(color);
 		}
 		_redraw = true;
 	}
@@ -221,8 +221,8 @@ public class TextList : InteractiveSurface
 			var txt = new Text(width, _font.Height, _margin + rowX, rowY);
 			txt.SetPalette(Palette);
 			txt.InitText(_big, _small, _lang);
-			txt.Color = _color;
-			txt.SecondaryColor = _color2;
+			txt.SetColor(_color);
+			txt.SetSecondaryColor(_color2);
 			TextHAlign align = _align.GetValueOrDefault(i);
 			if (align != TextHAlign.ALIGN_LEFT)
 			{
@@ -312,7 +312,7 @@ public class TextList : InteractiveSurface
 			var a1 = new ArrowButton(shape1, 11, 8, X + _arrowPos, Y);
 			a1.SetListButton();
 			a1.SetPalette(Palette);
-			a1.Color = _up.Color;
+			a1.SetColor(_up.Color);
 			a1.OnMouseClick(_leftClick, 0);
 			a1.OnMousePress(_leftPress);
 			a1.OnMouseRelease(_leftRelease);
@@ -320,7 +320,7 @@ public class TextList : InteractiveSurface
 			var a2 = new ArrowButton(shape2, 11, 8, X + _arrowPos + 12, Y);
 			a2.SetListButton();
 			a2.SetPalette(Palette);
-			a2.Color = _up.Color;
+			a2.SetColor(_up.Color);
 			a2.OnMouseClick(_rightClick, 0);
 			a2.OnMousePress(_rightPress);
 			a2.OnMouseRelease(_rightRelease);
@@ -443,14 +443,14 @@ public class TextList : InteractiveSurface
 	public override void SetColor(byte color)
 	{
 		_color = color;
-		_up.Color = color;
-		_down.Color = color;
+		_up.SetColor(color);
+		_down.SetColor(color);
 		_scrollbar.SetColor(color);
 		foreach (var vec in _texts)
 		{
 			foreach (var text in vec)
 			{
-				text.Color = color;
+				text.SetColor(color);
 			}
 		}
 	}
@@ -582,8 +582,8 @@ public class TextList : InteractiveSurface
 	/// <summary>Changes the color of the arrow buttons in the list.</summary>
 	public void SetArrowColor(byte color)
 	{
-		_up.Color = color;
-		_down.Color = color;
+		_up.SetColor(color);
+		_down.SetColor(color);
 		_scrollbar.SetColor(color);
 	}
 
@@ -1118,8 +1118,8 @@ public class TextList : InteractiveSurface
 	/// <summary>Changes the color of the scroll buttons.</summary>
 	public override void SetBorderColor(byte color)
 	{
-		_up.Color = color;
-		_down.Color = color;
+		_up.SetColor(color);
+		_down.SetColor(color);
 		_scrollbar.SetColor(color);
 	}
 

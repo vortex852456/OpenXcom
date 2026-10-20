@@ -705,10 +705,6 @@ public class Surface
 	{
 	}
 
-	/// <summary>Initializes the fonts and language of a text widget; ignored by plain surfaces.</summary>
-	public virtual void InitText(Font big, Font small, Language lang)
-	{
-	}
 
 	/// <summary>Per-pixel blit operation; a struct type parameter lets the JIT inline it into the loop.</summary>
 	internal interface IPixelOp
