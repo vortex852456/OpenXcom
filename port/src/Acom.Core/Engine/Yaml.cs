@@ -596,8 +596,27 @@ internal static class YamlConvert
 			value = array;
 			return true;
 		}
+		if (CustomReader(type) is { } custom)
+		{
+			// like the C++ read(ryml::ConstNodeRef, T*) overloads: public static bool YamlRead(YamlNodeReader, ref T)
+			var args = new object?[] { new YamlNodeReader(node), value ?? DefaultOf(type) };
+			if (!(bool)custom.Invoke(null, args)!)
+				return false;
+			value = args[1];
+			return true;
+		}
 		throw new NotSupportedException($"YAML conversion to {type} is not supported");
 	}
+
+	private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.MethodInfo?> s_customReaders = new();
+	private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.MethodInfo?> s_customWriters = new();
+
+	private static System.Reflection.MethodInfo? CustomReader(Type type) => s_customReaders.GetOrAdd(type, t =>
+		t.GetMethod("YamlRead", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, [typeof(YamlNodeReader), t.MakeByRefType()]));
+
+	/// <summary>A type's <c>public static void YamlWrite(YamlNodeWriter, T)</c> (C++ write(ryml::NodeRef*, const T&amp;) overloads).</summary>
+	internal static System.Reflection.MethodInfo? CustomWriter(Type type) => s_customWriters.GetOrAdd(type, t =>
+		t.GetMethod("YamlWrite", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, [typeof(YamlNodeWriter), t]));
 
 	private static object? DefaultOf(Type type) => type.IsValueType ? Activator.CreateInstance(type) : null;
 

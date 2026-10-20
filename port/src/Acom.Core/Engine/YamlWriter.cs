@@ -55,7 +55,7 @@ public class YamlNodeWriter
 {
 	private protected readonly YamlWriteNode _node;
 
-	private protected YamlNodeWriter(YamlWriteNode node)
+	internal YamlNodeWriter(YamlWriteNode node)
 	{
 		_node = node;
 	}
@@ -213,6 +213,11 @@ public class YamlNodeWriter
 				}
 				return;
 			default:
+				if (YamlConvert.CustomWriter(value.GetType()) is { } custom)
+				{
+					custom.Invoke(null, [new YamlNodeWriter(node), value]);
+					return;
+				}
 				node.Kind = YamlWriteNode.NodeKind.Scalar;
 				node.Value = YamlConvert.FormatScalar(value);
 				return;
