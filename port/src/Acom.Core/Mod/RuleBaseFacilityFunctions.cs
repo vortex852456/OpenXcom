@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleBaseFacilityFunctions.h
-// Port status: partial (missing: BaseAreaSubset alias, needs AreaSubset from src/Engine/GraphSubset.h)
 #nullable disable
 
 using System.Numerics;
@@ -128,4 +127,139 @@ public struct RuleBaseFacilityFunctions : IEquatable<RuleBaseFacilityFunctions>
 		if ((uint)pos >= Size)
 			throw new ArgumentOutOfRangeException(nameof(pos), pos, "bitset position out of range");
 	}
+
+/// <summary>
+/// Subset area of base: <c>AreaSubset&lt;Base, Sint8&gt;</c> from src/Engine/GraphSubset.h (C++ alias <c>BaseAreaSubset</c>).
+/// </summary>
+/// <remarks>Fields are <see cref="sbyte"/> like the C++ <c>Sint8</c> data type; arithmetic wraps the same way.</remarks>
+public struct BaseAreaSubset : IEquatable<BaseAreaSubset>
+{
+	// define part of surface
+	public sbyte beg_x, end_x;
+	public sbyte beg_y, end_y;
+
+	public BaseAreaSubset(int max_x, int max_y)
+	{
+		beg_x = 0;
+		end_x = (sbyte)max_x;
+		beg_y = 0;
+		end_y = (sbyte)max_y;
+	}
+
+	public BaseAreaSubset((int first, int second) range_x, (int first, int second) range_y)
+	{
+		beg_x = (sbyte)range_x.first;
+		end_x = (sbyte)range_x.second;
+		beg_y = (sbyte)range_y.first;
+		end_y = (sbyte)range_y.second;
+	}
+
+	public readonly BaseAreaSubset Offset(int x, int y)
+	{
+		BaseAreaSubset ret = this;
+		ret.beg_x = (sbyte)(ret.beg_x + x);
+		ret.end_x = (sbyte)(ret.end_x + x);
+		ret.beg_y = (sbyte)(ret.beg_y + y);
+		ret.end_y = (sbyte)(ret.end_y + y);
+		return ret;
+	}
+
+	public readonly int SizeX() => end_x - beg_x;
+
+	public readonly int SizeY() => end_y - beg_y;
+
+	/// <summary>Check if area is empty (C++ explicit operator bool): true if it has non-zero area.</summary>
+	public readonly bool ToBoolean() => SizeX() != 0 && SizeY() != 0;
+
+	public static explicit operator bool(BaseAreaSubset area) => area.ToBoolean();
+
+	/// <summary>Check if two areas are same.</summary>
+	public static bool operator ==(BaseAreaSubset a, BaseAreaSubset b) =>
+		a.beg_x == b.beg_x &&
+		a.end_x == b.end_x &&
+		a.beg_y == b.beg_y &&
+		a.end_y == b.end_y;
+
+	/// <summary>Check if two areas are not same.</summary>
+	public static bool operator !=(BaseAreaSubset a, BaseAreaSubset b) => !(a == b);
+
+	public readonly bool Equals(BaseAreaSubset other) => this == other;
+
+	public override readonly bool Equals(object? obj) => obj is BaseAreaSubset other && this == other;
+
+	public override readonly int GetHashCode() => HashCode.Combine(beg_x, end_x, beg_y, end_y);
+
+	private static void IntersectionRange(ref sbyte begin_a, ref sbyte end_a, sbyte begin_b, sbyte end_b)
+	{
+		if (begin_a >= end_b || begin_b >= end_a)
+		{
+			// intersection is empty
+			end_a = begin_a;
+		}
+		else
+		{
+			begin_a = Math.Max(begin_a, begin_b);
+			end_a = Math.Min(end_a, end_b);
+		}
+	}
+
+	private static void BoundBoxRange(ref sbyte begin_a, ref sbyte end_a, sbyte begin_b, sbyte end_b)
+	{
+		if (begin_b < end_b && begin_a < end_a)
+		{
+			begin_a = Math.Min(begin_a, begin_b);
+			end_a = Math.Max(end_a, end_b);
+		}
+		else if (begin_b < end_b)
+		{
+			begin_a = begin_b;
+			end_a = end_b;
+		}
+		else
+		{
+			// keep first range same
+		}
+	}
+
+	public static BaseAreaSubset Intersection(BaseAreaSubset a, BaseAreaSubset b)
+	{
+		BaseAreaSubset ret = a;
+		IntersectionRange(ref ret.beg_x, ref ret.end_x, b.beg_x, b.end_x);
+		IntersectionRange(ref ret.beg_y, ref ret.end_y, b.beg_y, b.end_y);
+		return ret;
+	}
+
+	public static BaseAreaSubset Intersection(BaseAreaSubset a, BaseAreaSubset b, BaseAreaSubset c)
+	{
+		BaseAreaSubset ret = Intersection(a, b);
+		IntersectionRange(ref ret.beg_x, ref ret.end_x, c.beg_x, c.end_x);
+		IntersectionRange(ref ret.beg_y, ref ret.end_y, c.beg_y, c.end_y);
+		return ret;
+	}
+
+	public static BaseAreaSubset Intersection(BaseAreaSubset a, BaseAreaSubset b, BaseAreaSubset c, BaseAreaSubset d)
+	{
+		BaseAreaSubset ret = Intersection(a, b, c);
+		IntersectionRange(ref ret.beg_x, ref ret.end_x, d.beg_x, d.end_x);
+		IntersectionRange(ref ret.beg_y, ref ret.end_y, d.beg_y, d.end_y);
+		return ret;
+	}
+
+	public static BaseAreaSubset BoundBox(BaseAreaSubset a, BaseAreaSubset b)
+	{
+		BaseAreaSubset ret = a;
+		BoundBoxRange(ref ret.beg_x, ref ret.end_x, b.beg_x, b.end_x);
+		BoundBoxRange(ref ret.beg_y, ref ret.end_y, b.beg_y, b.end_y);
+		return ret;
+	}
+
+	public static BaseAreaSubset BoundBox(BaseAreaSubset a, BaseAreaSubset b, BaseAreaSubset c)
+	{
+		BaseAreaSubset ret = BoundBox(a, b);
+		BoundBoxRange(ref ret.beg_x, ref ret.end_x, c.beg_x, c.end_x);
+		BoundBoxRange(ref ret.beg_y, ref ret.end_y, c.beg_y, c.end_y);
+		return ret;
+	}
+
+	public static BaseAreaSubset FromPoint(int x, int y) => new BaseAreaSubset(1, 1).Offset(x, y);
 }
