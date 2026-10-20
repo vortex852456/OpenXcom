@@ -130,9 +130,6 @@ public class Mod
 	public int GetOffset(int id, int max) => throw new NotImplementedException();
 	public void LoadBaseFunction(string parent, ref RuleBaseFacilityFunctions f, YamlNodeReader reader) => throw new NotImplementedException();
 	public List<string> GetBaseFunctionNames(RuleBaseFacilityFunctions f) => throw new NotImplementedException();
-	// legacy overloads for units still using BitArray for RuleBaseFacilityFunctions; remove once they use the struct
-	public void LoadBaseFunction(string parent, System.Collections.BitArray f, YamlNodeReader reader) => throw new NotImplementedException();
-	public List<string> GetBaseFunctionNames(System.Collections.BitArray f) => throw new NotImplementedException();
 	public void LoadInts(string parent, List<int> ints, YamlNodeReader reader) => throw new NotImplementedException();
 	public void LoadUnorderedInts(string parent, List<int> ints, YamlNodeReader reader) => throw new NotImplementedException();
 	public void LoadName(string parent, ref string names, YamlNodeReader reader) => throw new NotImplementedException();

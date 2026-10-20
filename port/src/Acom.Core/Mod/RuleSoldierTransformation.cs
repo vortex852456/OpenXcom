@@ -20,7 +20,6 @@
 // Ported from: src/Mod/RuleSoldierTransformation.h, src/Mod/RuleSoldierTransformation.cpp
 #nullable disable
 
-using System.Collections;
 
 namespace Acom;
 
@@ -31,7 +30,7 @@ public class RuleSoldierTransformation
 {
 	private readonly string _name;
 	private readonly List<string> _requires = [], _requiredPreviousTransformations = [], _forbiddenPreviousTransformations = [];
-	private readonly BitArray _requiresBaseFunc = new(128); // RuleBaseFacilityFunctions = std::bitset<128>
+	private RuleBaseFacilityFunctions _requiresBaseFunc;
 	private string _producedItem = "";
 	private string _producedSoldierType = "", _producedSoldierArmor = "";
 	private bool _keepSoldierArmor, _createsClone, _needsCorpseRecovered, _allowsDeadSoldiers, _allowsLiveSoldiers, _allowsWoundedSoldiers;
@@ -97,7 +96,7 @@ public class RuleSoldierTransformation
 		reader.TryRead("listOrder", ref _listOrder);
 
 		mod.LoadUnorderedNames(_name, _requires, reader["requires"]);
-		mod.LoadBaseFunction(_name, _requiresBaseFunc, reader["requiresBaseFunc"]);
+		mod.LoadBaseFunction(_name, ref _requiresBaseFunc, reader["requiresBaseFunc"]);
 		reader.TryRead("producedItem", ref _producedItem);
 		reader.TryRead("producedSoldierType", ref _producedSoldierType);
 		reader.TryRead("producedSoldierArmor", ref _producedSoldierArmor);
@@ -158,7 +157,7 @@ public class RuleSoldierTransformation
 	/// <summary>Gets the list of research this project requires.</summary>
 	public List<string> RequiredResearch { get => _requires; }
 	/// <summary>Gets the list of required base functions for this project (a copy, like the C++ bitset by value).</summary>
-	public BitArray RequiredBaseFuncs { get => new(_requiresBaseFunc); }
+	public RuleBaseFacilityFunctions RequiredBaseFuncs => _requiresBaseFunc;
 	/// <summary>Gets the type of item produced by this project (the soldier stops existing completely and is fully replaced by the item).</summary>
 	public string ProducedItem { get => _producedItem; }
 	/// <summary>Gets the type of soldier produced by this project.</summary>

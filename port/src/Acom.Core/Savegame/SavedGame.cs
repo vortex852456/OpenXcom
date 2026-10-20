@@ -1586,15 +1586,7 @@ public class SavedGame
 	}
 
 	/// <summary>C++ <c>(~provided &amp; required).any()</c> on base function bitsets.</summary>
-	private static bool AnyMissingBaseFunc(System.Collections.BitArray provided, System.Collections.BitArray required)
-	{
-		for (int i = 0; i < required.Length; ++i)
-		{
-			if (required[i] && !(i < provided.Length && provided[i]))
-				return true;
-		}
-		return false;
-	}
+	private static bool AnyMissingBaseFunc(RuleBaseFacilityFunctions provided, RuleBaseFacilityFunctions required) => (~provided & required).Any();
 
 	/// <summary>Get the list of RuleResearch which can be researched in a Base.</summary>
 	/// <param name="projects">The list of ResearchProject which are available.</param>

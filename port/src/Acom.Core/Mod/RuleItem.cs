@@ -220,7 +220,7 @@ public class RuleItem
 	public List<RuleResearch> Requirements { get => throw new NotImplementedException(); }
 	public List<RuleResearch> BuyRequirements { get => throw new NotImplementedException(); }
 	public string RequiresBuyCountry { get => throw new NotImplementedException(); }
-	public System.Collections.BitArray RequiresBuyBaseFunc { get => throw new NotImplementedException(); }
+	public RuleBaseFacilityFunctions RequiresBuyBaseFunc { get => throw new NotImplementedException(); }
 	public SortedDictionary<string, int> RecoveryDividers { get => throw new NotImplementedException(); }
 	public Dictionary<RuleItem, List<int>> RecoveryTransformations { get => throw new NotImplementedException(); }
 	public List<string> Categories { get => throw new NotImplementedException(); }

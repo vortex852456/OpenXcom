@@ -21,7 +21,6 @@
 // Port status: partial (missing: script hooks)
 #nullable disable
 
-using System.Collections;
 
 namespace Acom;
 
@@ -52,7 +51,7 @@ public class RuleSoldier
 	private int _group;
 	private int _listOrder;
 	private readonly List<string> _requires = [];
-	private readonly BitArray _requiresBuyBaseFunc = new(128); // RuleBaseFacilityFunctions = std::bitset<128>
+	private RuleBaseFacilityFunctions _requiresBuyBaseFunc;
 	private string _requiresBuyCountry = "";
 	private UnitStats _minStats, _maxStats, _statCaps, _trainingStatCaps, _dogfightExperience;
 	private string _armorName = "";
@@ -133,7 +132,7 @@ public class RuleSoldier
 
 		//requires
 		mod.LoadUnorderedNames(_type, _requires, reader["requires"]);
-		mod.LoadBaseFunction(_type, _requiresBuyBaseFunc, reader["requiresBuyBaseFunc"]);
+		mod.LoadBaseFunction(_type, ref _requiresBuyBaseFunc, reader["requiresBuyBaseFunc"]);
 		reader.TryRead("requiresBuyCountry", ref _requiresBuyCountry);
 
 
@@ -355,7 +354,7 @@ public class RuleSoldier
 	/// <summary>Gets the list of research required to acquire this soldier.</summary>
 	public List<string> Requirements { get => _requires; }
 	/// <summary>Gets the base functions required to hire this soldier type (a copy, like the C++ bitset by value).</summary>
-	public BitArray RequiresBuyBaseFunc { get => new(_requiresBuyBaseFunc); }
+	public RuleBaseFacilityFunctions RequiresBuyBaseFunc => _requiresBuyBaseFunc;
 	/// <summary>Gets the allied country name required to hire this soldier type.</summary>
 	public string RequiresBuyCountry { get => _requiresBuyCountry; }
 	/// <summary>Gets the minimum stats for the random stats generator.</summary>
