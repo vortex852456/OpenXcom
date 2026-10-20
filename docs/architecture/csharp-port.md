@@ -32,6 +32,9 @@ port/
 ## YAML
 `Engine/Yaml.cs` liest mit dem Event-Parser von YamlDotNet in einen eigenen Knotenbaum, damit das Verhalten von rapidyaml erhalten bleibt: doppelte Schlüssel erlaubt (erster Treffer gewinnt), Merge-Schlüssel `<<` wie `Tree::resolve()`, Zahlen/Bools wie c4core (`0x`, `True`, ...). Die Selbsttests aus `src/Engine/Yaml.cpp` sind in `YamlTests` übernommen; `RepoYamlTests` liest alle `.rul`/`.yml` des Repos.
 
+## Bilder laden
+`Engine/ImageDecoder.cs` ersetzt lodepng und SDL_image, weil gängige .NET-Bibliotheken nach RGBA wandeln und die Palettenindizes verlieren. Wie `Surface::loadImage`: `.png` mit 8 Bit pro Pixel nach lodepng-Regeln (erster Paletteneintrag mit Alpha 0 wird transparent), alles andere nach SDL_image-Regeln (PNG mit 1–16 Bit Palette/Grau, GIF; Colour Key wird transparent). Golden-Test: `tools/golden/images.cpp` lädt alle Repo-Bilder und die synthetischen Testbilder (`tools/golden/make_test_images.py`) mit lodepng/SDL_image.
+
 ## Generierter Code
 `Options.Values.cs` und `Options.Create.cs` erzeugt `port/tools/gen/gen_options.py` aus `Options.inc.h`/`Options.cpp` (C-Präprozessor mit Desktop-Defines). Neue Optionen im C++-Stil dort ergänzen und neu generieren, nicht von Hand editieren.
 
@@ -57,6 +60,9 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. E
 | Palette `setColors`/`setColor` | +1 auf doppelte Schwarztöne | entfällt | Workaround für SDL-1.2-Farbabgleich, der hier nicht stattfindet |
 | YAML-Suche mit Duplikaten | ohne Index: Suche ab letzter Fundstelle | immer erster Treffer | Einfacher, deckt sich mit der indizierten Suche des Originals |
 | Eingebettete Assets (`exe:standard.zip`) | optional | entfällt | Inhalte kommen als Dateien/Zip |
+| Bildformate (`loadImage`) | alles, was SDL_image kann (auch BMP, LBM, PCX, ...) | nur PNG und GIF | Mods nutzen praktisch nur PNG/GIF; weitere Leser bei Bedarf |
+| Palettenalpha auf dem SDL_image-Weg | SDL 1.2: `unused` = 0, sdl12-compat: 255 | 255 | Byte ist in SDL 1.2 unbenutzt; Transparenz kommt dort aus dem Colour Key |
+| Abgeschnittene GIF-Dateien | SDL_image hängt in Erweiterungen bzw. liest alte Pufferbytes | Fehler bzw. Bildende | Kein Hänger, kein Datenmüll |
 
 ## Phasen
 Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilweise/fertig).
@@ -64,7 +70,7 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | Phase | Inhalt | Prüfung |
 |---|---|---|
 | 0 ✅ | Gerüst, RNG, Pluralregeln, Palette, Surface (HD), Action, InteractiveSurface, State, Game-Loop, Screen, MonoGame-Host | Golden-Tests, Headless-Screenshot |
-| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert, Golden-Test gegen C++-`options.cfg`), CrossPlatform-Ordner, Language/LocalizedText, FileMap/ModInfo inkl. Zip-Mods) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
+| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert, Golden-Test gegen C++-`options.cfg`), CrossPlatform-Ordner, Language/LocalizedText, FileMap/ModInfo inkl. Zip-Mods, `Surface.LoadImage` mit eigenem PNG/GIF-Leser) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
 | 2 | `Mod/` (Rule*, Laden/Mergen von Rulesets) und `Savegame/` (Modell + YAML-Saves) | Rulesets/Saves in C++ und C# laden, Dumps vergleichen |
 | 3 | `Menu/`, `Geoscape/`, `Basescape/`, `Ufopaedia/` | Bedienbare Kampagne mit Testinhalten |
 | 4 | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine) | Golden-Tests Pfadsuche/LOS/Schaden mit festem Seed |
@@ -72,7 +78,6 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | parallel | Eigenes Inhaltspaket (Setting, Texte, HD-Grafik, Sound, Karten) | siehe `content-rights.md` |
 
 ## Offene Entscheidungen
-- PNG/GIF-Decoder, der Palettenindizes erhält (eigener Decoder oder Bibliothek mit kompatibler Lizenz).
 - Skript-Engine: portieren oder ersetzen.
 
 ## Befehle
@@ -82,7 +87,7 @@ dotnet build                                   # alles bauen (Warnungen = Fehler
 dotnet test --project tests/Acom.Core.Tests # Tests
 dotnet run --project src/Acom.Desktop       # Spiel/Demo starten
 xvfb-run -a dotnet run --project src/Acom.Desktop -- --screenshot out.png --frames 60   # headless prüfen
-tools/golden/generate.sh                       # Golden-Dateien aus C++ neu erzeugen (g++, SDL-1.2-Header)
+tools/golden/generate.sh                       # Golden-Dateien aus C++ neu erzeugen (g++, SDL-1.2- und SDL_image-Pakete)
 python3 tools/port-status.py [Bereich]         # Fortschritt / offene Units
 dotnet run --project tools/Acom.AssetSpec -- --data <Originaldaten> --game ufo   # Asset-Liste nach content/spec/ (nur Metadaten)
 ```

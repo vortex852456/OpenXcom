@@ -11,6 +11,7 @@ src/Engine/Collections | C++-Containerhelfer -> .NET/LINQ
 src/Engine/HelperMeta | C++-Template-Metaprogrammierung
 src/Engine/Exception | -> .NET-Exceptions
 src/md5 | -> System.Security.Cryptography.MD5
+src/lodepng | PNG-Decoder -> Engine/ImageDecoder.cs (behaelt Palettenindizes, zlib aus System.IO.Compression)
 src/fmath | C++-Mathehelfer -> System.Math
 src/fallthrough | C++-Makro
 src/resource | Windows-Ressourcen-IDs

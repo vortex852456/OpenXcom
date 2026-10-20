@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Surface.h, src/Engine/Surface.cpp
-// Port status: partial (missing: loadImage (PNG/GIF/LBM), drawLine/Circle/Polygon/TexturedPolygon/String, SurfaceCrop, GraphSubset blit).
+// Port status: partial (missing: loadImage of formats other than PNG/GIF (LBM, BMP, ...), drawLine/Circle/Polygon/TexturedPolygon/String, SurfaceCrop, GraphSubset blit).
 
 #pragma warning disable CA1815 // SDL_Rect mirrors SDL 1.2; equality is not needed.
 
@@ -59,7 +59,7 @@ public class Surface
 
 	private byte[] _pixels;
 	private int _width, _height;
-	private readonly int _scale;
+	private int _scale;
 	private readonly Rgba[] _palette = new Rgba[256];
 	protected int _x, _y;
 	protected bool _visible = true, _hidden, _redraw;
@@ -285,6 +285,91 @@ public class Surface
 						SetPixelIterative(ref x, ref y, dataByte);
 				}
 			}
+		}
+	}
+
+	/// <summary>Loads an image file of a known format (PNG, GIF) through the mod file system.</summary>
+	public void LoadImage(string filename, int scale = 1) => LoadImage(FileMap.ReadAll(filename), filename, scale);
+
+	/// <summary>
+	/// Loads the contents of an image file of a known format into the surface, replacing it
+	/// (size, palette, position and flags) like <c>*this = Surface(width, height, 0, 0)</c> in C++.
+	/// PNGs with 8 bits per pixel are read like lodepng (the first palette entry with alpha 0 becomes
+	/// transparent), everything else like SDL_image (the colour key becomes transparent).
+	/// </summary>
+	/// <param name="data">Content of the file.</param>
+	/// <param name="filename">Filename of the image (selects the PNG path, used in messages).</param>
+	/// <param name="scale">HD extension: pixel density of the file; its size must be a multiple of it.</param>
+	/// <exception cref="InvalidDataException">Unknown format, broken file or not an 8-bit image.</exception>
+	public void LoadImage(byte[] data, string filename, int scale = 1)
+	{
+		ArgumentNullException.ThrowIfNull(data);
+		ArgumentOutOfRangeException.ThrowIfLessThan(scale, 1);
+		Logger.Verbose("Loading image: " + filename);
+
+		IndexedImage? image = null;
+		bool lodepng = false;
+		// Try loading with LodePNG first
+		if (CrossPlatform.CompareExt(filename, "png") && data.Length > 8 + 12 + 12) // minimal PNG file size: header and two empty chunks
+		{
+			try
+			{
+				image = ImageDecoder.DecodeLodePng(data);
+				lodepng = image != null;
+			}
+			catch (InvalidDataException e)
+			{
+				Logger.Error("Image " + filename + " lodepng failed:" + e.Message);
+			}
+		}
+		if (image == null) // Otherwise default to SDL_Image
+		{
+			try
+			{
+				image = ImageDecoder.DecodeSdl(data);
+			}
+			catch (InvalidDataException e)
+			{
+				throw new InvalidDataException(filename + ":" + e.Message, e);
+			}
+			if (image == null)
+				throw new InvalidDataException(filename + ": ACOM supports only 8bit images.");
+		}
+		if (image.Width % scale != 0 || image.Height % scale != 0)
+			throw new InvalidDataException(filename + ": image size " + image.Width + "x" + image.Height + " is no multiple of the pixel density " + scale + ".");
+
+		_scale = scale;
+		_width = image.Width / scale;
+		_height = image.Height / scale;
+		_pixels = image.Pixels;
+		Array.Clear(_palette);
+		_x = _y = 0;
+		_visible = true;
+		_hidden = _redraw = false;
+		SetPalette(image.Palette, 0, image.Palette.Length);
+
+		int transparent = image.ColorKey;
+		if (lodepng)
+		{
+			transparent = 0;
+			for (int c = 0; c < _palette.Length; ++c)
+			{
+				if (_palette[c].A == 0)
+				{
+					transparent = c;
+					break;
+				}
+			}
+		}
+		if (transparent != 0)
+		{
+			// graphics should have index 0 as transparent; incorrect ones are changed to 0
+			for (int i = 0; i < _pixels.Length; ++i)
+			{
+				if (_pixels[i] == transparent)
+					_pixels[i] = 0;
+			}
+			Logger.Warning("Image " + filename + (lodepng ? " (from lodepng)" : " (from SDL)") + " has incorrect transparent color index " + transparent + " (instead of 0).");
 		}
 	}
 
