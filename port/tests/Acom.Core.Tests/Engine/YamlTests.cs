@@ -144,6 +144,30 @@ public class YamlTests
 	}
 
 	[Fact]
+	public void Map_values_keep_the_first_duplicate_key_and_sort_ordinal()
+	{
+		// C++ read(std::map*) clears the map and emplaces, so a duplicate key keeps its first value
+		var reader = Root("m: {b: 1, a: 2, b: 3, B: 4}").ToBase();
+		var map = reader["m"].ReadVal<SortedDictionary<string, int>>();
+		Assert.Equal(["B", "a", "b"], map.Keys);
+		Assert.Equal(1, map["b"]);
+		Assert.Equal(1, reader["m"].ReadVal<Dictionary<string, int>>()["b"]);
+	}
+
+	[Fact]
+	public void Floats_are_read_as_float()
+	{
+		var reader = Root("f: 0.1\nl: [0.5, -2, 1e3]\nn: .inf").ToBase();
+		float f = 7;
+		Assert.True(reader.TryRead("f", ref f));
+		Assert.Equal(0.1f, f);
+		Assert.Equal(0.1f, reader["f"].ReadVal<float>());
+		Assert.Equal([0.5f, -2f, 1000f], reader["l"].ReadVal<List<float>>());
+		Assert.Equal(float.PositiveInfinity, reader["n"].ReadVal<float>());
+		Assert.Equal(0.1f, reader["f"].ReadVal<float?>());
+	}
+
+	[Fact]
 	public void Merge_keys_follow_rapidyaml()
 	{
 		const string yaml = """

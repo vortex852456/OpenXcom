@@ -90,7 +90,7 @@ public class RuleStatBonus
 							var vec = _bonusOrig[bonusIndex].second;
 							if (statReader.HasVal)
 							{
-								float val = (float)statReader.ReadVal<double>(); // YamlConvert parses float as double and fails to unbox float; same value
+								float val = statReader.ReadVal<float>();
 								vec.Add(val);
 							}
 							else
@@ -99,7 +99,7 @@ public class RuleStatBonus
 								{
 									if (j < statReader.ChildrenCount)
 									{
-										float val = (float)statReader[j].ReadVal<double>();
+										float val = statReader[j].ReadVal<float>();
 										vec.Add(val);
 									}
 								}

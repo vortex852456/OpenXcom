@@ -307,24 +307,24 @@ public class RuleDamageType
 		reader.TryRead("IgnorePainImmunity", ref IgnorePainImmunity);
 		reader.TryRead("IgnoreNormalMoraleLose", ref IgnoreNormalMoraleLose);
 		reader.TryRead("IgnoreOverKill", ref IgnoreOverKill);
-		TryReadFloat(reader, "ArmorEffectiveness", ref ArmorEffectiveness);
-		TryReadFloat(reader, "RadiusEffectiveness", ref RadiusEffectiveness);
-		TryReadFloat(reader, "RadiusReduction", ref RadiusReduction);
+		reader.TryRead("ArmorEffectiveness", ref ArmorEffectiveness);
+		reader.TryRead("RadiusEffectiveness", ref RadiusEffectiveness);
+		reader.TryRead("RadiusReduction", ref RadiusReduction);
 
 		reader.TryRead("FireThreshold", ref FireThreshold);
 		reader.TryRead("SmokeThreshold", ref SmokeThreshold);
 
-		TryReadFloat(reader, "ToHealth", ref ToHealth);
-		TryReadFloat(reader, "ToMana", ref ToMana);
-		TryReadFloat(reader, "ToArmor", ref ToArmor);
-		TryReadFloat(reader, "ToArmorPre", ref ToArmorPre);
-		TryReadFloat(reader, "ToWound", ref ToWound);
-		TryReadFloat(reader, "ToItem", ref ToItem);
-		TryReadFloat(reader, "ToTile", ref ToTile);
-		TryReadFloat(reader, "ToStun", ref ToStun);
-		TryReadFloat(reader, "ToEnergy", ref ToEnergy);
-		TryReadFloat(reader, "ToTime", ref ToTime);
-		TryReadFloat(reader, "ToMorale", ref ToMorale);
+		reader.TryRead("ToHealth", ref ToHealth);
+		reader.TryRead("ToMana", ref ToMana);
+		reader.TryRead("ToArmor", ref ToArmor);
+		reader.TryRead("ToArmorPre", ref ToArmorPre);
+		reader.TryRead("ToWound", ref ToWound);
+		reader.TryRead("ToItem", ref ToItem);
+		reader.TryRead("ToTile", ref ToTile);
+		reader.TryRead("ToStun", ref ToStun);
+		reader.TryRead("ToEnergy", ref ToEnergy);
+		reader.TryRead("ToTime", ref ToTime);
+		reader.TryRead("ToMorale", ref ToMorale);
 
 		reader.TryRead("RandomHealth", ref RandomHealth);
 		reader.TryRead("RandomMana", ref RandomMana);
@@ -340,19 +340,6 @@ public class RuleDamageType
 
 		reader.TryRead("TileDamageMethod", ref TileDamageMethod);
 		reader.TryRead("TileDamageLimit", ref TileDamageLimit);
-	}
-
-	/// <summary>
-	/// <c>reader.tryRead(key, floatValue)</c>. YamlConvert parses floats as double (like c4core) but boxes the
-	/// result as double for float targets, so the value is read as double and narrowed here.
-	/// </summary>
-	private static void TryReadFloat(YamlNodeReader reader, string key, ref float value)
-	{
-		double d = value;
-		if (reader.TryRead(key, ref d))
-		{
-			value = (float)d;
-		}
 	}
 
 	/// <summary>Helper function for calculating damage from damage.</summary>
