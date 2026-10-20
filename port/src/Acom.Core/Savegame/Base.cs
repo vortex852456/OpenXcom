@@ -413,13 +413,6 @@ public class Base : Target
 		}
 	}
 
-	/// <summary>C++ fmath AreSame(double, double).</summary>
-	private static bool AreSame(double l, double r) =>
-		Math.Abs(l - r) <= DBL_EPSILON * Math.Max(1.0, Math.Max(Math.Abs(l), Math.Abs(r)));
-
-	/// <summary>C++ DBL_EPSILON (not the same as <see cref="double.Epsilon"/>).</summary>
-	private const double DBL_EPSILON = 2.2204460492503131e-016;
-
 	/// <summary>Returns the list of facilities in the base.</summary>
 	public List<BaseFacility> Facilities => _facilities;
 

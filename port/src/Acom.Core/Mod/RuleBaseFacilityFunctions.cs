@@ -127,6 +127,7 @@ public struct RuleBaseFacilityFunctions : IEquatable<RuleBaseFacilityFunctions>
 		if ((uint)pos >= Size)
 			throw new ArgumentOutOfRangeException(nameof(pos), pos, "bitset position out of range");
 	}
+}
 
 /// <summary>
 /// Subset area of base: <c>AreaSubset&lt;Base, Sint8&gt;</c> from src/Engine/GraphSubset.h (C++ alias <c>BaseAreaSubset</c>).
@@ -185,7 +186,7 @@ public struct BaseAreaSubset : IEquatable<BaseAreaSubset>
 
 	public readonly bool Equals(BaseAreaSubset other) => this == other;
 
-	public override readonly bool Equals(object? obj) => obj is BaseAreaSubset other && this == other;
+	public override readonly bool Equals(object obj) => obj is BaseAreaSubset other && this == other;
 
 	public override readonly int GetHashCode() => HashCode.Combine(beg_x, end_x, beg_y, end_y);
 
