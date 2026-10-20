@@ -31,6 +31,6 @@ public class NextTurnState : State
 	public override void Handle(Action action) => throw new NotImplementedException();
 	public override void Think() => throw new NotImplementedException();
 	public void Close() => throw new NotImplementedException();
-	public virtual void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
+	public override void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
 	public void BtnBriefingReinforcementsClick(Action action) => throw new NotImplementedException();
 }

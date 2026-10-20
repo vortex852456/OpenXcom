@@ -113,7 +113,7 @@ public class BattlescapeState : State
 	public void TxtTooltipInExtraSpecial(Action action) => throw new NotImplementedException();
 	public void TxtTooltipInEndTurn(Action action) => throw new NotImplementedException();
 	public void TxtTooltipOut(Action action) => throw new NotImplementedException();
-	public virtual void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
+	public override void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
 	public void StopScrolling(Action action) => throw new NotImplementedException();
 	public void Autosave(int currentTurn) => throw new NotImplementedException();
 	public bool IsBusy { get => throw new NotImplementedException(); }

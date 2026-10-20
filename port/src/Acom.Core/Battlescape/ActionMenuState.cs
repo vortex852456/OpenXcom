@@ -35,5 +35,5 @@ public class ActionMenuState : State
 	public override void Init() => throw new NotImplementedException();
 	public override void Handle(Action action) => throw new NotImplementedException();
 	public virtual void BtnActionMenuItemClick(Action action) => throw new NotImplementedException();
-	public virtual void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
+	public override void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
 }

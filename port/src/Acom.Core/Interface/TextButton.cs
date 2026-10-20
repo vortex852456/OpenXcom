@@ -35,7 +35,7 @@ public class TextButton : InteractiveSurface
 	public void SetBig() => throw new NotImplementedException();
 	public void SetSmall() => throw new NotImplementedException();
 	public Font Font { get => throw new NotImplementedException(); }
-	public virtual void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
+	public override void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
 	public virtual void SetHighContrast(bool contrast) => throw new NotImplementedException();
 	public string Text { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 	public void SetGroup(TextButton group) => throw new NotImplementedException();

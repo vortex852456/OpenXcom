@@ -32,7 +32,7 @@ public class BattlescapeMessage : Surface
 	public void SetBackground(Surface background) => throw new NotImplementedException();
 	public void SetText(string message, string message2) => throw new NotImplementedException();
 	public void SetProgressValue(int progress) => throw new NotImplementedException();
-	public virtual void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
+	public override void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
 	public override void SetPalette(ReadOnlySpan<Rgba> colors, int firstcolor = 0, int ncolors = 256) => throw new NotImplementedException();
 	public override void Blit(Surface surface) => throw new NotImplementedException();
 	public override void SetHeight(int height) => throw new NotImplementedException();

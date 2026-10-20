@@ -98,6 +98,39 @@ public class GameTests
 	}
 
 	[Fact]
+	public void Volume_exponent_maps_linear_to_exponential_levels()
+	{
+		Assert.Equal(0.0, Game.VolumeExponent(0));
+		Assert.Equal(1.0, Game.VolumeExponent(Game.SDL_MIX_MAXVOLUME), 12);
+		Assert.Equal((Math.Sqrt(11) - 1) / 10, Game.VolumeExponent(64), 12);
+	}
+
+	[Fact]
+	public void SetVolume_sets_mixer_channels_like_the_original()
+	{
+		var game = new Game(new Screen(4, 4));
+		Assert.True(Options.mute); // no audio backend: like a missing sound device
+		game.SetVolume(10, 10, 10);
+		Assert.Equal(128, game.MixMusicVolume);
+
+		Options.mute = false;
+		try
+		{
+			game.SetVolume(128, 64, 32);
+			Assert.Equal([128, 10, 10, 64, 128, 128], game.MixChannelVolumes[..6].ToArray());
+			Assert.Equal(29, game.MixMusicVolume);
+			// the sound volume also applies to the UI channels when ui is left unchanged
+			game.SetVolume(64, -1, -1);
+			Assert.Equal([29, 29, 29, 14, 29, 29], game.MixChannelVolumes[..6].ToArray());
+			Assert.Equal(29, game.MixMusicVolume);
+		}
+		finally
+		{
+			Options.mute = true;
+		}
+	}
+
+	[Fact]
 	public void Flip_converts_palette_indices_to_rgba()
 	{
 		var screen = new Screen(2, 1, scale: 2);

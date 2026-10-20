@@ -77,6 +77,23 @@ public static class SDLKeyboard
 	}
 }
 
+/// <summary>Application state bits of SDL 1.2 (SDL_GetAppState, SDL_ActiveEvent.state).</summary>
+public static class SDLApp
+{
+	public const byte SDL_APPMOUSEFOCUS = 0x01;
+	public const byte SDL_APPINPUTFOCUS = 0x02;
+	public const byte SDL_APPACTIVE = 0x04;
+}
+
+/// <summary>Application visibility/focus event data.</summary>
+public struct SDL_ActiveEvent
+{
+	/// <summary>Whether given states were gained (1) or lost (0).</summary>
+	public byte gain;
+	/// <summary>A mask of the focus states (<see cref="SDLApp"/>).</summary>
+	public byte state;
+}
+
 /// <summary>Key symbol of a keyboard event.</summary>
 public struct SDL_keysym
 {
@@ -120,6 +137,7 @@ public struct SDL_ResizeEvent
 public sealed class SDL_Event
 {
 	public SDLEventType type;
+	public SDL_ActiveEvent active;
 	public SDL_KeyboardEvent key;
 	public SDL_MouseMotionEvent motion;
 	public SDL_MouseButtonEvent button;
@@ -141,4 +159,7 @@ public sealed class SDL_Event
 		=> new() { type = SDLEventType.SDL_MOUSEBUTTONUP, button = { button = button, x = x, y = y } };
 
 	public static SDL_Event Quit() => new() { type = SDLEventType.SDL_QUIT };
+
+	public static SDL_Event ActiveEvent(byte gain, byte state)
+		=> new() { type = SDLEventType.SDL_ACTIVEEVENT, active = { gain = gain, state = state } };
 }

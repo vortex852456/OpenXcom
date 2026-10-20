@@ -58,5 +58,5 @@ public class OptionsBaseState : State
 	public void BtnGroupPress(Action action) => throw new NotImplementedException();
 	public void TxtTooltipIn(Action action) => throw new NotImplementedException();
 	public void TxtTooltipOut(Action action) => throw new NotImplementedException();
-	public virtual void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
+	public override void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
 }

@@ -40,6 +40,6 @@ public class MainMenuState : State
 	public void BtnModsClick(Action action) => throw new NotImplementedException();
 	public void BtnQuitClick(Action action) => throw new NotImplementedException();
 	public void BtnUpdateClick(Action action) => throw new NotImplementedException();
-	public virtual void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
+	public override void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
 	public override void Init() => throw new NotImplementedException();
 }

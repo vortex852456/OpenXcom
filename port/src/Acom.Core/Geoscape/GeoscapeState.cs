@@ -83,6 +83,6 @@ public class GeoscapeState : State
 	public void BtnTimerClick(Action action) => throw new NotImplementedException();
 	public bool ProcessMissionSite(MissionSite site) => throw new NotImplementedException();
 	public void HandleBaseDefense(Base @base, Ufo ufo) => throw new NotImplementedException();
-	public virtual void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
+	public override void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
 	public void DetermineAlienMissions(bool isNewMonth = true, RuleEvent eventRules = null) => throw new NotImplementedException();
 }

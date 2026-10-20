@@ -29,7 +29,7 @@ public class WarningMessage : Surface
 	public WarningMessage(int width, int height, int x = 0, int y = 0) : base(width, height, x, y) => throw new NotImplementedException();
 	public override void SetColor(byte color) => throw new NotImplementedException();
 	public void SetTextColor(byte color) => throw new NotImplementedException();
-	public virtual void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
+	public override void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
 	public override void SetPalette(ReadOnlySpan<Rgba> colors, int firstcolor = 0, int ncolors = 256) => throw new NotImplementedException();
 	public void ShowMessage(string msg, int time = 2) => throw new NotImplementedException();
 	public override void Think() => throw new NotImplementedException();

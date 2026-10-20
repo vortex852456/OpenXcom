@@ -131,7 +131,7 @@ public class ComboBox : InteractiveSurface
 	}
 
 	/// <summary>Changes the resources for the text in the combo box.</summary>
-	public virtual void InitText(Font big, Font small, Language lang)
+	public override void InitText(Font big, Font small, Language lang)
 	{
 		_lang = lang;
 		_button.InitText(big, small, lang);

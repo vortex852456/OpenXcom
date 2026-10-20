@@ -44,7 +44,7 @@ public class Text : InteractiveSurface
 	public void SetBig() => throw new NotImplementedException();
 	public void SetSmall() => throw new NotImplementedException();
 	public Font Font { get => throw new NotImplementedException(); }
-	public virtual void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
+	public override void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
 	public void SetText(string text) => throw new NotImplementedException();
 	public string GetText() => throw new NotImplementedException();
 	public void SetWordWrap(bool wrap, bool indent = false, bool ignoreSeparators = false) => throw new NotImplementedException();

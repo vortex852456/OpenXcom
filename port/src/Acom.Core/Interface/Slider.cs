@@ -96,7 +96,7 @@ public class Slider : InteractiveSurface
 	}
 
 	/// <summary>Changes the various resources needed for text rendering.</summary>
-	public virtual void InitText(Font big, Font small, Language lang)
+	public override void InitText(Font big, Font small, Language lang)
 	{
 		_txtMinus.InitText(big, small, lang);
 		_txtPlus.InitText(big, small, lang);

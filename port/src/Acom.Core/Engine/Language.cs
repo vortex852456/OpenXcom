@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Language.h, src/Engine/Language.cpp
-// Port status: partial (missing: getList (needs FileMap), loadRule (needs ExtraStrings))
 
 using System.Globalization;
 using System.Text;
@@ -95,18 +94,34 @@ public sealed class Language
 	private readonly LanguagePlurality _handler;
 	private readonly TextDirection _direction;
 	private readonly TextWrapping _wrap;
-	private readonly string _id;
 
 	/// <summary>Creates a blank language for <see cref="Options.language"/>.</summary>
 	public Language()
 	{
-		_id = Options.language;
-		_handler = LanguagePlurality.Create(_id);
-		_direction = s_rtl.Contains(_id) ? TextDirection.DIRECTION_RTL : TextDirection.DIRECTION_LTR;
+		string id = Options.language;
+		_handler = LanguagePlurality.Create(id);
+		_direction = s_rtl.Contains(id) ? TextDirection.DIRECTION_RTL : TextDirection.DIRECTION_LTR;
 		if (Options.wordwrap == TextWrapping.WRAP_AUTO)
-			_wrap = s_cjk.Contains(_id) ? TextWrapping.WRAP_LETTERS : TextWrapping.WRAP_WORDS;
+			_wrap = s_cjk.Contains(id) ? TextWrapping.WRAP_LETTERS : TextWrapping.WRAP_WORDS;
 		else
 			_wrap = Options.wordwrap;
+	}
+
+	/// <summary>Gets all the languages found in the Data folder (common layer) and their human-readable names.</summary>
+	/// <param name="ids">List of language ids (sorted).</param>
+	/// <param name="names">List of language human-readable names.</param>
+	public static void GetList(List<string> ids, List<string> names)
+	{
+		ArgumentNullException.ThrowIfNull(ids);
+		ArgumentNullException.ThrowIfNull(names);
+		var nset = FileMap.FilterFiles(FileMap.GetVFolderContents("Language", 0), "yml");
+		ids.Clear();
+		foreach (var filename in nset)
+			ids.Add(FileNameToId(filename));
+		ids.Sort(StringComparer.Ordinal);
+		names.Clear();
+		foreach (var id in ids)
+			names.Add(s_names.GetValueOrDefault(id, id));
 	}
 
 	/// <summary>Checks if a language is in the supported name list.</summary>
@@ -125,6 +140,13 @@ public sealed class Language
 		if (found < 0)
 			return noExtName;
 		return noExtName[..(found + 1)] + noExtName[(found + 1)..].ToUpperInvariant();
+	}
+
+	/// <summary>Loads the language from an external file (Ruby-on-Rails YAML format).</summary>
+	public void LoadFile(FileMap.FileRecord frec)
+	{
+		ArgumentNullException.ThrowIfNull(frec);
+		LoadFile(frec.GetYaml());
 	}
 
 	/// <summary>Loads strings from a language file (root map, optionally wrapped in the language id).</summary>
@@ -154,7 +176,17 @@ public sealed class Language
 		}
 	}
 
-	/// <summary>Adds or replaces strings (used for ruleset extraStrings).</summary>
+	/// <summary>Loads the language from a mod's ExtraStrings.</summary>
+	/// <param name="extraStrings">List of ExtraStrings.</param>
+	/// <param name="id">Language ID.</param>
+	public void LoadRule(SortedDictionary<string, ExtraStrings> extraStrings, string id)
+	{
+		ArgumentNullException.ThrowIfNull(extraStrings);
+		if (extraStrings.TryGetValue(id, out var it))
+			LoadStrings(it.Strings);
+	}
+
+	/// <summary>Adds or replaces strings (the body of <see cref="LoadRule"/>).</summary>
 	public void LoadStrings(IEnumerable<KeyValuePair<string, string>> strings)
 	{
 		ArgumentNullException.ThrowIfNull(strings);
@@ -200,7 +232,7 @@ public sealed class Language
 			lock (s_notFoundIds)
 			{
 				if (s_notFoundIds.Add(id))
-					Logger.Warning($"{id} not found in {_id}");
+					Logger.Warning($"{id} not found in {Options.language}");
 			}
 			return new LocalizedText(id);
 		}
@@ -209,7 +241,7 @@ public sealed class Language
 			lock (s_notFoundIds)
 			{
 				if (s_notFoundIds.Add(id))
-					Logger.Warning($"{id} has plural format in ``{_id}``. Code assumes singular format.");
+					Logger.Warning($"{id} has plural format in ``{Options.language}``. Code assumes singular format.");
 			}
 			return s;
 		}
@@ -224,6 +256,9 @@ public sealed class Language
 	{
 		return GetString(gender == SoldierGender.GENDER_MALE ? id + "_MALE" : id + "_FEMALE");
 	}
+
+	/// <summary>Outputs all the language IDs and strings to an HTML file.</summary>
+	public void ToHtml(string filename) => CrossPlatform.WriteFile(filename, ToHtml());
 
 	/// <summary>Outputs the language to a HTML table (for translators).</summary>
 	public string ToHtml()

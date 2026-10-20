@@ -27,7 +27,7 @@ namespace Acom;
 public class BaseView : InteractiveSurface
 {
 	public BaseView(int width, int height, int x = 0, int y = 0) : base(width, height, x, y) => throw new NotImplementedException();
-	public virtual void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
+	public override void InitText(Font big, Font small, Language lang) => throw new NotImplementedException();
 	public void SetBase(Base @base) => throw new NotImplementedException();
 	public void SetTexture(SurfaceSet texture) => throw new NotImplementedException();
 	public BaseFacility SelectedFacility { get => throw new NotImplementedException(); }

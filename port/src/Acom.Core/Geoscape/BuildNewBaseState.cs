@@ -46,5 +46,5 @@ public class BuildNewBaseState : State
 	public void BtnZoomOutLeftClick(Action action) => throw new NotImplementedException();
 	public void BtnZoomOutRightClick(Action action) => throw new NotImplementedException();
 	public void BtnCancelClick(Action action) => throw new NotImplementedException();
-	public virtual void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
+	public override void Resize(ref int dX, ref int dY) => throw new NotImplementedException();
 }

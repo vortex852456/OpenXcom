@@ -406,7 +406,7 @@ public class TextList : InteractiveSurface
 	/// Changes the resources for the text in the list
 	/// and calculates the selector and visible amount of rows.
 	/// </summary>
-	public virtual void InitText(Font big, Font small, Language lang)
+	public override void InitText(Font big, Font small, Language lang)
 	{
 		_big = big;
 		_small = small;

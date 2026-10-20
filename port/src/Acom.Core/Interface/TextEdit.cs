@@ -122,7 +122,7 @@ public class TextEdit : InteractiveSurface
 	}
 
 	/// <summary>Changes the various fonts for the text edit to use.</summary>
-	public virtual void InitText(Font big, Font small, Language lang)
+	public override void InitText(Font big, Font small, Language lang)
 	{
 		_text.InitText(big, small, lang);
 		_caret.InitText(big, small, lang);

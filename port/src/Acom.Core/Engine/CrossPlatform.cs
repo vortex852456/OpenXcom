@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/CrossPlatform.h, src/Engine/CrossPlatform.cpp
-// Port status: partial (command line, folder discovery, file/path helpers, versions; missing: screenshots, embedded assets,
+// Port status: partial (command line, folder discovery, file/path helpers, versions, locale, quit shortcut; missing: screenshots, embedded assets,
 // save headers, error dialogs, path conversions).
 // Deviation: folder listings are sorted case-insensitively (like NTFS); the C++ code uses the unspecified readdir order.
 // Deviation: ACOM uses its own folder names ("acom"/"ACOM") instead of "openxcom"/"OpenXcom",
@@ -332,5 +332,43 @@ public static class CrossPlatform
 			Logger.Error($"Failed to write {filename}: {e.Message}");
 			return false;
 		}
+	}
+
+	/// <summary>Gets the user's locale as "language-COUNTRY" (e.g. "de-DE").</summary>
+	/// <remarks>
+	/// Deviation: the port runs with invariant globalization, so the locale comes from the POSIX
+	/// variables (LC_ALL, LC_MESSAGES, LANG) on every platform, giving what the C++ Windows branch returns.
+	/// The C++ Linux branch cuts one character too many ("de_DE.UTF-8" → "d-e_D") and never finds a language.
+	/// </remarks>
+	public static string GetLocale()
+	{
+		string? name = null;
+		foreach (var variable in new[] { "LC_ALL", "LC_MESSAGES", "LANG" })
+		{
+			name = Environment.GetEnvironmentVariable(variable);
+			if (!string.IsNullOrEmpty(name))
+				break;
+		}
+		if (string.IsNullOrEmpty(name))
+			return "x-";
+		int dot = name.IndexOfAny(['.', '@']);
+		if (dot >= 0)
+			name = name[..dot];
+		int dash = name.IndexOf('_', StringComparison.Ordinal);
+		if (dash >= 0)
+			return name[..dash] + "-" + name[(dash + 1)..];
+		return name + "-";
+	}
+
+	/// <summary>Is the event the platform's quit shortcut (Alt+F4 on Windows, Command+Q on macOS)?</summary>
+	public static bool IsQuitShortcut(SDL_Event ev)
+	{
+		ArgumentNullException.ThrowIfNull(ev);
+		if (OperatingSystem.IsWindows())
+			return ev.type == SDLEventType.SDL_KEYDOWN && ev.key.keysym.sym == SDLKey.SDLK_F4 && (ev.key.keysym.mod & SDLMod.KMOD_ALT) != 0;
+		if (OperatingSystem.IsMacOS())
+			return ev.type == SDLEventType.SDL_KEYDOWN && ev.key.keysym.sym == SDLKey.SDLK_q && (ev.key.keysym.mod & SDLMod.KMOD_LMETA) != 0;
+		//TODO add other OSs shortcuts.
+		return false;
 	}
 }
