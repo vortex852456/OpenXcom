@@ -51,6 +51,39 @@ public class RuleItemTests
 		Assert.False(map.Time);
 		Assert.True(map.Energy);
 		Assert.Null(map.Stun);
+
+		// a null scalar resets the value (NullableValue::setNull), so the fallback rules apply again
+		var reset = new RuleItemUseFlatRule(true, true);
+		reset.LoadFlat(Node("flatSnap: ~"), "Snap");
+		Assert.Null(reset.Time);
+		Assert.True(reset.Energy);
+	}
+
+	[Fact]
+	public void LoadYaml_nullable_helpers_use_minus_one_for_null()
+	{
+		var node = Node("n: ~\ni: 5\nb: true\nf: false");
+		int value = 7;
+		LoadYaml.LoadIntNullable(ref value, node["missing"]);
+		Assert.Equal(7, value);
+		LoadYaml.LoadIntNullable(ref value, node["n"]);
+		Assert.Equal(LoadYaml.defIntNullable, value);
+		LoadYaml.LoadIntNullable(ref value, node["i"]);
+		Assert.Equal(5, value);
+		Assert.Equal(9, LoadYaml.UseIntNullable(-1, 9));
+		Assert.Equal(5, LoadYaml.UseIntNullable(5, 9));
+
+		int flag = 0;
+		LoadYaml.LoadBoolNullable(ref flag, node["n"]);
+		Assert.Equal(-1, flag);
+		Assert.True(LoadYaml.UseBoolNullable(flag, true));
+		LoadYaml.LoadBoolNullable(ref flag, node["b"]);
+		Assert.Equal(1, flag);
+		sbyte small = 1;
+		LoadYaml.LoadBoolNullable(ref small, node["f"]);
+		Assert.Equal(0, small);
+		Assert.False(LoadYaml.UseBoolNullable(small, true));
+		Assert.True(LoadYaml.UseBoolNullable(2, false)); // any other value converts to true like C++ int -> bool
 	}
 
 	[Fact]
