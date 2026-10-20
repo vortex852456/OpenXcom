@@ -78,6 +78,45 @@ public class RuleManufacture
 		_producedItemsNames[name] = 1;
 	}
 
+	/// <summary>
+	/// Copy (C++ implicit copy constructor; <c>Mod::loadAll</c> copies the <c>startFrom</c> project of a
+	/// manufacture shortcut and then calls <see cref="BreakDown"/> on the copy).
+	/// </summary>
+	/// <remarks>Containers are copied like the C++ members held by value; rule references stay shared (C++ pointers).</remarks>
+	public RuleManufacture(RuleManufacture other)
+	{
+		ArgumentNullException.ThrowIfNull(other);
+		_name = other._name;
+		_category = other._category;
+		_spawnedPersonType = other._spawnedPersonType;
+		_spawnedPersonName = other._spawnedPersonName;
+		_spawnedSoldier = other._spawnedSoldier;
+		_requiresName.AddRange(other._requiresName);
+		_requiresBaseFunc = other._requiresBaseFunc;
+		_requires = [.. other._requires];
+		_space = other._space;
+		_time = other._time;
+		_cost = other._cost;
+		_points = other._points;
+		_refund = other._refund;
+		foreach (var i in other._requiredItemsNames)
+			_requiredItemsNames.Add(i.Key, i.Value);
+		foreach (var i in other._producedItemsNames)
+			_producedItemsNames.Add(i.Key, i.Value);
+		foreach (var i in other._requiredItems)
+			_requiredItems.Add(i.Key, i.Value);
+		foreach (var i in other._producedItems)
+			_producedItems.Add(i.Key, i.Value);
+		foreach (var i in other._requiredCrafts)
+			_requiredCrafts.Add(i.Key, i.Value);
+		_producedCraft = other._producedCraft;
+		_randomProducedItemsNames = other._randomProducedItemsNames.ConvertAll(p => (p.first, new SortedDictionary<string, int>(p.second, p.second.Comparer)));
+		foreach (var p in other._randomProducedItems)
+			_randomProducedItems.Add((p.first, new Dictionary<RuleItem, int>(p.second)));
+		_transferTimes = [.. other._transferTimes];
+		_listOrder = other._listOrder;
+	}
+
 	/// <summary>Loads the manufacture project from YAML.</summary>
 	public void Load(YamlNodeReader node, Mod mod)
 	{

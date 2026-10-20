@@ -48,4 +48,25 @@ public class RuleManufactureTests
 		Assert.False(research.IsHoldingNeededItem);
 		Assert.Null(research.Lookup);
 	}
+
+	[Fact]
+	public void Copy_does_not_share_containers_with_the_original()
+	{
+		// C++ Mod::loadAll copies the startFrom project by value before breakDown() rewrites the copy.
+		var topic = new RuleResearch("STR_TOPIC", 0);
+		var original = new RuleManufacture("STR_ITEM", 7);
+		original.Requirements.Add(topic);
+		original.TransferTimes.Add(24);
+
+		var copy = new RuleManufacture(original);
+		Assert.Equal("STR_ITEM", copy.Name);
+		Assert.Equal(7, copy.ListOrder);
+		Assert.Equal([topic], copy.Requirements);
+		Assert.Equal([24], copy.TransferTimes);
+
+		copy.Requirements.Clear();
+		copy.TransferTimes.Add(48);
+		Assert.Equal([topic], original.Requirements);
+		Assert.Equal([24], original.TransferTimes);
+	}
 }
