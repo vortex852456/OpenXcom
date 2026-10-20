@@ -339,7 +339,8 @@ public class ComboBox : InteractiveSurface
 		}
 		if (_list.Visible)
 		{
-			if (_sel < _list.VisibleRows / 2 || _sel == -1)
+			// unsigned comparison like C++ size_t; ScrollTo() treats a negative result as huge
+			if ((uint)_sel < (uint)(_list.VisibleRows / 2) || _sel == -1)
 			{
 				_list.ScrollTo(0);
 			}

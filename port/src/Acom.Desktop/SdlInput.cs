@@ -48,6 +48,8 @@ internal sealed unsafe partial class SdlInput : IDisposable
 	private readonly List<SDL_Event> _pending = [];
 	private int _mouseX, _mouseY;
 	private byte _buttons;
+	/// <summary>A repeated key press was dropped; its text input follows and is dropped too.</summary>
+	private bool _dropText;
 
 	static SdlInput()
 	{
@@ -114,7 +116,11 @@ internal sealed unsafe partial class SdlInput : IDisposable
 				case SDL_KEYDOWN:
 				case SDL_KEYUP:
 				{
-					// SDL_KeyboardEvent: keysym.scancode @16, keysym.sym @20, keysym.mod @24
+					// SDL_KeyboardEvent: repeat @13, keysym.scancode @16, keysym.sym @20, keysym.mod @24
+					// SDL 1.2 only repeated held keys after SDL_EnableKeyRepeat; drop the repeat and its text.
+					_dropText = type == SDL_KEYDOWN && *(e + 13) != 0 && !SDLKeyboard.KeyRepeat;
+					if (_dropText)
+						break;
 					int scancode = *(int*)(e + 16);
 					int sym = *(int*)(e + 20);
 					// SDL2 modifier bits match SDL 1.2 (GUI keys took over the META bits).
@@ -135,6 +141,11 @@ internal sealed unsafe partial class SdlInput : IDisposable
 				case SDL_TEXTINPUT:
 				{
 					// SDL_TextInputEvent: UTF-8 text @12, up to 32 bytes. SDL 1.2 attached the character to the key press.
+					if (_dropText)
+					{
+						_dropText = false;
+						break;
+					}
 					var text = Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpanFromNullTerminated(e + 12));
 					foreach (char c in text)
 					{

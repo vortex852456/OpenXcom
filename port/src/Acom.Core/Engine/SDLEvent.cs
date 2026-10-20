@@ -55,6 +55,28 @@ public static class SDLMouse
 	public static byte SDL_BUTTON(int button) => (byte)(1 << (button - 1));
 }
 
+/// <summary>Keyboard settings of SDL 1.2 that the engine changes at run time (SDL_keyboard.h).</summary>
+public static class SDLKeyboard
+{
+	public const int SDL_DEFAULT_REPEAT_DELAY = 500;
+	public const int SDL_DEFAULT_REPEAT_INTERVAL = 30;
+
+	private static volatile bool s_keyRepeat;
+
+	/// <summary>Whether held keys send repeated key presses. Off until enabled, as in SDL 1.2.</summary>
+	public static bool KeyRepeat => s_keyRepeat;
+
+	/// <summary>
+	/// SDL 1.2 SDL_EnableKeyRepeat: a delay of 0 turns key repeat off.
+	/// The platform layer drops repeated key presses while it is off; delay and interval are the system's.
+	/// </summary>
+	public static int SDL_EnableKeyRepeat(int delay, int interval)
+	{
+		s_keyRepeat = delay != 0;
+		return 0;
+	}
+}
+
 /// <summary>Key symbol of a keyboard event.</summary>
 public struct SDL_keysym
 {

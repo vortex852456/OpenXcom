@@ -35,8 +35,8 @@ public enum TextEditConstraint : uint
 /// to change the text himself.
 /// </summary>
 /// <remarks>
-/// <c>SDL_EnableKeyRepeat</c> calls are left out: the SDL2 platform layer always delivers key repeats.
-/// The C++ destructor also clears the state's modal surface; that is up to the owning state here.
+/// There is no destructor: the C++ one turns key repeat off and clears the state's modal surface
+/// in case the text edit was left focused; that is up to the owning state here.
 /// </remarks>
 public class TextEdit : InteractiveSurface
 {
@@ -89,6 +89,7 @@ public class TextEdit : InteractiveSurface
 			base.SetFocus(focus);
 			if (_isFocused)
 			{
+				SDLKeyboard.SDL_EnableKeyRepeat(SDLKeyboard.SDL_DEFAULT_REPEAT_DELAY, SDLKeyboard.SDL_DEFAULT_REPEAT_INTERVAL);
 				_caretPos = _value.Length;
 				_blink = true;
 				_timer.Start();
@@ -99,6 +100,7 @@ public class TextEdit : InteractiveSurface
 			{
 				_blink = false;
 				_timer.Stop();
+				SDLKeyboard.SDL_EnableKeyRepeat(0, SDLKeyboard.SDL_DEFAULT_REPEAT_INTERVAL);
 				if (_modal)
 					_state.SetModal(null);
 			}

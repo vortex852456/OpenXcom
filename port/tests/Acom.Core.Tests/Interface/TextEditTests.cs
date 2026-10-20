@@ -88,11 +88,21 @@ public class TextEditTests
 		Assert.Equal(10, changes); // every key press reports a change
 	}
 
+	[Fact]
+	public void Key_repeat_is_turned_off_by_a_zero_delay()
+	{
+		SDLKeyboard.SDL_EnableKeyRepeat(SDLKeyboard.SDL_DEFAULT_REPEAT_DELAY, SDLKeyboard.SDL_DEFAULT_REPEAT_INTERVAL);
+		Assert.True(SDLKeyboard.KeyRepeat);
+		SDLKeyboard.SDL_EnableKeyRepeat(0, SDLKeyboard.SDL_DEFAULT_REPEAT_INTERVAL);
+		Assert.False(SDLKeyboard.KeyRepeat);
+	}
+
 	[Fact(SkipExceptions = [typeof(NotImplementedException)])]
 	public void Enter_and_escape_unfocus()
 	{
 		var (edit, state) = Create();
 		edit.SetFocus(true);
+		Assert.True(SDLKeyboard.KeyRepeat); // held keys repeat only while a text edit is focused
 		int enters = 0;
 
 		// empty text without enter handler: stays focused
@@ -103,6 +113,7 @@ public class TextEditTests
 		edit.KeyboardPress(Key(SDLKey.SDLK_RETURN), null);
 		Assert.False(edit.IsFocused);
 		Assert.Null(state.Modal);
+		Assert.False(SDLKeyboard.KeyRepeat);
 		Assert.Equal("abc", edit.Text);
 
 		edit.OnEnter(_ => enters++);
