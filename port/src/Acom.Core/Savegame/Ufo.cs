@@ -33,7 +33,7 @@ public enum UfoDetection
 
 public class Ufo : MovingTarget
 {
-	public static string ALTITUDE_STRING;
+	public static readonly string[] ALTITUDE_STRING = ["STR_GROUND", "STR_VERY_LOW", "STR_LOW_UC", "STR_HIGH_UC", "STR_VERY_HIGH"];
 	public const string ScriptName = "Ufo";
 	public Ufo(RuleUfo rules, int uniqueId, int hunterKillerPercentage = 0, int huntMode = 0, int huntBehavior = 0) => throw new NotImplementedException();
 	protected override void CalculateSpeed() => throw new NotImplementedException();

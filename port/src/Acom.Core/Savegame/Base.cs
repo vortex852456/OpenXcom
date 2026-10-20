@@ -144,13 +144,13 @@ public class Base : Target
 	public void CleanupPrisons(int prisonType) => throw new NotImplementedException();
 	public void CleanupDefenses(bool reclaimItems) => throw new NotImplementedException();
 	public BasePlacementErrors IsAreaInUse(object area, RuleBaseFacility replacement = null) => throw new NotImplementedException();
-	public System.Collections.BitArray GetProvidedBaseFunc(object skip) => throw new NotImplementedException();
-	public System.Collections.BitArray InherentProvidedBaseFunc { get => throw new NotImplementedException(); }
-	public System.Collections.BitArray GetRequireBaseFunc(object skip) => throw new NotImplementedException();
-	public System.Collections.BitArray GetForbiddenBaseFunc(object skip) => throw new NotImplementedException();
-	public System.Collections.BitArray InherentForbiddenBaseFunc { get => throw new NotImplementedException(); }
-	public System.Collections.BitArray GetFutureBaseFunc(object skip) => throw new NotImplementedException();
-	public System.Collections.BitArray InherentFutureBaseFunc { get => throw new NotImplementedException(); }
+	public RuleBaseFacilityFunctions GetProvidedBaseFunc(object skip) => throw new NotImplementedException();
+	public RuleBaseFacilityFunctions InherentProvidedBaseFunc { get => throw new NotImplementedException(); }
+	public RuleBaseFacilityFunctions GetRequireBaseFunc(object skip) => throw new NotImplementedException();
+	public RuleBaseFacilityFunctions GetForbiddenBaseFunc(object skip) => throw new NotImplementedException();
+	public RuleBaseFacilityFunctions InherentForbiddenBaseFunc { get => throw new NotImplementedException(); }
+	public RuleBaseFacilityFunctions GetFutureBaseFunc(object skip) => throw new NotImplementedException();
+	public RuleBaseFacilityFunctions InherentFutureBaseFunc { get => throw new NotImplementedException(); }
 	public bool IsMaxAllowedLimitReached(RuleBaseFacility rule) => throw new NotImplementedException();
 	public BaseSumDailyRecovery SumRecoveryPerDay { get => throw new NotImplementedException(); }
 	public object RemoveCraft(Craft craft, bool unload) => throw new NotImplementedException();

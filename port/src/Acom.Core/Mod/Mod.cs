@@ -128,6 +128,9 @@ public class Mod
 	public void LoadSoundOffset(string parent, List<int> sounds, YamlNodeReader reader, string set) => throw new NotImplementedException();
 	public void LoadTransparencyOffset(string parent, ref int index, YamlNodeReader reader) => throw new NotImplementedException();
 	public int GetOffset(int id, int max) => throw new NotImplementedException();
+	public void LoadBaseFunction(string parent, ref RuleBaseFacilityFunctions f, YamlNodeReader reader) => throw new NotImplementedException();
+	public List<string> GetBaseFunctionNames(RuleBaseFacilityFunctions f) => throw new NotImplementedException();
+	// legacy overloads for units still using BitArray for RuleBaseFacilityFunctions; remove once they use the struct
 	public void LoadBaseFunction(string parent, System.Collections.BitArray f, YamlNodeReader reader) => throw new NotImplementedException();
 	public List<string> GetBaseFunctionNames(System.Collections.BitArray f) => throw new NotImplementedException();
 	public void LoadInts(string parent, List<int> ints, YamlNodeReader reader) => throw new NotImplementedException();
@@ -142,9 +145,11 @@ public class Mod
 	public void LoadUnorderedNamesToInts(string parent, SortedDictionary<string, List<int>> names, YamlNodeReader reader) => throw new NotImplementedException();
 	public void LoadUnorderedNamesToNamesToInt(string parent, SortedDictionary<string, SortedDictionary<string, int>> names, YamlNodeReader reader) => throw new NotImplementedException();
 	public void LoadKillCriteria(string parent, List<List<(int first, List<string> second)>> names, YamlNodeReader reader) => throw new NotImplementedException();
-	// C++ linkRule templates (Mod.h): resolve the name(s) with get<Rule>(name, true), then clear the name(s).
+	/// <summary>Convert names to correct rule objects (C++ template linkRule; clears <paramref name="name"/>).</summary>
 	public void LinkRule<T>(ref T rule, ref string name) where T : class => throw new NotImplementedException();
+	/// <summary>Convert names to correct rule objects (appends to <paramref name="rule"/>, clears <paramref name="names"/>).</summary>
 	public void LinkRule<T>(List<T> rule, List<string> names) where T : class => throw new NotImplementedException();
+	/// <summary>Convert names to correct rule objects (appends to <paramref name="rule"/>, clears <paramref name="names"/>).</summary>
 	public void LinkRule<T>(List<List<T>> rule, List<List<string>> names) where T : class => throw new NotImplementedException();
 	public void LoadAll() => throw new NotImplementedException();
 	public SavedGame NewSave(GameDifficulty diff) => throw new NotImplementedException();
@@ -208,10 +213,10 @@ public class Mod
 	public RuleDamageType GetDamageType(ItemDamageType type) => throw new NotImplementedException();
 	public int HireEngineerCost { get => throw new NotImplementedException(); }
 	public string HireEngineersUnlockResearch { get => throw new NotImplementedException(); }
-	public System.Collections.BitArray HireEngineersRequiresBaseFunc { get => throw new NotImplementedException(); }
+	public RuleBaseFacilityFunctions HireEngineersRequiresBaseFunc { get => throw new NotImplementedException(); }
 	public int HireScientistCost { get => throw new NotImplementedException(); }
 	public string HireScientistsUnlockResearch { get => throw new NotImplementedException(); }
-	public System.Collections.BitArray HireScientistsRequiresBaseFunc { get => throw new NotImplementedException(); }
+	public RuleBaseFacilityFunctions HireScientistsRequiresBaseFunc { get => throw new NotImplementedException(); }
 	public int EngineerCost { get => throw new NotImplementedException(); }
 	public int ScientistCost { get => throw new NotImplementedException(); }
 	public int PersonnelTime { get => throw new NotImplementedException(); }
