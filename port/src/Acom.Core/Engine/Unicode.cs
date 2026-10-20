@@ -25,6 +25,11 @@ namespace Acom;
 /// <summary>Special characters used in game texts.</summary>
 public static class Unicode
 {
+	/// <summary>Currency symbol used by formatFunding, set by the ruleset constant "extendedCurrencySymbol".</summary>
+#pragma warning disable CA2211 // Global set by Mod.LoadConstants, as in the C++ code.
+	public static string OXCE_CURRENCY_SYMBOL = "$";
+#pragma warning restore CA2211
+
 	/// <summary>Special tag for custom text format.</summary>
 	public const char TOK_CUSTOM_FORMAT = (char)27;
 

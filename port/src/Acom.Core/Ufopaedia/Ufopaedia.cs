@@ -26,6 +26,7 @@ namespace Acom;
 
 public static class Ufopaedia
 {
+	public const string UFOPAEDIA_NOT_AVAILABLE = "STR_NOT_AVAILABLE";
 	public static bool IsArticleAvailable(SavedGame save, ArticleDefinition article) => throw new NotImplementedException();
 	public static void OpenArticle(Game game, string article_id) => throw new NotImplementedException();
 	public static void OpenArticleDetail(Game game, string article_id) => throw new NotImplementedException();
