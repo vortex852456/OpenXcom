@@ -302,11 +302,16 @@ public sealed class PlaceholderSmokeTests : IDisposable
 		var screens = new List<string>();
 		int turn = battle.Turn, moves = 0, shots = 0, plannedTurn = -1;
 		var plan = new Queue<System.Action>();
-		for (int i = 0; i < 30000 && battle.Turn < turn + 3; ++i)
+		bool finished = false;
+		for (int i = 0; i < 30000 && battle.Turn < turn + 3 && !finished; ++i)
 		{
 			var top = game.States[^1];
 			switch (top)
 			{
+				case DebriefingState:
+					// all aliens down (a small scout has a single one) - the battle is over before turn + 3
+					finished = true;
+					continue;
 				case InventoryState inventory:
 					inventory.BtnOkClick(null!);
 					break;
@@ -334,7 +339,7 @@ public sealed class PlaceholderSmokeTests : IDisposable
 			Frame(game);
 		}
 		Assert.True(moves > 0, "no soldier moved");
-		Assert.True(battle.Turn >= turn + 3, $"battle stuck in turn {battle.Turn}, side {battle.Side}, screens: {string.Join(", ", screens)}");
+		Assert.True(finished || battle.Turn >= turn + 3, $"battle stuck in turn {battle.Turn}, side {battle.Side}, screens: {string.Join(", ", screens)}");
 	}
 
 	/// <summary>
