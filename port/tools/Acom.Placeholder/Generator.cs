@@ -453,6 +453,8 @@ public sealed class PlaceholderGenerator
 			Art.Border(img, w - 64, 0, 64, h, 9, 2);
 			return img;
 		}
+		if (name.StartsWith("BACK", StringComparison.Ordinal))
+			return Art.Backdrop(w, h, seed);
 		bool emblem = name.StartsWith("UP", StringComparison.Ordinal) || name.StartsWith("MAN_", StringComparison.Ordinal) || name.StartsWith("BIGOB_", StringComparison.Ordinal);
 		return Art.Picture(w, h, seed, group, emblem);
 	}

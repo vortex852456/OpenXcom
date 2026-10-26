@@ -22,7 +22,7 @@ Der Smoke-Test `tests/Acom.Core.Tests/Tools/PlaceholderSmokeTests.cs` erzeugt di
 ## Inhalt
 | Bereich | Erzeugt | Regeln |
 |---|---|---|
-| Paletten | `PALETTES.DAT` (5), `BACKPALS.DAT` | eigene 16×16-Rampen (Schattierung 0 = hell); Gruppen 12+13 bilden die 32-stufige Ozean-Rampe des Globus |
+| Paletten | `PALETTES.DAT` (5), `BACKPALS.DAT` | eigene 16×16-Rampen (Schattierung 0 = hell); Gruppen 12+13 bilden die 32-stufige Ozean-Rampe des Globus. In den Menü-Paletten (0–3) tragen die Textfarben der Rulesets (Gruppe 8, 13 außer Geoscape, 15) kurze 5-stufige UI-Rampen (Text `c` zeichnet `c+1` hell bis `c+5` dunkel), Gruppe 14 ist die dunkle Fensterhintergrund-Rampe (`BACK*.SCR`, je Bildschirm per `BACKPALS.DAT` umgefärbt); Bilder, Sprites und Globus-Texturen meiden diese Gruppen. Die Kampf-Palette (4) bleibt reine Schattierungsrampen |
 | Bilder | alle `SCR`/`SPK` (inkl. `UFOGRAPH/*.PCK` im SPK-Format, `INTERWIN.DAT`) | Rauschen, Streifen, Rahmen, geometrisches Emblem |
 | Sprites | alle `PCK`+`TAB`, DAT-Bögen (`TEXTURE`, `SCANG`, `DETBLOB`, `MEDIBITS`, `SPICONS`) | Maße und Frame-Anzahl aus der Asset-Liste; Figuren, Kisten, Scheiben, Iso-Kacheln |
 | Globus | `WORLD.DAT` | 5°-Vierecke über allen Ländern und Missionszonen (außer Flugzone 0) → einige große Kontinente |
