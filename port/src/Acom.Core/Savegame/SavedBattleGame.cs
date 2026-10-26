@@ -1084,7 +1084,7 @@ public class SavedBattleGame
 		{
 			return false;
 		}
-		if (unit.OriginalFaction == UnitFaction.FACTION_PLAYER && !_battleState.Game.SavedGame.IsResearched(rule.Requirements))
+		if (unit.OriginalFaction == UnitFaction.FACTION_PLAYER && !GeoscapeSave.IsResearched(rule.Requirements))
 		{
 			return false;
 		}
@@ -1094,7 +1094,7 @@ public class SavedBattleGame
 		}
 		if (rule.IsManaRequired && unit.OriginalFaction == UnitFaction.FACTION_PLAYER)
 		{
-			if (!_rule.IsManaFeatureEnabled || !_battleState.Game.SavedGame.IsManaUnlocked(_rule))
+			if (!_rule.IsManaFeatureEnabled || !GeoscapeSave.IsManaUnlocked(_rule))
 			{
 				return false;
 			}
@@ -2148,7 +2148,7 @@ public class SavedBattleGame
 			}
 		}
 
-		Mod mod = BattleState.Game.Mod;
+		Mod mod = State.GamePtr.Mod; // static State::_game in C++ (see GeoscapeSave)
 		foreach (var bu in Units)
 		{
 			bu.CalculateEnviDamage(mod, this);
@@ -2638,7 +2638,13 @@ public class SavedBattleGame
 	}
 
 	/// <summary>A shortcut to the geoscape save.</summary>
-	public SavedGame GeoscapeSave => _battleState.Game.SavedGame;
+	/// <remarks>
+	/// C++ reads the static State::_game through <c>_battleState</c>, which also works while the battle is generated
+	/// and no BattlescapeState exists yet; the port uses the static game pointer directly.
+	/// </remarks>
+#pragma warning disable CA1822 // instance member as in C++
+	public SavedGame GeoscapeSave => State.GamePtr.SavedGame;
+#pragma warning restore CA1822
 
 	/// <summary>Gets/sets the depth of the battlescape game (0-3).</summary>
 	public int Depth { get => _depth; set => _depth = value; }
