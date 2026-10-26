@@ -513,6 +513,8 @@ public class Craft : MovingTarget
 	/// <summary>Changes the destination the craft is heading to.</summary>
 	public override Target Destination
 	{
+		// Explicit getter: a setter-only override crashes the CA1859 analyzer (AD0001) at call sites reading it.
+		get => base.Destination;
 		set
 		{
 			if (_status != "STR_OUT")
