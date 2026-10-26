@@ -18,6 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Geoscape/DogfightState.h, src/Geoscape/DogfightState.cpp
+// Deviation: drawUfo clamps the blob index (C++ reads past the blob table for huge UFOs being hit).
 #nullable disable
 
 using System.Globalization;
@@ -2297,11 +2298,14 @@ public class DogfightState : State
 		}
 		int currentUfoXposition = _battle.Width / 2 - 6;
 		int currentUfoYposition = _battle.Height - (_currentDist / 8) - 6;
+		// Deviation: C++ indexes past the 8 blobs (undefined behaviour) for huge UFOs during the hit animation;
+		// the port uses the largest blob instead of crashing.
+		int blob = Math.Min(_ufoBlobSize + _ufo.HitFrame, _ufoBlobs.GetLength(0) - 1);
 		for (int y = 0; y < 13; ++y)
 		{
 			for (int x = 0; x < 13; ++x)
 			{
-				byte pixelOffset = (byte)_ufoBlobs[_ufoBlobSize + _ufo.HitFrame, y, x];
+				byte pixelOffset = (byte)_ufoBlobs[blob, y, x];
 				if (pixelOffset == 0)
 				{
 					continue;
