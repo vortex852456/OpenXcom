@@ -1638,7 +1638,7 @@ public class AIModule
 				_attackAction.target = bu.Position;
 				ExtendedFireModeChoice(costAuto, costSnap, costAimed, costThrow, true);
 
-				BattleAction chosenAction = BattleState.CopyAction(_attackAction);
+				BattleAction chosenAction = new BattleAction(_attackAction);
 				if (chosenAction.type == BA_THROW)
 					chosenAction.weapon = costThrow.weapon;
 
@@ -2564,7 +2564,7 @@ public class AIModule
 		}
 
 		BattleActionType chosenAction = BA_RETHINK;
-		BattleAction testAction = BattleState.CopyAction(_attackAction);
+		BattleAction testAction = new BattleAction(_attackAction);
 		int score = 0;
 		foreach (BattleActionType i in attackOptions)
 		{

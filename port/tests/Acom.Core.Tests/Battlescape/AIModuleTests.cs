@@ -253,7 +253,7 @@ public class AIModuleTests
 		action.number = 3;
 
 		// the copy is created with the BattleAction constructor (BattlescapeGame is still a stub)
-		BattleAction copy = OrSkip(() => BattleState.CopyAction(action));
+		BattleAction copy = OrSkip(() => new BattleAction(action));
 		copy.waypoints.Add(new Position(7, 8, 9));
 		copy.Time = 1;
 
