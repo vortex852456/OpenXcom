@@ -27,7 +27,7 @@ namespace Acom;
 /// Represents an assignable extra bonus to soldier's stats, regen and night vision.
 /// Bonus is awarded either via SoldierCommendations or via SoldierTransformations.
 /// </summary>
-public class RuleSoldierBonus
+public partial class RuleSoldierBonus
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "RuleSoldierBonus";
@@ -81,16 +81,19 @@ public class RuleSoldierBonus
 		_stats.Merge(reader["stats"].ReadVal(_stats));
 		var rec = reader["recovery"];
 		{
-			// property names of the ModScript::*SoldierRecoveryStatBonus parsers
-			_timeRecovery.Load(_name, rec, "time");
-			_energyRecovery.Load(_name, rec, "energy");
-			_moraleRecovery.Load(_name, rec, "morale");
-			_healthRecovery.Load(_name, rec, "health");
-			_manaRecovery.Load(_name, rec, "mana");
-			_stunRecovery.Load(_name, rec, "stun");
+			var bonus = mod?.ScriptParsers.bonusStatsScripts;
+			_timeRecovery.Load(_name, rec, bonus?.Get(ModScript.TimeSoldierRecoveryStatBonus), "time");
+			_energyRecovery.Load(_name, rec, bonus?.Get(ModScript.EnergySoldierRecoveryStatBonus), "energy");
+			_moraleRecovery.Load(_name, rec, bonus?.Get(ModScript.MoraleSoldierRecoveryStatBonus), "morale");
+			_healthRecovery.Load(_name, rec, bonus?.Get(ModScript.HealthSoldierRecoveryStatBonus), "health");
+			_manaRecovery.Load(_name, rec, bonus?.Get(ModScript.ManaSoldierRecoveryStatBonus), "mana");
+			_stunRecovery.Load(_name, rec, bonus?.Get(ModScript.StunSoldierRecoveryStatBonus), "stun");
 		}
 
-		// _soldierBonusScripts and _scriptValues: script hooks missing
+		if (mod != null)
+		{
+			LoadScripts(reader, mod.ScriptParsers);
+		}
 
 		reader.TryRead("listOrder", ref _listOrder);
 	}

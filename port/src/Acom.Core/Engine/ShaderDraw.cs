@@ -58,4 +58,34 @@ public static class ShaderDrawHelper
 				dest = unchecked((byte)(newColor | newShade));
 		}
 	}
+
+	/// <summary>Applies a burn effect and a shade (C++ <c>helper::BurnShade</c>).</summary>
+	public static void BurnShade(ref byte dest, byte src, int burn, int shade)
+	{
+		var n = dest;
+		if (src != 0)
+		{
+			if (burn != 0)
+			{
+				byte tempBurn = unchecked((byte)((src & ColorShade) + burn));
+				if (tempBurn > 26)
+				{
+					//nothing
+				}
+				else if (tempBurn > 15)
+				{
+					StandardShade(ref n, ColorShade, shade);
+				}
+				else
+				{
+					StandardShade(ref n, unchecked((byte)((src & ColorGroup) + tempBurn)), shade);
+				}
+			}
+			else
+			{
+				StandardShade(ref n, src, shade);
+			}
+		}
+		dest = n;
+	}
 }

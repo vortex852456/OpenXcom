@@ -28,7 +28,7 @@ namespace Acom;
 /// Contains battle-related info about an item like the position, ammo quantity, ...
 /// </summary>
 /// <seealso cref="RuleItem"/>
-public class BattleItem
+public partial class BattleItem
 {
 	public const string ScriptName = "BattleItem";
 
@@ -129,11 +129,15 @@ public class BattleItem
 		reader.TryRead("fuseEnabed", ref _fuseEnabled);
 		reader.TryRead("droppedOnAlienTurn", ref _droppedOnAlienTurn);
 		reader.TryRead("XCOMProperty", ref _XCOMProperty);
+		if (mod != null)
+		{
+			_scriptValues.Load(reader, mod.ScriptGlobal);
+		}
 	}
 
 	/// <summary>Saves the item to a YAML file.</summary>
 	/// <remarks>C++ also takes the script globals (<c>ScriptGlobal*</c>); script values are not ported.</remarks>
-	public void Save(YamlNodeWriter writer)
+	public void Save(YamlNodeWriter writer, ScriptGlobal shared = null)
 	{
 		ArgumentNullException.ThrowIfNull(writer);
 		writer.SetAsMap();
@@ -197,6 +201,11 @@ public class BattleItem
 			writer.Write("droppedOnAlienTurn", _droppedOnAlienTurn);
 		if (_XCOMProperty)
 			writer.Write("XCOMProperty", _XCOMProperty);
+
+		if (shared != null)
+		{
+			_scriptValues.Save(writer, shared);
+		}
 	}
 
 	/// <summary>Gets the ruleset for the item's type.</summary>

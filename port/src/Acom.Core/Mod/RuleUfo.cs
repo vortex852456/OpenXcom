@@ -78,7 +78,7 @@ public class RuleUfoStats : RuleCraftStats
 /// speed, weapons, scores, etc.
 /// </summary>
 /// <seealso cref="Ufo"/>
-public class RuleUfo
+public partial class RuleUfo
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "RuleUfo";
@@ -232,6 +232,8 @@ public class RuleUfo
 		mod.LoadSoundOffset(_type, ref _alertSound, reader["alertSound"], "GEO.CAT");
 		mod.LoadSoundOffset(_type, ref _huntAlertSound, reader["huntAlertSound"], "GEO.CAT");
 		mod.LoadSoundOffset(_type, ref _hitSound, reader["hitSound"], "GEO.CAT");
+
+		LoadScripts(reader, mod.ScriptParsers);
 	}
 
 	/// <summary>Gets the language string that names this UFO. Each UFO type has a unique name.</summary>

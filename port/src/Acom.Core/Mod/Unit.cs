@@ -442,7 +442,7 @@ public class StatAdjustment
 /// <summary>
 /// Represents the static data for a unit that is generated on the battlescape, this includes: HWPs, aliens and civilians.
 /// </summary>
-public class Unit
+public partial class Unit
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "RuleUnit";

@@ -36,7 +36,7 @@ public enum SoldierLook : byte { LOOK_BLONDE, LOOK_BROWNHAIR, LOOK_ORIENTAL, LOO
 /// Soldiers have a wide variety of stats that affect
 /// their performance during battles.
 /// </summary>
-public class Soldier
+public partial class Soldier
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "GeoscapeSoldier";
@@ -288,6 +288,11 @@ public class Soldier
 				}
 			}
 		}
+
+		if (mod != null)
+		{
+			_scriptValues.Load(reader, mod.ScriptGlobal);
+		}
 	}
 
 	/// <summary>Reads a std::map&lt;std::string, int&gt;, keeping the C++ (ordinal) key order.</summary>
@@ -300,7 +305,7 @@ public class Soldier
 
 	/// <summary>Saves the soldier to a YAML file.</summary>
 	/// <remarks>C++ also takes the script globals (<c>ScriptGlobal*</c>); script values are not ported.</remarks>
-	public void Save(YamlNodeWriter writer)
+	public void Save(YamlNodeWriter writer, ScriptGlobal shared = null)
 	{
 		ArgumentNullException.ThrowIfNull(writer);
 		writer.SetAsMap();
@@ -357,6 +362,11 @@ public class Soldier
 			writer.Write("previousTransformations", _previousTransformations);
 		if (_transformationBonuses.Count != 0)
 			writer.Write("transformationBonuses", _transformationBonuses);
+
+		if (shared != null)
+		{
+			_scriptValues.Save(writer, shared);
+		}
 	}
 
 	/// <summary>Number of Unicode code points (C++ Unicode::codePointLengthUTF8).</summary>

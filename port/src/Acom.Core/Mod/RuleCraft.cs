@@ -201,7 +201,7 @@ public class RuleCraftStats
 /// costs, speed, capacities, consumptions, etc.
 /// </summary>
 /// <seealso cref="Craft"/>
-public class RuleCraft
+public partial class RuleCraft
 {
 	/// <summary>Maximum number of weapon slots on craft.</summary>
 	public const int WeaponMax = 4;
@@ -451,6 +451,8 @@ public class RuleCraft
 
 		reader.TryRead("pilotMinStatsRequired", ref _pilotMinStatsRequired);
 		mod.LoadNames(_type, _pilotSoldierBonusesRequiredNames, reader["pilotSoldierBonusesRequired"]);
+
+		LoadScripts(reader, mod.ScriptParsers);
 	}
 
 	/// <summary>Cross link with other rules.</summary>

@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleStatBonus.h, src/Mod/RuleStatBonus.cpp
-// Port status: partial (missing: script hooks - a custom script given as text instead of a stat map is stored but not run, the bonus then stays externalBonuses)
 #nullable disable
 
 using System.Diagnostics;
@@ -30,8 +29,8 @@ namespace Acom;
 /// </summary>
 /// <remarks>
 /// C++ turns the bonus map into an OXCE script (<c>mul bonus 1000; unit.firingBonusStats bonus c1 c2 c3 c4; ...</c>)
-/// and runs it. The port evaluates that generated script directly with the same int/float arithmetic,
-/// see <see cref="Execute{T}"/>.
+/// and runs it. The port compiles the same script, but evaluates it directly with the same int/float arithmetic
+/// (see <see cref="Execute{T}"/>) unless a custom script or global bonus scripts (events) have to run.
 /// </remarks>
 public class RuleStatBonus
 {
@@ -48,8 +47,10 @@ public class RuleStatBonus
 	private bool _refresh = true;
 	/// <summary>Compiled form of the generated script (C++ <c>_container</c>).</summary>
 	private Term[] _terms = [];
-	/// <summary>Custom script text from the ruleset (C++ loads it into <c>_container</c>); not run, needs the script engine.</summary>
+	/// <summary>Custom script text from the ruleset (C++ loads it into <c>_container</c>).</summary>
 	private string _customScript;
+	/// <summary>Compiled script (C++ <c>_container</c>), loaded when a parser is given.</summary>
+	private readonly ScriptContainerEvents _container = new();
 
 	/// <summary>Default constructor.</summary>
 	public RuleStatBonus()
@@ -63,7 +64,25 @@ public class RuleStatBonus
 	/// Name of the property (C++ <c>parser.getPropertyNodeName()</c> of the <c>ModScript::BonusStatsCommon</c> parser, e.g.
 	/// <c>accuracyMultiplier</c>, <c>psiDefence</c>, <c>time</c> under <c>recovery</c>).
 	/// </param>
-	public void Load(string parentName, YamlNodeReader reader, string propertyNodeName)
+	public void Load(string parentName, YamlNodeReader reader, string propertyNodeName) => Load(parentName, reader, propertyNodeName, null);
+
+	/// <summary>Loads the bonus from YAML (C++ <c>load(parentName, reader, parser)</c>).</summary>
+	/// <param name="parentName">Name of the owning rule (for error messages).</param>
+	/// <param name="reader">Node that contains the property.</param>
+	/// <param name="parser">Parser of the script, gives the property name.</param>
+	public void Load(string parentName, YamlNodeReader reader, ModScript.BonusStatsBaseParser parser)
+	{
+		ArgumentNullException.ThrowIfNull(parser);
+		Load(parentName, reader, parser.PropertyNodeName, parser);
+	}
+
+	/// <summary>Loads the bonus from YAML with <paramref name="parser"/> if given, otherwise by property name only (tests).</summary>
+	public void Load(string parentName, YamlNodeReader reader, ModScript.BonusStatsBaseParser parser, string propertyNodeName)
+	{
+		Load(parentName, reader, parser?.PropertyNodeName ?? propertyNodeName, parser);
+	}
+
+	private void Load(string parentName, YamlNodeReader reader, string propertyNodeName, ModScript.BonusStatsBaseParser parser)
 	{
 		if (reader)
 		{
@@ -121,9 +140,12 @@ public class RuleStatBonus
 				}
 				else if (stats.HasVal)
 				{
-					// _container.loadContainer(parentName, script, parser): custom script, needs the script engine
 					_customScript = stats.ReadVal<string>();
 					_terms = [];
+					if (parser != null)
+					{
+						_container.LoadContainer(parentName, _customScript, parser);
+					}
 					_refresh = false;
 				}
 				// let's remember that this was modified by a modder (i.e. is not a default value)
@@ -142,7 +164,70 @@ public class RuleStatBonus
 			}
 			_terms = terms;
 			_customScript = null;
+			if (parser != null)
+			{
+				_container.LoadContainer(parentName, GenerateScript(), parser);
+			}
 			_refresh = false;
+		}
+	}
+
+	/// <summary>Script generated from the bonus vector (C++ <c>load</c>).</summary>
+	private string GenerateScript()
+	{
+		var script = new System.Text.StringBuilder(1024);
+
+		if (_bonusOrig.Count != 0)
+		{
+			//scale up for rounding
+			script.Append("mul bonus 1000;\n");
+
+			foreach (var p in _bonusOrig)
+			{
+				script.Append("unit.");
+				script.Append(p.first);
+				script.Append(statNamePostfix);
+				script.Append(" bonus");
+				for (int j = 0; j < statDataFuncSize; ++j)
+				{
+					if (j < p.second.Count)
+					{
+						script.Append(' ');
+						script.Append(Coefficient(p.second, j).ToString(System.Globalization.CultureInfo.InvariantCulture));
+					}
+					else
+					{
+						script.Append(" 0");
+					}
+				}
+				script.Append(";\n");
+			}
+
+			//rounding to the nearest
+			script.Append("if ge bonus 0; add bonus 500; else; sub bonus 500; end;\n");
+			script.Append("div bonus 1000;\n");
+		}
+		script.Append("return bonus;");
+		return script.ToString();
+	}
+
+	private const string statNamePostfix = "BonusStats";
+
+	/// <summary>The compiled script has to run: custom script or global scripts of this bonus type.</summary>
+	private bool NeedScript
+	{
+		get
+		{
+			if (_container.Parser == null)
+			{
+				return false;
+			}
+			if (_customScript != null)
+			{
+				return true;
+			}
+			var events = _container.DataEvents;
+			return events != null && events.Exists(e => e.IsValid);
 		}
 	}
 
@@ -212,9 +297,15 @@ public class RuleStatBonus
 	{
 		ArgumentNullException.ThrowIfNull(attack);
 		Debug.Assert(!_refresh, "RuleStatBonus not loaded correctly");
+		if (NeedScript)
+		{
+			var arg = new ScriptOutputArgs(externalBonuses);
+			ModScript.Execute(_container, arg, attack.attacker, externalBonuses, attack.weapon_item, attack.damage_item, (int)attack.type, attack.skill_rules);
+			return arg.GetFirst();
+		}
 		if (_customScript != null)
 		{
-			return externalBonuses; // script hooks missing: weapon, ammo, action type and skill are only visible to custom scripts
+			return externalBonuses; // never loaded with a parser
 		}
 		return Execute(attack.attacker, externalBonuses, s_unitStat);
 	}
@@ -223,9 +314,15 @@ public class RuleStatBonus
 	public int GetBonus(BattleUnit unit, int externalBonuses = 0)
 	{
 		Debug.Assert(!_refresh, "RuleStatBonus not loaded correctly");
+		if (NeedScript)
+		{
+			var arg = new ScriptOutputArgs(externalBonuses);
+			ModScript.Execute(_container, arg, unit, externalBonuses, null, null, (int)BattleActionType.BA_NONE, null);
+			return arg.GetFirst();
+		}
 		if (_customScript != null)
 		{
-			return externalBonuses; // script hooks missing
+			return externalBonuses; // never loaded with a parser
 		}
 		return Execute(unit, externalBonuses, s_unitStat);
 	}
@@ -313,6 +410,33 @@ public class RuleStatBonus
 		else
 		{
 			return unit.UnitRules.EnergyRecovery;
+		}
+	}
+
+	/// <summary>
+	/// Register stat functions <c>unit.&lt;stat&gt;BonusStats</c> (C++ <c>BonusStatsBaseParser</c> constructor, <c>getBonusStatsScript</c>):
+	/// <c>(const BattleUnit*, int&amp;, int, int, int, int)</c>.
+	/// </summary>
+	internal static void ScriptRegisterStats(Bind<BattleUnit> bu)
+	{
+		foreach (var (name, func) in s_statDataMap)
+		{
+			bu.AddFunc(name + statNamePostfix, [Bind<BattleUnit>.Self, ScriptParam.IntRef, ScriptParam.Int, ScriptParam.Int, ScriptParam.Int, ScriptParam.Int], (ref ScriptArgs a) =>
+			{
+				var unit = a.Ptr<BattleUnit>(0);
+				if (unit != null)
+				{
+					float stat = func(unit);
+					float bonus = 0;
+					bonus += a.Int(5); bonus *= stat;
+					bonus += a.Int(4); bonus *= stat;
+					bonus += a.Int(3); bonus *= stat;
+					bonus += a.Int(2); bonus *= stat;
+					ref int ret = ref a.IntRef(1);
+					ret = (int)(ret + bonus / statMultiper);
+				}
+				return ScriptArg.RetContinue;
+			}, "add stat '" + name + "' transformed by polynomial (const arguments are coefficients), final result of polynomial is divided by " + statMultiper);
 		}
 	}
 

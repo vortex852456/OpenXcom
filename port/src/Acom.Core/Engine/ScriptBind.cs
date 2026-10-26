@@ -201,12 +201,17 @@ public static class ScriptBindTable
 	private static readonly Lock s_lock = new();
 	private static readonly Dictionary<Type, (string name, Action<ScriptParserBase> register)> s_types = [];
 
-	/// <summary>Add bindable type.</summary>
-	public static void Add<T>() where T : IScriptBind
+	static ScriptBindTable()
+	{
+		ModScript.RegisterBindTypes();
+	}
+
+	/// <summary>Add bindable type (C++ class with <c>ScriptName</c> and <c>ScriptRegister</c>).</summary>
+	public static void Add<T>(string scriptName, Action<ScriptParserBase> scriptRegister) where T : class
 	{
 		lock (s_lock)
 		{
-			s_types[typeof(T)] = (T.ScriptName, T.ScriptRegister);
+			s_types[typeof(T)] = (scriptName, scriptRegister);
 		}
 	}
 

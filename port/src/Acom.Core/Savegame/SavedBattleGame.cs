@@ -28,7 +28,7 @@ namespace Acom;
 /// A saved game holds all the variable info in a game like mapdata,
 /// soldiers, items, etc.
 /// </summary>
-public class SavedBattleGame
+public partial class SavedBattleGame
 {
 	public const string ScriptName = "BattleGame";
 
@@ -403,7 +403,10 @@ public class SavedBattleGame
 		reader.TryRead("togglePersonalLight", ref _togglePersonalLight);
 		reader.TryRead("toggleNightVision", ref _toggleNightVision);
 		reader.TryRead("toggleBrightness", ref _toggleBrightness);
-		// script hook not ported: _scriptValues.load(reader, _rule->getScriptGlobal())
+		if (_rule != null)
+		{
+			_scriptValues.Load(reader, _rule.ScriptGlobal);
+		}
 
 		// Sanity checks
 		foreach (var unit in _units)
@@ -577,11 +580,11 @@ public class SavedBattleGame
 		if (_missionType == "STR_BASE_DEFENSE")
 			writer.Write("moduleMap", _baseModules);
 		writer.Write("units", _units,
-			(w, bu) => bu.Save(w.Write()));
+			(w, bu) => bu.Save(w.Write(), _rule?.ScriptGlobal));
 		writer.Write("items", _items,
-			(w, bi) => { if (!bi.IsSpecialWeapon) bi.Save(w.Write()); });
+			(w, bi) => { if (!bi.IsSpecialWeapon) bi.Save(w.Write(), _rule?.ScriptGlobal); });
 		writer.Write("itemsSpecial", _items,
-			(w, bi) => { if (bi.IsSpecialWeapon) bi.Save(w.Write()); });
+			(w, bi) => { if (bi.IsSpecialWeapon) bi.Save(w.Write(), _rule?.ScriptGlobal); });
 		writer.Write("tuReserved", (int)_tuReserved);
 		writer.Write("kneelReserved", _kneelReserved);
 		writer.Write("depth", _depth);
@@ -592,9 +595,9 @@ public class SavedBattleGame
 		writer.Write("maxAmbienceRandomDelay", _maxAmbienceRandomDelay);
 		writer.Write("currentAmbienceDelay", _currentAmbienceDelay);
 		writer.Write("recoverGuaranteed", _recoverGuaranteed,
-			(w, bi) => bi.Save(w.Write()));
+			(w, bi) => bi.Save(w.Write(), _rule?.ScriptGlobal));
 		writer.Write("recoverConditional", _recoverConditional,
-			(w, bi) => bi.Save(w.Write()));
+			(w, bi) => bi.Save(w.Write(), _rule?.ScriptGlobal));
 		writer.Write("music", _music);
 		_baseItems.Save(writer["baseItems"]);
 		writer.Write("turnLimit", _turnLimit);
@@ -603,7 +606,10 @@ public class SavedBattleGame
 		writer.Write("togglePersonalLight", _togglePersonalLight);
 		writer.Write("toggleNightVision", _toggleNightVision);
 		writer.Write("toggleBrightness", _toggleBrightness);
-		// script hook not ported: _scriptValues.save(writer, _rule->getScriptGlobal())
+		if (_rule != null)
+		{
+			_scriptValues.Save(writer, _rule.ScriptGlobal);
+		}
 	}
 
 	/// <summary>Part of <see cref="Save"/>: the field sizes and the packed binary tile data (base64).</summary>

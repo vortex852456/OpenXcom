@@ -36,7 +36,7 @@ public enum UfoDetection
 /// position, damage, speed, etc.
 /// </summary>
 /// <seealso cref="RuleUfo"/>
-public class Ufo : MovingTarget
+public partial class Ufo : MovingTarget
 {
 	/// <summary>C++ static const char *ALTITUDE_STRING[].</summary>
 	public static readonly string[] ALTITUDE_STRING =
@@ -214,6 +214,11 @@ public class Ufo : MovingTarget
 		reader.TryRead("escapeCountdown", ref _escapeCountdown);
 		if (_inBattlescape)
 			Speed = 0;
+
+		if (mod != null)
+		{
+			_scriptValues.Load(reader, mod.ScriptGlobal);
+		}
 	}
 
 	/// <summary>Finishes loading the UFO from YAML (called after XCOM craft and other UFOs are loaded).</summary>
@@ -303,7 +308,7 @@ public class Ufo : MovingTarget
 	/// <summary>Saves the UFO to a YAML file.</summary>
 	/// <param name="writer">YAML node.</param>
 	/// <param name="newBattle">Saving for a new battle (no mission/trajectory).</param>
-	public void Save(YamlNodeWriter writer, bool newBattle)
+	public void Save(YamlNodeWriter writer, bool newBattle, ScriptGlobal shared = null)
 	{
 		ArgumentNullException.ThrowIfNull(writer);
 		writer.SetAsMap();
@@ -352,6 +357,11 @@ public class Ufo : MovingTarget
 
 		writer.Write("fireCountdown", _fireCountdown);
 		writer.Write("escapeCountdown", _escapeCountdown);
+
+		if (shared != null)
+		{
+			_scriptValues.Save(writer, shared);
+		}
 	}
 
 	/// <summary>Saves the UFO's unique identifiers to a YAML file.</summary>

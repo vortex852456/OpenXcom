@@ -33,7 +33,7 @@ namespace Acom;
 /// For example, if we have a Research E which needs either A &amp; B or C &amp; D, we create two fake research projects:
 /// F which need A &amp; B and G which need C &amp; D; both F and G can unlock E.
 /// </remarks>
-public class RuleResearch
+public partial class RuleResearch
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "RuleResearch";
@@ -114,6 +114,8 @@ public class RuleResearch
 		reader.TryRead("unlockFinalMission", ref _unlockFinalMission);
 		reader.TryRead("repeatable", ref _repeatable);
 		reader.TryRead("listOrder", ref _listOrder);
+
+		_scriptValues.Load(reader, mod.ScriptParsers.GetShared());
 	}
 
 	/// <summary>Cross link with other rules.</summary>

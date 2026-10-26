@@ -10,9 +10,8 @@ namespace Acom.Tests.Engine;
 public sealed class ScriptTests
 {
 	/// <summary>Bindable test type (C++ DummyClass of the self tests).</summary>
-	private sealed class DummyClass : IScriptBind
+	private sealed class DummyClass
 	{
-		public static string ScriptName => "DummyClass";
 
 		public int value;
 		public readonly ScriptValues<DummyClass> values = new();
@@ -31,7 +30,7 @@ public sealed class ScriptTests
 
 	static ScriptTests()
 	{
-		ScriptBindTable.Add<DummyClass>();
+		ScriptBindTable.Add<DummyClass>("DummyClass", DummyClass.ScriptRegister);
 	}
 
 	private sealed class Log : IDisposable

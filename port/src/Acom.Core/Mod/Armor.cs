@@ -77,7 +77,7 @@ public struct ArmorMoveCost : IEquatable<ArmorMoveCost>
 /// Not only soldier armor, but also alien armor - some alien races wear
 /// Soldier Armor, Leader Armor or Commander Armor depending on their rank.
 /// </summary>
-public class Armor
+public partial class Armor
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "RuleArmor";
@@ -420,15 +420,16 @@ public class Armor
 		reader.TryRead("overKill", ref _overKill);
 		reader.TryRead("meleeDodgeBackPenalty", ref _meleeDodgeBackPenalty);
 
-		_psiDefence.Load(_type, reader, "psiDefence");
-		_meleeDodge.Load(_type, reader, "meleeDodge");
+		var parsers = mod.ScriptParsers;
+		_psiDefence.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.PsiDefenceStatBonus));
+		_meleeDodge.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.MeleeDodgeStatBonus));
 
-		_timeRecovery.Load(_type, reader["recovery"], "time");
-		_energyRecovery.Load(_type, reader["recovery"], "energy");
-		_moraleRecovery.Load(_type, reader["recovery"], "morale");
-		_healthRecovery.Load(_type, reader["recovery"], "health");
-		_manaRecovery.Load(_type, reader["recovery"], "mana");
-		_stunRecovery.Load(_type, reader["recovery"], "stun");
+		_timeRecovery.Load(_type, reader["recovery"], parsers.bonusStatsScripts.Get(ModScript.TimeRecoveryStatBonus));
+		_energyRecovery.Load(_type, reader["recovery"], parsers.bonusStatsScripts.Get(ModScript.EnergyRecoveryStatBonus));
+		_moraleRecovery.Load(_type, reader["recovery"], parsers.bonusStatsScripts.Get(ModScript.MoraleRecoveryStatBonus));
+		_healthRecovery.Load(_type, reader["recovery"], parsers.bonusStatsScripts.Get(ModScript.HealthRecoveryStatBonus));
+		_manaRecovery.Load(_type, reader["recovery"], parsers.bonusStatsScripts.Get(ModScript.ManaRecoveryStatBonus));
+		_stunRecovery.Load(_type, reader["recovery"], parsers.bonusStatsScripts.Get(ModScript.StunRecoveryStatBonus));
 
 		reader.TryRead("spriteFaceGroup", ref _faceColorGroup);
 		reader.TryRead("spriteHairGroup", ref _hairColorGroup);
@@ -439,11 +440,11 @@ public class Armor
 		mod.LoadInts(_type, _rankColor, reader["spriteRankColor"]);
 		mod.LoadInts(_type, _utileColor, reader["spriteUtileColor"]);
 
-		// script hooks (_battleUnitScripts) are not ported
+		LoadScripts(reader, parsers);
 
 		mod.LoadUnorderedNames(_type, _unitsNames, reader["units"]);
 		mod.LoadUnorderedInts(_type, _ranks, reader["ranks"]);
-		// script hooks (_scriptValues) are not ported
+		_scriptValues.Load(reader, parsers.GetShared());
 		mod.LoadSpriteOffset(_type, _customArmorPreviewIndex, reader["customArmorPreviewIndex"], "CustomArmorPreviews");
 		LoadBoolNullable(ref _allowsRunning, reader["allowsRunning"]);
 		LoadBoolNullable(ref _allowsStrafing, reader["allowsStrafing"]);

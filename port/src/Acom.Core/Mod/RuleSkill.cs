@@ -26,7 +26,7 @@ namespace Acom;
 /// <summary>
 /// Represents a soldier skill (an action usable in battle, optionally bound to weapons and soldier bonuses).
 /// </summary>
-public class RuleSkill
+public partial class RuleSkill
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "RuleSkill";
@@ -85,7 +85,7 @@ public class RuleSkill
 		mod.LoadUnorderedNames(_type, _compatibleWeaponNames, reader["compatibleWeapons"]);
 		mod.LoadUnorderedNames(_type, _requiredBonusNames, reader["requiredBonuses"]);
 
-		// _scriptValues and _skillScripts: script hooks missing
+		LoadScripts(reader, mod.ScriptParsers);
 	}
 
 	/// <summary>Cross link with other Rules.</summary>

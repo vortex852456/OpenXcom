@@ -28,7 +28,7 @@ namespace Acom;
 /// Contains constant info like its location in the
 /// world and starting funding range.
 /// </summary>
-public class RuleCountry
+public partial class RuleCountry
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "RuleCountry";
@@ -93,6 +93,8 @@ public class RuleCountry
 		}
 		mod.LoadBaseFunction(_type, ref _provideBaseFunc, reader["provideBaseFunc"]);
 		mod.LoadBaseFunction(_type, ref _forbiddenBaseFunc, reader["forbiddenBaseFunc"]);
+
+		LoadScripts(reader, mod.ScriptParsers);
 	}
 
 	/// <summary>Cross link with other rules.</summary>

@@ -149,11 +149,11 @@ public class Transfer
 		writer.Write("hours", _hours);
 		if (_soldier != null)
 		{
-			_soldier.Save(writer["soldier"]);
+			_soldier.Save(writer["soldier"], mod.ScriptGlobal);
 		}
 		else if (_craft != null)
 		{
-			_craft.Save(writer["craft"]);
+			_craft.Save(writer["craft"], mod.ScriptGlobal);
 		}
 		else if (_itemQty != 0)
 		{

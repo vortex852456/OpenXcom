@@ -50,7 +50,7 @@ public enum InventoryType : uint
 /// Represents a specific section of the inventory,
 /// containing information like available slots and screen position.
 /// </summary>
-public class RuleInventory
+public partial class RuleInventory
 {
 	public const int SLOT_W = 16;
 	public const int SLOT_H = 16;

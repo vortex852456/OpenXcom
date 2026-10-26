@@ -50,7 +50,7 @@ public enum TileUnitOverlapping
 /// here they are objects in an array of <see cref="SavedBattleGame"/> (see <see cref="SavedBattleGame.GetBelowTile"/>).
 /// </remarks>
 #pragma warning disable CA1708 // C++ names: struct SerializationKey and its static instance serializationKey
-public class Tile
+public partial class Tile
 #pragma warning restore CA1708
 {
 	public const string ScriptName = "Tile";

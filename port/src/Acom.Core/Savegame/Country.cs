@@ -28,7 +28,7 @@ namespace Acom;
 /// Contains variable info about a country like
 /// monthly funding and various activities.
 /// </summary>
-public class Country
+public partial class Country
 {
 	public enum Satisfaction
 	{
@@ -65,7 +65,7 @@ public class Country
 	}
 
 	/// <summary>Loads the country from a YAML file.</summary>
-	public void Load(YamlNodeReader reader)
+	public void Load(YamlNodeReader reader, ScriptGlobal shared = null)
 	{
 		reader.TryRead("funding", ref _funding);
 		reader.TryRead("activityXcom", ref _activityXcom);
@@ -73,10 +73,15 @@ public class Country
 		reader.TryRead("pact", ref _pact);
 		reader.TryRead("newPact", ref _newPact);
 		reader.TryRead("cancelPact", ref _cancelPact);
+
+		if (shared != null)
+		{
+			_scriptValues.Load(reader, shared);
+		}
 	}
 
 	/// <summary>Saves the country to a YAML file.</summary>
-	public void Save(YamlNodeWriter writer)
+	public void Save(YamlNodeWriter writer, ScriptGlobal shared = null)
 	{
 		ArgumentNullException.ThrowIfNull(writer);
 		writer.SetAsMap();
@@ -93,6 +98,11 @@ public class Country
 		// Note: can have a _newPact flag, even if already has a _pact from earlier (when xcom liberates and aliens retake a country during the same month)
 		if (_newPact)
 			writer.Write("newPact", _newPact);
+
+		if (shared != null)
+		{
+			_scriptValues.Save(writer, shared);
+		}
 	}
 
 	/// <summary>Ruleset for the country's type.</summary>

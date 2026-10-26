@@ -86,7 +86,7 @@ public class VehicleDeploymentData
 /// Contains variable info about a craft like
 /// position, fuel, damage, etc.
 /// </summary>
-public class Craft : MovingTarget
+public partial class Craft : MovingTarget
 {
 	/// <summary>Name of class used in script.</summary>
 	public const string ScriptName = "Craft";
@@ -312,6 +312,11 @@ public class Craft : MovingTarget
 			Speed = 0;
 
 		RecalcSpeedMaxRadian();
+
+		if (mod != null)
+		{
+			_scriptValues.Load(reader, mod.ScriptGlobal);
+		}
 	}
 
 	/// <summary>Finishes loading the craft from YAML (called after all other XCOM craft are loaded too).</summary>
@@ -374,7 +379,7 @@ public class Craft : MovingTarget
 	}
 
 	/// <summary>Saves the craft to YAML (C++ <c>save(writer, shared)</c>; hides the <see cref="MovingTarget"/> overload like C++ does).</summary>
-	public new void Save(YamlNodeWriter writer)
+	public void Save(YamlNodeWriter writer, ScriptGlobal shared = null)
 	{
 		writer.SetAsMap();
 		base.Save(writer);
@@ -420,6 +425,11 @@ public class Craft : MovingTarget
 			writer.Write("customVehicleDeployment", _customVehicleDeployment);
 		if (_skinIndex != 0)
 			writer.Write("skinIndex", _skinIndex);
+
+		if (shared != null)
+		{
+			_scriptValues.Save(writer, shared);
+		}
 	}
 
 	/// <summary>

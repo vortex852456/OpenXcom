@@ -485,7 +485,7 @@ public class BattleActionAttack
 /// Contains constant info about an item like
 /// storage size, sell price, etc.
 /// </summary>
-public class RuleItem
+public partial class RuleItem
 {
 	/// <summary>Maximum number of ammo slots on weapon.</summary>
 	public const int AmmoSlotMax = 4;
@@ -881,7 +881,7 @@ public class RuleItem
 		}
 	}
 
-	/// <summary>Loads the item from a YAML file (the C++ ModScript parser argument is left out: script hooks).</summary>
+	/// <summary>Loads the item from a YAML file (the C++ ModScript parser argument comes from <see cref="Mod.ScriptParsers"/>).</summary>
 	/// <param name="node">YAML node.</param>
 	/// <param name="mod">Mod for the item.</param>
 	public void Load(YamlNodeReader node, Mod mod)
@@ -1237,20 +1237,20 @@ public class RuleItem
 		reader.TryRead("monthlyMaintenance", ref _monthlyMaintenance);
 		reader.TryRead("sprayWaypoints", ref _sprayWaypoints);
 
-		// the C++ code passes the stat bonus script parsers here (script hooks); the property name is the parser name
-		_damageBonus.Load(_type, reader, "damageBonus");
-		_meleeBonus.Load(_type, reader, "meleeBonus");
-		_accuracyMulti.Load(_type, reader, "accuracyMultiplier");
-		_meleeMulti.Load(_type, reader, "meleeMultiplier");
-		_throwMulti.Load(_type, reader, "throwMultiplier");
-		_closeQuartersMulti.Load(_type, reader, "closeQuartersMultiplier");
+		var parsers = mod.ScriptParsers;
+		_damageBonus.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.DamageBonusStatBonus));
+		_meleeBonus.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.MeleeBonusStatBonus));
+		_accuracyMulti.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.AccuracyMultiplierStatBonus));
+		_meleeMulti.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.MeleeMultiplierStatBonus));
+		_throwMulti.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.ThrowMultiplierStatBonus));
+		_closeQuartersMulti.Load(_type, reader, parsers.bonusStatsScripts.Get(ModScript.CloseQuarterMultiplierStatBonus));
 
 		reader.TryRead("powerRangeReduction", ref _powerRangeReduction);
 		reader.TryRead("powerRangeThreshold", ref _powerRangeThreshold);
 
 		reader.TryRead("psiRequired", ref _psiReqiured);
 		reader.TryRead("manaRequired", ref _manaRequired);
-		// missing: _scriptValues.load and _battleItemScripts.load (script hooks)
+		LoadScripts(reader, parsers);
 	}
 
 	/// <summary>Cross link with other Rules.</summary>
@@ -1457,7 +1457,9 @@ public class RuleItem
 		int buyPriceCoefficient = save.BuyPriceCoefficient;
 		int cost = BuyCost;
 		int adjusted = (int)((long)cost * buyPriceCoefficient / 100);
-		// missing: ModScript::BuyCostItem script hook
+
+		adjusted = ModScript.ScriptFunc2(GetScriptEvents(ModScript.BuyCostItem), adjusted, cost, this, save, buyPriceCoefficient);
+
 		return adjusted;
 	}
 
@@ -1473,7 +1475,9 @@ public class RuleItem
 		int sellPriceCoefficient = save.SellPriceCoefficient;
 		int cost = SellCost;
 		int adjusted = (int)((long)cost * sellPriceCoefficient / 100);
-		// missing: ModScript::SellCostItem script hook
+
+		adjusted = ModScript.ScriptFunc2(GetScriptEvents(ModScript.SellCostItem), adjusted, cost, this, save, sellPriceCoefficient);
+
 		return adjusted;
 	}
 
@@ -1969,8 +1973,9 @@ public class RuleItem
 			frame = item.GetBigSprite(texture, save, animFrame);
 			if (frame != null)
 			{
-				// C++ blits through ScriptWorkerBlit (BattleItem::ScriptFill); without recolor scripts that is a plain blitNShade (script hooks)
-				frame.BlitNShade(surface, HandSpriteOffX, HandSpriteOffY, 0);
+				var scr = new ScriptWorkerBlit();
+				BattleItem.ScriptFill(scr, item, save, (int)UnitBodyPartEx.BODYPART_ITEM_INVENTORY, animFrame, 0);
+				scr.ExecuteBlit(frame, surface, HandSpriteOffX, HandSpriteOffY, 0);
 			}
 		}
 		else

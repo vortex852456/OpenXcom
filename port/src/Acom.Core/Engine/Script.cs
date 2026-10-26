@@ -1217,15 +1217,6 @@ public readonly struct ScriptTag<T> : IEquatable<ScriptTag<T>>, IScriptTag
 	public static ScriptTag<T> GetNullTag() => Make(0);
 }
 
-/// <summary>Type that has script bindings (C++ static <c>ScriptName</c> + <c>ScriptRegister</c>).</summary>
-public interface IScriptBind
-{
-	/// <summary>Name of class used in script.</summary>
-	static abstract string ScriptName { get; }
-	/// <summary>Register all useful function used by script.</summary>
-	static abstract void ScriptRegister(ScriptParserBase parser);
-}
-
 ////////////////////////////////////////////////////////////
 //					tags & global data
 ////////////////////////////////////////////////////////////
@@ -1799,5 +1790,199 @@ internal static class ScriptBox
 			slot = default(T);
 		}
 		return ref Unsafe.Unbox<T>(slot);
+	}
+}
+
+/// <summary>
+/// libstdc++ <c>std::sort</c> (introsort + final insertion sort), so that elements comparing equal end up in the same
+/// (unstable) order as in the C++ game.
+/// </summary>
+internal static class StdSort
+{
+	private const int S_threshold = 16;
+
+	/// <summary>Sort with strict weak ordering <paramref name="less"/>.</summary>
+	public static void Sort<T>(IList<T> v, Func<T, T, bool> less)
+	{
+		int first = 0, last = v.Count;
+		if (first != last)
+		{
+			IntrosortLoop(v, first, last, Lg(last - first) * 2, less);
+			FinalInsertionSort(v, first, last, less);
+		}
+	}
+
+	private static int Lg(int n)
+	{
+		int r = 0;
+		while ((n >>= 1) != 0) ++r;
+		return r;
+	}
+
+	private static void Swap<T>(IList<T> v, int a, int b) => (v[a], v[b]) = (v[b], v[a]);
+
+	private static void IntrosortLoop<T>(IList<T> v, int first, int last, int depthLimit, Func<T, T, bool> less)
+	{
+		while (last - first > S_threshold)
+		{
+			if (depthLimit == 0)
+			{
+				HeapSelect(v, first, last, last, less);
+				SortHeap(v, first, last, less);
+				return;
+			}
+			--depthLimit;
+			int cut = UnguardedPartitionPivot(v, first, last, less);
+			IntrosortLoop(v, cut, last, depthLimit, less);
+			last = cut;
+		}
+	}
+
+	private static void MoveMedianToFirst<T>(IList<T> v, int result, int a, int b, int c, Func<T, T, bool> less)
+	{
+		if (less(v[a], v[b]))
+		{
+			if (less(v[b], v[c])) Swap(v, result, b);
+			else if (less(v[a], v[c])) Swap(v, result, c);
+			else Swap(v, result, a);
+		}
+		else if (less(v[a], v[c])) Swap(v, result, a);
+		else if (less(v[b], v[c])) Swap(v, result, c);
+		else Swap(v, result, b);
+	}
+
+	private static int UnguardedPartition<T>(IList<T> v, int first, int last, int pivot, Func<T, T, bool> less)
+	{
+		while (true)
+		{
+			while (less(v[first], v[pivot])) ++first;
+			--last;
+			while (less(v[pivot], v[last])) --last;
+			if (!(first < last)) return first;
+			Swap(v, first, last);
+			++first;
+		}
+	}
+
+	private static int UnguardedPartitionPivot<T>(IList<T> v, int first, int last, Func<T, T, bool> less)
+	{
+		int mid = first + (last - first) / 2;
+		MoveMedianToFirst(v, first, first + 1, mid, last - 1, less);
+		return UnguardedPartition(v, first + 1, last, first, less);
+	}
+
+	private static void UnguardedLinearInsert<T>(IList<T> v, int last, Func<T, T, bool> less)
+	{
+		T val = v[last];
+		int next = last - 1;
+		while (less(val, v[next]))
+		{
+			v[last] = v[next];
+			last = next;
+			--next;
+		}
+		v[last] = val;
+	}
+
+	private static void InsertionSort<T>(IList<T> v, int first, int last, Func<T, T, bool> less)
+	{
+		if (first == last) return;
+		for (int i = first + 1; i != last; ++i)
+		{
+			if (less(v[i], v[first]))
+			{
+				T val = v[i];
+				for (int k = i; k > first; --k) v[k] = v[k - 1];
+				v[first] = val;
+			}
+			else
+			{
+				UnguardedLinearInsert(v, i, less);
+			}
+		}
+	}
+
+	private static void FinalInsertionSort<T>(IList<T> v, int first, int last, Func<T, T, bool> less)
+	{
+		if (last - first > S_threshold)
+		{
+			InsertionSort(v, first, first + S_threshold, less);
+			for (int i = first + S_threshold; i != last; ++i) UnguardedLinearInsert(v, i, less);
+		}
+		else
+		{
+			InsertionSort(v, first, last, less);
+		}
+	}
+
+	private static void PushHeap<T>(IList<T> v, int first, int holeIndex, int topIndex, T value, Func<T, T, bool> less)
+	{
+		int parent = (holeIndex - 1) / 2;
+		while (holeIndex > topIndex && less(v[first + parent], value))
+		{
+			v[first + holeIndex] = v[first + parent];
+			holeIndex = parent;
+			parent = (holeIndex - 1) / 2;
+		}
+		v[first + holeIndex] = value;
+	}
+
+	private static void AdjustHeap<T>(IList<T> v, int first, int holeIndex, int len, T value, Func<T, T, bool> less)
+	{
+		int topIndex = holeIndex;
+		int secondChild = holeIndex;
+		while (secondChild < (len - 1) / 2)
+		{
+			secondChild = 2 * (secondChild + 1);
+			if (less(v[first + secondChild], v[first + (secondChild - 1)])) secondChild--;
+			v[first + holeIndex] = v[first + secondChild];
+			holeIndex = secondChild;
+		}
+		if ((len & 1) == 0 && secondChild == (len - 2) / 2)
+		{
+			secondChild = 2 * (secondChild + 1);
+			v[first + holeIndex] = v[first + (secondChild - 1)];
+			holeIndex = secondChild - 1;
+		}
+		PushHeap(v, first, holeIndex, topIndex, value, less);
+	}
+
+	private static void MakeHeap<T>(IList<T> v, int first, int last, Func<T, T, bool> less)
+	{
+		if (last - first < 2) return;
+		int len = last - first;
+		int parent = (len - 2) / 2;
+		while (true)
+		{
+			T value = v[first + parent];
+			AdjustHeap(v, first, parent, len, value, less);
+			if (parent == 0) return;
+			parent--;
+		}
+	}
+
+	private static void PopHeap<T>(IList<T> v, int first, int last, int result, Func<T, T, bool> less)
+	{
+		T value = v[result];
+		v[result] = v[first];
+		AdjustHeap(v, first, 0, last - first, value, less);
+	}
+
+	private static void HeapSelect<T>(IList<T> v, int first, int middle, int last, Func<T, T, bool> less)
+	{
+		MakeHeap(v, first, middle, less);
+		for (int i = middle; i < last; ++i)
+		{
+			if (less(v[i], v[first])) PopHeap(v, first, middle, i, less);
+		}
+	}
+
+	private static void SortHeap<T>(IList<T> v, int first, int last, Func<T, T, bool> less)
+	{
+		while (last - first > 1)
+		{
+			--last;
+			PopHeap(v, first, last, last, less);
+		}
 	}
 }

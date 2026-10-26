@@ -28,7 +28,7 @@ namespace Acom;
 /// Represents the creation data for an X-COM unit.
 /// This info is copied to either Soldier for Geoscape or BattleUnit for Battlescape.
 /// </summary>
-public class RuleSoldier
+public partial class RuleSoldier
 {
 	/// <summary>Number of bits for soldier gender.</summary>
 	public const int LookGenderBits = 1;
@@ -239,7 +239,7 @@ public class RuleSoldier
 		reader.TryRead("group", ref _group);
 		reader.TryRead("listOrder", ref _listOrder);
 
-		// _scriptValues: script hooks missing
+		_scriptValues.Load(reader, mod.ScriptParsers.GetShared());
 	}
 
 	/// <summary>

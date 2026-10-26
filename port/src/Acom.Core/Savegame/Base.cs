@@ -370,9 +370,9 @@ public class Base : Target
 		writer.Write("facilities", _facilities,
 			(vectorWriter, f) => f.Save(vectorWriter.Write()));
 		writer.Write("soldiers", _soldiers,
-			(vectorWriter, s) => s.Save(vectorWriter.Write()));
+			(vectorWriter, s) => s.Save(vectorWriter.Write(), _mod.ScriptGlobal));
 		writer.Write("crafts", _crafts,
-			(vectorWriter, c) => c.Save(vectorWriter.Write()));
+			(vectorWriter, c) => c.Save(vectorWriter.Write(), _mod.ScriptGlobal));
 		_items.Save(writer["items"]);
 		writer.Write("scientists", _scientists);
 		writer.Write("engineers", _engineers);

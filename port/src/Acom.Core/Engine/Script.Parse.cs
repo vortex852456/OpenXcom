@@ -2485,9 +2485,13 @@ public class ScriptParserBase
 	public bool HaveType(ScriptParam p) => HaveTypeBase(p.ArgType);
 
 	/// <summary>Register pointer type in parser (C++ <c>registerPointerType&lt;P&gt;</c>).</summary>
-	public void RegisterPointerType<P>() where P : class, IScriptBind
+	public void RegisterPointerType<P>() where P : class
 	{
-		RegisterPointerType(typeof(P), P.ScriptName, P.ScriptRegister);
+		if (!ScriptBindTable.TryGet(typeof(P), out var name, out var register))
+		{
+			throw new InvalidOperationException("Type without script bindings: " + typeof(P).Name);
+		}
+		RegisterPointerType(typeof(P), name, register);
 	}
 
 	/// <summary>Register pointer type in parser.</summary>
@@ -2832,6 +2836,15 @@ public class ScriptParserBase
 	private static readonly Lock s_printOpLock = new();
 	private static bool s_printOp = true;
 
+	/// <summary>Print the list of built-in operations again with the next metadata (tests).</summary>
+	internal static void ResetPrintOp()
+	{
+		lock (s_printOpLock)
+		{
+			s_printOp = true;
+		}
+	}
+
 	/// <summary>Print all metadata.</summary>
 	public void LogScriptMetadata(bool haveEvents, string groupName)
 	{
@@ -2909,7 +2922,7 @@ public class ScriptParserBase
 			}
 			refLog.Append("Script data:\n");
 			var temp = _refList.ToList();
-			temp.Sort((a, b) => string.CompareOrdinal(a.name.ToString(), b.name.ToString()));
+			StdSort.Sort(temp, (a, b) => a.name.AsSpan().SequenceCompareTo(b.name.AsSpan()) < 0);
 			foreach (var r in temp)
 			{
 				if ((!ArgIsReg(r.type) && !ArgIsPtr(r.type) && Logger.ReportingLevel != SeverityLevel.LOG_VERBOSE) || ArgBase(r.type) == ArgInvalid)
@@ -2918,7 +2931,7 @@ public class ScriptParserBase
 				}
 				if (ArgBase(r.type) == ArgInt && !ArgIsReg(r.type))
 				{
-					refLog.Append("Name: ").Append(r.name.ToString().PadRight(40)).Append(GetTypePrefix(r.type).PadRight(9)).Append(' ').Append(argType(r.type).PadRight(9)).Append(' ').Append(hex(r.value.GetInt())).Append('\n');
+					refLog.Append("Name: ").Append(r.name.ToString().PadRight(40)).Append(GetTypePrefix(r.type).PadRight(9)).Append(' ').Append(argType(r.type).PadRight(9)).Append(' ').Append(r.value.GetInt().ToString(CultureInfo.InvariantCulture)).Append('\n');
 				}
 				else
 				{
@@ -2932,7 +2945,7 @@ public class ScriptParserBase
 			else
 			{
 				var tmp = _procList.ToList();
-				tmp.Sort((a, b) => string.CompareOrdinal(a.name.ToString(), b.name.ToString()));
+				StdSort.Sort(tmp, (a, b) => a.name.AsSpan().SequenceCompareTo(b.name.AsSpan()) < 0);
 
 				refLog.Append('\n');
 				refLog.Append("Script operations:\n");
@@ -3163,10 +3176,7 @@ public class ScriptParserEventsBase : ScriptParserBase
 	/// <summary>Release event data.</summary>
 	public List<ScriptContainerBase> ReleseEvents()
 	{
-		// C++ std::sort, the port uses a stable sort
-		var sorted = _eventsData.OrderBy(e => e.offset).ToList();
-		_eventsData.Clear();
-		_eventsData.AddRange(sorted);
+		StdSort.Sort(_eventsData, (a, b) => a.offset < b.offset);
 		foreach (var e in _eventsData)
 		{
 			var reservedSpaceForZero = e.offset < 0;

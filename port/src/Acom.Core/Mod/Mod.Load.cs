@@ -18,10 +18,8 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/Mod.h, src/Mod/Mod.cpp
-// Port status: partial (missing: script hooks)
 //
 // Ruleset loading part of Mod: YAML load helpers, offsets, loadAll/loadMod/loadFile and loadRule.
-// The C++ ModScript parsers and ModScriptGlobal (tags, script values, RuleList constants) are left out.
 #nullable disable
 
 using System.Collections;
@@ -1071,7 +1069,7 @@ public partial class Mod
 	/// </param>
 	internal void LoadAll(bool loadResources)
 	{
-		// script hooks: ModScript parser (not ported)
+		_scriptParsers = new ModScript(_scriptGlobal, this);
 		var mods = FileMap.GetRulesets();
 
 		Logger.Info("Loading begins...");
@@ -1083,6 +1081,7 @@ public partial class Mod
 		{
 			Logger.Warning("Validation of mod data reduced, game can behave incorrectly");
 		}
+		_scriptGlobal.BeginLoad();
 		_modData.Clear();
 		for (int i = 0; i < mods.Count; ++i)
 		{
@@ -1100,7 +1099,7 @@ public partial class Mod
 			{
 				ThrowModOnErrorHelper(modId, "this mod name is already used");
 			}
-			// script hooks: _scriptGlobal->addMod(modId, 1000 * offset)
+			_scriptGlobal.AddMod(mods[i].ModId, 1000 * offset);
 			ModInfo modInfo = Options.GetModInfos()[modId];
 			int size = modInfo.ReservedSpace;
 			_modData[i].name = modId;
@@ -1149,7 +1148,7 @@ public partial class Mod
 			try
 			{
 				_modCurrent = _modData[i];
-				// script hooks: _scriptGlobal->setMod(_modCurrent->offset)
+				_scriptGlobal.SetMod(_modCurrent.offset);
 				LoadMod(mods[i].Rulesets);
 			}
 			catch (Exception e) when (IsOxceException(e))
@@ -1162,7 +1161,7 @@ public partial class Mod
 
 		//back master
 		_modCurrent = _modData[0];
-		// script hooks: _scriptGlobal->endLoad()
+		_scriptGlobal.EndLoad();
 		_currentFile = "After-load validation";
 
 		AfterLoad(loadResources);
@@ -1390,6 +1389,7 @@ public partial class Mod
 			try
 			{
 				_currentFile = filerec.FullPath;
+				_scriptGlobal.FileLoad(filerec.FullPath);
 				LoadFile(filerec);
 			}
 			catch (Exception e) when (IsOxceException(e))
@@ -1676,11 +1676,41 @@ public partial class Mod
 
 				if (!CheckForSoftError(file == null, "extended", t, "Unknown file name for 'tagsFile': '" + filePath + "'", SeverityLevel.LOG_ERROR))
 				{
-					// script hooks: the tags of that file are copied into the script globals (not ported)
+					//copy only tags and load them in current file.
+					var tempReader = file.GetYaml();
+					var tempTags = new SortedDictionary<string, SortedDictionary<string, string>>(StringComparer.Ordinal);
+					var tagsNode = tempReader["extended"]["tags"];
+					if (tagsNode)
+					{
+						foreach (var type in tagsNode.Children())
+						{
+							var inner = new SortedDictionary<string, string>(StringComparer.Ordinal);
+							foreach (var tag in type.Children())
+							{
+								inner.TryAdd(tag.Key, tag.ReadVal<string>());
+							}
+							tempTags.TryAdd(type.Key, inner);
+						}
+					}
+					var tempExtended = new YamlRootNodeWriter();
+					tempExtended.SetAsMap();
+					var tagsWriter = tempExtended["tags"];
+					tagsWriter.SetAsMap();
+					foreach (var type in tempTags)
+					{
+						var typeWriter = tagsWriter[type.Key];
+						typeWriter.SetAsMap();
+						foreach (var tag in type.Value)
+						{
+							typeWriter[tag.Key].SetValue(tag.Value);
+						}
+					}
+					_scriptGlobal.Load(tempExtended.ToReader());
 				}
 			}
 
-			// script hooks: _scriptGlobal->load(extended), script values "globals" (not ported)
+			_scriptGlobal.Load(extended);
+			_scriptGlobal.ScriptValues.Load(extended, ScriptParsers.GetShared(), "globals");
 		}
 
 		IReadOnlyList<YamlNodeReader> iterateRules(string nodeName, string type)

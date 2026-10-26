@@ -763,7 +763,10 @@ public partial class BattleUnit
 		reader.TryRead("vip", ref _vip);
 		reader.TryRead("bannedInNextStage", ref _bannedInNextStage);
 		reader.TryRead("meleeAttackedBy", ref _meleeAttackedBy);
-		// script values (_scriptValues.load) are not ported
+		if (mod != null)
+		{
+			_scriptValues.Load(reader, mod.ScriptGlobal);
+		}
 	}
 
 	/// <summary>C++ <c>reader.tryReadAs&lt;int&gt;</c> into an 8 bit counter (the value is truncated like <c>static_cast&lt;Uint8&gt;</c>).</summary>
@@ -778,7 +781,7 @@ public partial class BattleUnit
 
 	/// <summary>Saves the unit to YAML.</summary>
 	/// <param name="writer">YAML node.</param>
-	public void Save(YamlNodeWriter writer)
+	public void Save(YamlNodeWriter writer, ScriptGlobal shared = null)
 	{
 		writer.SetAsMap();
 		writer.Write("id", _id);
@@ -927,7 +930,10 @@ public partial class BattleUnit
 			writer.Write("bannedInNextStage", _bannedInNextStage);
 		if (_meleeAttackedBy.Count != 0)
 			writer.Write("meleeAttackedBy", _meleeAttackedBy);
-		// script values (_scriptValues.save) are not ported
+		if (shared != null)
+		{
+			_scriptValues.Save(writer, shared);
+		}
 	}
 
 	/// <summary>Prepare vector values for recolor.</summary>

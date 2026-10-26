@@ -80,7 +80,7 @@ public class SaveInfo
 /// the port sorts by the (unique) research name instead. Only the order of <see cref="DiscoveredResearch"/> and of the
 /// lists from <see cref="GetNewlyAvailableResearchProjects"/> can differ from the original.
 /// </remarks>
-public class SavedGame
+public partial class SavedGame
 {
 	public Country debugCountry;
 	public Region debugRegion;
@@ -520,7 +520,7 @@ public class SavedGame
 			if (mod.GetCountry(type) != null)
 			{
 				var c = new Country(mod.GetCountry(type), false);
-				c.Load(country);
+				c.Load(country, mod.ScriptGlobal);
 				_countries.Add(c);
 			}
 			else
@@ -788,7 +788,7 @@ public class SavedGame
 			_battleGame.Load(battle, mod, this);
 		}
 
-		// Script hook not ported: _scriptValues.load(reader, mod->getScriptGlobal())
+		_scriptValues.Load(reader, mod.ScriptGlobal);
 	}
 
 	/// <summary>Loads the global equipment layouts and craft loadouts.</summary>
@@ -842,7 +842,7 @@ public class SavedGame
 
 	/// <summary>Saves a saved game's contents to a YAML file.</summary>
 	/// <param name="filename">YAML filename.</param>
-	/// <param name="mod">Mod for the saved game (only used by script hooks in C++).</param>
+	/// <param name="mod">Mod for the saved game (script globals of the tags).</param>
 	public void Save(string filename, Mod mod)
 	{
 		var headerWriter = new YamlRootNodeWriter();
@@ -910,7 +910,7 @@ public class SavedGame
 		writer.Write("globeZoom", _globeZoom);
 		writer.Write("ids", _ids);
 
-		SaveVector(writer, _countries, "countries", (c, w) => c.Save(w));
+		SaveVector(writer, _countries, "countries", (c, w) => c.Save(w, mod.ScriptGlobal));
 		SaveVector(writer, _regions, "regions", (r, w) => r.Save(w));
 		SaveVector(writer, _bases, "bases", (b, w) => b.Save(w));
 		SaveVector(writer, _waypoints, "waypoints", (wp, w) => wp.Save(w));
@@ -921,7 +921,7 @@ public class SavedGame
 		SaveVector(writer, _activeMissions, "alienMissions", (am, w) => am.Save(w));
 		// UFOs must be after missions
 		bool newBattle = MonthsPassed == -1;
-		SaveVector(writer, _ufos, "ufos", (u, w) => u.Save(w, newBattle));
+		SaveVector(writer, _ufos, "ufos", (u, w) => u.Save(w, newBattle, mod.ScriptGlobal));
 		SaveVector(writer, _geoscapeEvents, "geoscapeEvents", (ge, w) => ge.Save(w));
 		if (_discovered.Count != 0)
 		{
@@ -947,7 +947,7 @@ public class SavedGame
 		writer.Write("customRuleCraftDeployments", _customRuleCraftDeployments);
 		_alienStrategy.Save(writer["alienStrategy"]);
 
-		SaveVector(writer, _deadSoldiers, "deadSoldiers", (s, w) => s.Save(w));
+		SaveVector(writer, _deadSoldiers, "deadSoldiers", (s, w) => s.Save(w, mod.ScriptGlobal));
 		for (int j = 0; j < Options.oxceMaxEquipmentLayoutTemplates; ++j)
 		{
 			string suffix = j.ToString(CultureInfo.InvariantCulture);
@@ -989,7 +989,7 @@ public class SavedGame
 			optionInfo.Save(optionsWriter);
 
 		_battleGame?.Save(writer["battleGame"]);
-		// Script hook not ported: _scriptValues.save(writer.toBase(), mod->getScriptGlobal())
+		_scriptValues.Save(writer, mod.ScriptGlobal);
 
 		// concatenate header + separator + body
 		// per yaml standard, "bare documents" in a yaml "stream" can be separated by either a "document end" or "directives end" marker line
