@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[3]
 CS = ROOT / "port" / "src" / "Acom.Core"
 CK = ci.CursorKind
 STUB_MARK = "// Port status: stub"
-# Units without skeletons: the OXCE script engine (open decision, Phase 5) and the headers of already ported code.
+# Units without skeletons: the OXCE script engine (ported by hand) and the headers of already ported code.
 NO_SKELETON = re.compile(r"^src/(Engine/Script|Mod/ModScript|Engine/Options\.inc)")
 SCRIPT_TYPES = re.compile(r"\b(Script\w*|ModScript\w*|\w*ScriptParser\w*|ScriptValues|ScriptGlobal|ScriptTag|ScriptWorker\w*|ScriptContainer\w*|ScriptOutputArgs|ScriptFunc|ProgPos|RetEnum)\b")
 

@@ -35,8 +35,14 @@ port/
 - **Namen:** `getX()`/`isX()`/`hasX()` ohne Parameter → Property `X`/`IsX`/`HasX`, mit `setX(T)` als Setter; sonst Methoden in PascalCase; Felder/Konstanten behalten C++-Namen; geerbte Member folgen der Basisklasse.
 - **Typen:** `vector`/`list`/`deque` → `List<T>`, `map` mit Wert-Schlüssel → `SortedDictionary` (Reihenfolge wie C++), mit Zeiger-Schlüssel → `Dictionary`, `pair` → `(A first, B second)`, `Uint8` → `byte`, `size_t` → `int`, `SDL_Color` → `Rgba`. Werttypen (`struct`): `VALUE_TYPES` im Generator (z. B. `Position`, `UnitStats`); alle anderen C++-Klassen werden Klassen, Kopien also explizit.
 - **Nullbarkeit:** Spielcode außerhalb von `Engine/` beginnt mit `#nullable disable` (Zeiger wie in C++); Engine-Code bleibt annotiert.
-- **Ohne Gerüst:** Skript-Engine (`Engine/Script*`, `Mod/ModScript`, Phase 5). Skript-Member fehlen in den Gerüsten; portierte Units vermerken sie als `missing: script hooks`.
+- **Ohne Gerüst:** Skript-Engine (`Engine/Script*`, `Mod/ModScript`), von Hand portiert. Skript-Member (`ScriptRegister`, `ScriptFill`, Skriptwerte) fehlen in den Gerüsten und stehen in `<Klasse>.Script.cs`-Partials.
 - Ein Namespace `Acom` für alles (wie C++ `OpenXcom`); getrennte Namespaces kollidierten mit Klassennamen (`Mod`, `Ufopaedia`).
+
+## Skript-Engine
+`Engine/Script.cs`, `Script.Parse.cs`, `ScriptBind.cs` (Tokenizer, Parser, Operationen, Tags, Events) und `Mod/ModScript.cs` (alle Parser/Gruppen) verhalten sich wie `Script.cpp`, inkl. Fehlermeldungen und bekannter C++-Eigenheiten (im Code kommentiert).
+- **Aufbau:** Programm = `ScriptInstr[]` (Delegate + Operanden); Register per C++-Byte-Offset (64-Bit-Layout) in `int[]`/`object[]`; `ScriptParam` beschreibt die C++-Argumenttypen. Bindings registriert `ModScript.RegisterBindTypes` (Typ → Skriptname + `ScriptRegister`).
+- **Hooks:** `ModScript.Execute/ScriptCallback/ScriptFunc1/ScriptFunc2` wie in C++; leere Container werden übersprungen. Regeln ohne geladene Skripte (nicht aus Rulesets) nutzen inline die eingebauten Default-Skripte (Psi/Nahkampf, Dampfpartikel, Sprites).
+- **Prüfung:** `ScriptGoldenTests` gegen kompiliertes `Script.cpp` (`tools/golden/script.cpp`); `ModScriptTests` vergleicht die Metadaten aller Parser (Typen, Register, Konstanten, Funktionssignaturen) mit dem Debug-Log des C++-Spiels (`Golden/script-metadata.txt.gz`). Gleichnamige Überladungen sortiert `StdSort` wie libstdc++ `std::sort`.
 
 ## YAML
 `Engine/Yaml.cs` liest mit dem Event-Parser von YamlDotNet in einen eigenen Knotenbaum, damit das Verhalten von rapidyaml erhalten bleibt: doppelte Schlüssel erlaubt (erster Treffer gewinnt), Merge-Schlüssel `<<` wie `Tree::resolve()`, Zahlen/Bools wie c4core (`0x`, `True`, ...). Die Selbsttests aus `src/Engine/Yaml.cpp` sind in `YamlTests` übernommen; `RepoYamlTests` liest alle `.rul`/`.yml` des Repos.
@@ -96,7 +102,7 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | 2 ✅ | `Mod/` (alle Rule*, `Mod.cpp`; alle `xcom1`-Regelwerke laden) und `Savegame/` (inkl. Konverter für Original-Spielstände) | YAML-Round-Trips, Ruleset-Ladetest |
 | 3 ✅ | `Menu/`, `Geoscape/`, `Basescape/`, `Ufopaedia/` | Unit-Tests der Logik, End-to-End mit Platzhalterdaten |
 | 4 ✅ | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine, Generator, alle States) | Golden-Tests Pfadsuche/Flugbahnen |
-| 5 | OXCE-Skript-Engine (`Engine/Script*`, `Mod/ModScript`) und Skript-Hooks in den portierten Klassen | Mod-Skripte aus Testmods |
+| 5 ✅ | OXCE-Skript-Engine (`Engine/Script*`, `Mod/ModScript`, Bindings, Hooks) | Golden-Tests gegen `Script.cpp`, Metadaten-Vergleich aller Parser |
 | parallel | Eigenes Inhaltspaket (Setting, Texte, HD-Grafik, Sound, Karten) | siehe `content-rights.md` |
 
 ## Offene Entscheidungen
