@@ -26,6 +26,12 @@ python3 "$here/make_test_images.py" "$root/$images"
 # SDL_gfx primitives behind Surface::drawLine/drawCircle/drawPolygon/drawTexturedPolygon/drawString (needs SDL_gfx 1.2 dev package)
 g++ -std=c++17 -O1 "$here/gfx.cpp" $(pkg-config --cflags --libs SDL_gfx sdl) -o "$tmp/gfx"
 "$tmp/gfx" > "$out/gfx.txt"
+# TileEngine trajectory helpers (calculateLineHelper/calculateParabolaHelper), extracted verbatim from the anonymous namespace
+awk '/^template<typename FuncNewPosition, typename FuncDrift>$/{p=1} p{print} /^bool calculateParabolaHelper/{q=1} q&&/^}$/{exit}' \
+	"$root/src/Battlescape/TileEngine.cpp" > "$tmp/tehelpers.inc"
+g++ -std=c++17 -O1 -I"$root/src" -I"$root/libs/rapidyaml" $(pkg-config --cflags sdl) -DTRAJECTORY_HELPERS="\"$tmp/tehelpers.inc\"" \
+	"$here/trajectory.cpp" -o "$tmp/trajectory"
+"$tmp/trajectory" > "$out/trajectory.txt"
 # Interface widgets (Text layout and drawing with the bin/common fonts, buttons, windows, bars, ...):
 # compiled from the original sources; game parts the cases never reach stay unresolved (calling one would crash the run)
 widgets=""
