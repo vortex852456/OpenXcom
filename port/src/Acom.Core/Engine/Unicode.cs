@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Unicode.h, src/Engine/Unicode.cpp
-// Port status: partial (text tokens, character classes, naturalCompare and number formatting; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
+// Port status: partial (text tokens, character classes, naturalCompare, upper/lowerCase and number formatting; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
 
 namespace Acom;
 
@@ -100,6 +100,12 @@ public static class Unicode
 
 	/// <summary>Compares two strings in natural order: true if <paramref name="a"/> comes before <paramref name="b"/> (C++ naturalCompare).</summary>
 	public static bool NaturalCompare(string a, string b) => NaturalComparison(a, b) < 0;
+
+	/// <summary>Converts a string to upper case (C++ upperCase works in place; here a new string is returned).</summary>
+	public static string UpperCase(string s) => string.IsNullOrEmpty(s) ? s : s.ToUpperInvariant();
+
+	/// <summary>Converts a string to lower case (C++ lowerCase works in place; here a new string is returned).</summary>
+	public static string LowerCase(string s) => string.IsNullOrEmpty(s) ? s : s.ToLowerInvariant();
 
 	/// <summary>Takes an integer value and formats it as number with separators (spacing the thousands).</summary>
 	/// <param name="value">The value.</param>
