@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/Mod.h, src/Mod/Mod.cpp
-// Port status: partial (missing: script hooks)
 //
 // Resource part of Mod: fonts, surfaces, palettes, sounds, music, transparency LUTs and the vanilla resource loading.
 #nullable disable

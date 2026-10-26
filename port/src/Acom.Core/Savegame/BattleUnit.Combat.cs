@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/BattleUnit.h, src/Savegame/BattleUnit.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.BattleActionType;
@@ -92,7 +91,29 @@ public partial class BattleUnit
 		int orgDamage = damage;
 		int overKillMinimum = type.IgnoreOverKill ? 0 : -UnitStats.OverkillMultipler * _stats.health;
 
-		// ModScript::HitUnitAmmo / HitUnit (damage, bodypart, side) would run here; not ported.
+		{
+			var args = new ScriptOutputArgs(damage, (int)bodypart, (int)side);
+			object[] work = [this, attack.damage_item, attack.weapon_item, attack.attacker, save, attack.skill_rules, orgDamage, (int)type.ResistType, (int)attack.type];
+
+			if (attack.damage_item != null)
+			{
+				ModScript.Execute(attack.damage_item.Rules.GetScriptEvents(ModScript.HitUnitAmmo), args, work);
+			}
+
+			ModScript.Execute(Armor.GetScript(ModScript.HitUnit), args, work);
+
+			damage = args.GetFirst();
+			bodypart = (UnitBodyPart)args.GetSecond();
+			side = (UnitSide)args.GetThird();
+			if ((uint)bodypart >= (uint)BODYPART_MAX)
+			{
+				bodypart = default;
+			}
+			if ((uint)side >= (uint)SIDE_MAX)
+			{
+				side = default;
+			}
+		}
 
 		// side and bodypart overrides (used by environmental conditions only)
 		if (sideOverride != SIDE_MAX)
@@ -182,7 +203,27 @@ public partial class BattleUnit
 				toArmor += type.GetArmorFinalDamage(damage);
 			}
 
-			// ModScript::DamageUnitAmmo / DamageUnit would run here; not ported.
+			{
+				var args = new ScriptOutputArgs(toHealth, toArmor, toStun, toTime, toEnergy, toMorale, toWound, toTransform, toMana);
+				object[] work = [this, attack.damage_item, attack.weapon_item, attack.attacker, save, attack.skill_rules, damage, orgDamage, (int)bodypart, (int)side, (int)type.ResistType, (int)attack.type];
+
+				if (attack.damage_item != null)
+				{
+					ModScript.Execute(attack.damage_item.Rules.GetScriptEvents(ModScript.DamageUnitAmmo), args, work);
+				}
+
+				ModScript.Execute(Armor.GetScript(ModScript.DamageUnit), args, work);
+
+				toHealth = args.GetInt(0);
+				toArmor = args.GetInt(1);
+				toStun = args.GetInt(2);
+				toTime = args.GetInt(3);
+				toEnergy = args.GetInt(4);
+				toMorale = args.GetInt(5);
+				toWound = args.GetInt(6);
+				toTransform = args.GetInt(7);
+				toMana = args.GetInt(8);
+			}
 
 			if (!_armor.GetPainImmune() || type.IgnorePainImmunity)
 			{
@@ -216,7 +257,7 @@ public partial class BattleUnit
 		// special effects
 		if (save.BattleState != null)
 		{
-			// C++ ModScript::DamageSpecialUnit::Output (arg_specialDamageTransform is only read by scripts)
+			// C++ ModScript::DamageSpecialUnit::Output
 			int arg_specialDamageTransformChance;
 			bool arg_selfDestruct;
 			int arg_selfDestructChance = 0;
@@ -306,7 +347,26 @@ public partial class BattleUnit
 				}
 			}
 
-			// ModScript::DamageSpecialUnitAmmo / DamageSpecialUnit would run here; not ported.
+			// script call
+			{
+				var args = new ScriptOutputArgs(specialDamageTransform != null ? 1 : 0, arg_specialDamageTransformChance, arg_selfDestruct ? 1 : 0, arg_selfDestructChance,
+					arg_moraleLoss, arg_fire, arg_attackerTurnsSinceSpotted, arg_attackerTurnsLeftSpottedForSnipers);
+				object[] work = [this, attack.damage_item, attack.weapon_item, attack.attacker, save, attack.skill_rules, damage, orgDamage, (int)bodypart, (int)side, (int)type.ResistType, (int)attack.type];
+
+				if (attack.damage_item != null)
+				{
+					ModScript.Execute(attack.damage_item.Rules.GetScriptEvents(ModScript.DamageSpecialUnitAmmo), args, work);
+				}
+
+				ModScript.Execute(Armor.GetScript(ModScript.DamageSpecialUnit), args, work);
+
+				arg_specialDamageTransformChance = args.GetInt(1);
+				arg_selfDestructChance = args.GetInt(3);
+				arg_moraleLoss = args.GetInt(4);
+				arg_fire = args.GetInt(5);
+				arg_attackerTurnsSinceSpotted = args.GetInt(6);
+				arg_attackerTurnsLeftSpottedForSnipers = args.GetInt(7);
+			}
 
 			// update state
 			MoraleChange(-arg_moraleLoss);

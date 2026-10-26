@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleCountry.h, src/Mod/RuleCountry.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -58,7 +57,7 @@ public partial class RuleCountry
 	}
 
 	/// <summary>Loads the country type from YAML.</summary>
-	/// <remarks>The C++ <c>parsers</c> argument (script containers) is left out with the script hooks.</remarks>
+	/// <remarks>The C++ <c>parsers</c> argument is <see cref="Mod.ScriptParsers"/>.</remarks>
 	public void Load(YamlNodeReader reader, Mod mod)
 	{
 		var parent = reader["refNode"];

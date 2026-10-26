@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleUfo.h, src/Mod/RuleUfo.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -151,7 +150,7 @@ public partial class RuleUfo
 	}
 
 	/// <summary>Loads the UFO from YAML.</summary>
-	/// <remarks>The C++ <c>parsers</c> argument (script containers) is left out with the script hooks.</remarks>
+	/// <remarks>The C++ <c>parsers</c> argument is <see cref="Mod.ScriptParsers"/>.</remarks>
 	public void Load(YamlNodeReader node, Mod mod)
 	{
 		var reader = node.UseIndex();

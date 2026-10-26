@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleInventory.h, src/Mod/RuleInventory.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;

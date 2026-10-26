@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/Inventory.h, src/Battlescape/Inventory.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Text;
@@ -283,6 +282,7 @@ public class Inventory : InteractiveSurface
 	public void DrawItems()
 	{
 		SavedBattleGame save = _game.SavedGame.SavedBattle;
+		var work = new ScriptWorkerBlit();
 		Surface tempSurface = _game.Mod.GetSurfaceSet("SCANG.DAT").GetFrame(6);
 		void primers(int x, int y, bool a)
 		{
@@ -322,9 +322,8 @@ public class Inventory : InteractiveSurface
 				{
 					continue;
 				}
-				// C++ blits through ScriptWorkerBlit (BattleItem::ScriptFill, BODYPART_ITEM_INVENTORY); without recolor
-				// scripts that is a plain blitNShade (script hooks)
-				frame.BlitNShade(_items, x, y, 0);
+				BattleItem.ScriptFill(work, invItem, save, (int)UnitBodyPartEx.BODYPART_ITEM_INVENTORY, _animFrame, 0);
+				work.ExecuteBlit(frame, _items, x, y, 0);
 
 				// two-handed indicator
 				if (invItem.Slot.Type == INV_HAND)
@@ -381,8 +380,8 @@ public class Inventory : InteractiveSurface
 				int x, y;
 				x = (groundItem.Slot.X + (groundItem.SlotX - _groundOffset) * RuleInventory.SLOT_W);
 				y = (groundItem.Slot.Y + groundItem.SlotY * RuleInventory.SLOT_H);
-				// C++ blits through ScriptWorkerBlit (script hooks), see above
-				frame.BlitNShade(_items, x, y, 0);
+				BattleItem.ScriptFill(work, groundItem, save, (int)UnitBodyPartEx.BODYPART_ITEM_INVENTORY, _animFrame, 0);
+				work.ExecuteBlit(frame, _items, x, y, 0);
 
 				// grenade primer indicators
 				if (groundItem.FuseTimer >= 0 && groundItem.Rules.InventoryWidth > 0)

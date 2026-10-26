@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/Base.h, src/Savegame/Base.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Collections;
@@ -464,7 +463,8 @@ public class Base : Target
 		bool hyperwave = false;
 		int hyperwave_chance = 0;
 		int radar_chance = 0;
-		// hyperwave_max_range / radar_max_range only feed the DetectUfoFromBase script hook (not ported)
+		int hyperwave_max_range = 0;
+		int radar_max_range = 0;
 
 		foreach (var fac in _facilities)
 		{
@@ -487,6 +487,14 @@ public class Base : Target
 				{
 					radar_chance += radarChance;
 				}
+			}
+			if (fac.Rules.IsHyperwave)
+			{
+				hyperwave_max_range = Math.Max(hyperwave_max_range, fac.Rules.RadarRange);
+			}
+			else
+			{
+				radar_max_range = Math.Max(radar_max_range, fac.Rules.RadarRange);
 			}
 		}
 
@@ -520,8 +528,11 @@ public class Base : Target
 			}
 		}
 
-		// script hook DetectUfoFromBase not ported: the unmodified values are used
-		return Rng.Percent(detectionChance) ? detectionType : UfoDetection.DETECTION_NONE;
+		var args = new ScriptOutputArgs((int)detectionType, detectionChance);
+
+		ModScript.Execute(target.Rules.GetScript(ModScript.DetectUfoFromBase), args, target, save, distance, alreadyTracked, radar_chance, radar_max_range, hyperwave_chance, hyperwave_max_range);
+
+		return Rng.Percent(args.GetSecond()) ? (UfoDetection)args.GetFirst() : UfoDetection.DETECTION_NONE;
 	}
 
 	/// <summary>Returns the amount of soldiers contained in the base without any assignments.</summary>

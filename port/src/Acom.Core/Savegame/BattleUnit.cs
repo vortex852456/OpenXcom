@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/BattleUnit.h, src/Savegame/BattleUnit.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.SoldierGender;
@@ -44,9 +43,8 @@ public class BattleUnitVisibility
 /// </summary>
 /// <remarks>
 /// The class is split into partial files: construction and YAML (this file), movement, combat,
-/// inventory and remaining state. OXCE script hooks (<c>ScriptRegister</c>, <c>ScriptFill</c>, script
-/// values and the <c>ModScript</c> callbacks in damage/experience) are not ported; where C++ lets a
-/// script modify a value, the unmodified value is used.
+/// inventory and remaining state; the script binding (<c>ScriptRegister</c>, <c>ScriptFill</c>) is in
+/// <c>BattleUnit.Script.cs</c>.
 /// </remarks>
 public partial class BattleUnit
 {

@@ -197,7 +197,7 @@ public partial class BattleItem
 		if (item != null)
 		{
 			var scr = item.Rules.GetScriptEvents(ModScript.RecolorItemSprite);
-			if (scr != null && scr.Data != null)
+			if (scr != null)
 			{
 				w.Update(scr, item, save, part, anim_frame, shade);
 			}

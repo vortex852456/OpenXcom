@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/Mod.h, src/Mod/Mod.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -259,7 +258,6 @@ public partial class Mod
 	/// <summary>Track of what mod last update rule object.</summary>
 	private readonly Dictionary<object, ModData> _ruleLastUpdateTracking = new(ReferenceEqualityComparer.Instance);
 
-#pragma warning disable CS0414 // read by the script bindings in C++ (not ported)
 	private int _surfaceOffsetBigobs;
 	private int _surfaceOffsetFloorob;
 	private int _surfaceOffsetHandob;
@@ -268,7 +266,6 @@ public partial class Mod
 	private int _surfaceOffsetBasebits;
 	private int _soundOffsetBattle;
 	private int _soundOffsetGeo;
-#pragma warning restore CS0414
 
 	/// <summary>File being loaded, used in error messages (C++ keeps it in the script global data).</summary>
 	private string _currentFile = "";

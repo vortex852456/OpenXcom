@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/TileEngine.h, src/Battlescape/TileEngine.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 global using MapSubset = Acom.AreaSubset<Acom.Position, short>;
@@ -39,8 +38,8 @@ namespace Acom;
 /// The port is split into partial files: this one holds the shared state, the generic map helpers and the lighting;
 /// <c>TileEngine.Visibility.cs</c> line of sight/fire, <c>TileEngine.Combat.cs</c> reactions, hits and explosions,
 /// <c>TileEngine.Terrain.cs</c> blockage, doors, gravity and items.
-/// OXCE script hooks are not ported: where a script could modify a value the unmodified value is used,
-/// except for the built-in default scripts of psi and melee attacks, which are implemented inline.
+/// OXCE script hooks are called like in C++; rules without loaded scripts (not loaded from a ruleset) use the
+/// built-in default scripts of psi and melee attacks, which are implemented inline.
 /// </remarks>
 public partial class TileEngine
 {

@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/BattleItem.h, src/Savegame/BattleItem.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -104,7 +103,6 @@ public partial class BattleItem
 	}
 
 	/// <summary>Loads the item from a YAML file.</summary>
-	/// <remarks>C++ also takes the script globals (<c>ScriptGlobal*</c>); script values are not ported.</remarks>
 	public void Load(YamlNodeReader reader, Mod mod)
 	{
 		ArgumentNullException.ThrowIfNull(mod);
@@ -136,7 +134,6 @@ public partial class BattleItem
 	}
 
 	/// <summary>Saves the item to a YAML file.</summary>
-	/// <remarks>C++ also takes the script globals (<c>ScriptGlobal*</c>); script values are not ported.</remarks>
 	public void Save(YamlNodeWriter writer, ScriptGlobal shared = null)
 	{
 		ArgumentNullException.ThrowIfNull(writer);
@@ -545,7 +542,11 @@ public partial class BattleItem
 				throw new InvalidOperationException("Image missing in 'FLOOROB.PCK' for item '" + _rules.Type + "'");
 			}
 
-			// script hook not ported: ModScript::SelectItemSprite (BODYPART_ITEM_FLOOR) keeps the sprite index
+			i = ModScript.ScriptFunc2(
+				_rules.GetScriptEvents(ModScript.SelectItemSprite),
+				i, 0,
+				this, save, (int)UnitBodyPartEx.BODYPART_ITEM_FLOOR, animFrame, shade
+			);
 			var newSurf = set.GetFrame(i);
 			if (newSurf == null)
 			{
@@ -573,7 +574,12 @@ public partial class BattleItem
 				throw new InvalidOperationException("Image missing in 'BIGOBS.PCK' for item '" + _rules.Type + "'");
 			}
 
-			// script hook not ported: ModScript::SelectItemSprite (BODYPART_ITEM_INVENTORY) keeps the sprite index
+			i = ModScript.ScriptFunc2(
+				_rules.GetScriptEvents(ModScript.SelectItemSprite),
+				i, 0,
+				this, save, (int)UnitBodyPartEx.BODYPART_ITEM_INVENTORY, animFrame, 0
+			);
+
 			var newSurf = set.GetFrame(i);
 			if (newSurf == null)
 			{

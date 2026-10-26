@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/Unit.h, src/Mod/Unit.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Diagnostics;

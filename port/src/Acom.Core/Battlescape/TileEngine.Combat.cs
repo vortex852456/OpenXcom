@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/TileEngine.cpp (reaction fire, hits, explosions, psi/melee/medikit/skill actions)
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.BattleActionType;
@@ -402,13 +401,25 @@ public partial class TileEngine
 
 			if (action.targeting)
 			{
+				int moveType = (int)originalAction.MoveType;
 				int meleeReactionChance = Mod.EXTENDED_MELEE_REACTIONS > 0 ? 100 : 0;
 				int reactionChance = BA_HIT != originalAction.type ? 100 : meleeReactionChance;
+				int dist = Position.Distance2d(unit.PositionVexels, target.PositionVexels);
+				int arc = GetArcDirection(GetDirectionTo(unit.PositionVexels, target.PositionVexels), unit.Direction);
+				var origTarg = _save.GetTile(originalAction.target)?.Unit;
 
-				// script hooks ModScript::ReactionWeaponAction/ReactionUnitAction/ReactionUnitReaction not ported:
-				// the unmodified chance is used (their extra inputs move type, distance, arc and original target are not needed)
+				var arg = new ScriptOutputArgs(reactionChance, dist);
+				object[] worker = [target, unit, action.weapon, (int)action.type, reaction.count, originalAction.weapon, originalAction.skillRules, (int)originalAction.type, origTarg, moveType, arc, _save];
+				if (originalAction.weapon != null)
+				{
+					ModScript.Execute(originalAction.weapon.Rules.GetScriptEvents(ModScript.ReactionWeaponAction), arg, worker);
+				}
 
-				if (Rng.Percent(reactionChance))
+				ModScript.Execute(target.Armor.GetScript(ModScript.ReactionUnitAction), arg, worker);
+
+				ModScript.Execute(unit.Armor.GetScript(ModScript.ReactionUnitReaction), arg, worker);
+
+				if (Rng.Percent(arg.GetFirst()))
 				{
 					_save.AppendToHitLog(HITLOG_REACTION_FIRE, unit.Faction);
 
@@ -617,7 +628,6 @@ public partial class TileEngine
 				}
 			}
 		}
-		_ = expType; // only an input of the (not ported) AwardExperience script hook
 
 		if (weapon.Rules.BattleType != BT_MEDIKIT)
 		{
@@ -631,7 +641,11 @@ public partial class TileEngine
 			}
 		}
 
-		// script hook ModScript::AwardExperience (armor) not ported: expMultiply is unmodified
+		expMultiply = ModScript.ScriptFunc2(
+			target.Armor.GetScript(ModScript.AwardExperience),
+			expMultiply, (int)expType,
+			unit, target, weapon, (int)attack.type
+		);
 
 		for (int i = expMultiply / 100; i > 0; --i)
 		{
@@ -1232,10 +1246,21 @@ public partial class TileEngine
 		Rng.RandomState rng = Rng.GlobalRandomState.SubSequence();
 		int psiAttackResult = 0;
 
-		// ModScript::TryPsiAttackItem: the item script is not ported, its built-in default script (BattleItem.cpp) is applied:
-		// "var int r; random.randomRange r 0 55; add psi_attack_success attack_strength; add psi_attack_success r;
-		//  sub psi_attack_success defense_strength; sub psi_attack_success distance_strength_reduction; return psi_attack_success;"
+		var psiItemScript = weapon.Rules.GetScriptEvents(ModScript.TryPsiAttackItem);
+		if (psiItemScript?.Parser != null)
 		{
+			psiAttackResult = ModScript.ScriptFunc1(
+				psiItemScript,
+				psiAttackResult,
+				weapon, attacker, victim, attack.skill_rules, attackStrength, defenseStrength, (int)attack.type, rng, (int)dis, (int)weapon.Rules.GetPsiAccuracyRangeReduction(dis),
+				_save
+			);
+		}
+		else
+		{
+			// rule without loaded scripts (not loaded from a ruleset): the built-in default script (BattleItem.cpp)
+			// "var int r; random.randomRange r 0 55; add psi_attack_success attack_strength; add psi_attack_success r;
+			//  sub psi_attack_success defense_strength; sub psi_attack_success distance_strength_reduction; return psi_attack_success;"
 			int r = rng.Generate(0, 55);
 			int distanceStrengthReduction = (int)weapon.Rules.GetPsiAccuracyRangeReduction(dis);
 			psiAttackResult += attackStrength;
@@ -1244,7 +1269,12 @@ public partial class TileEngine
 			psiAttackResult -= distanceStrengthReduction;
 		}
 
-		// ModScript::TryPsiAttackUnit (armor, no default script) not ported: result unmodified
+		psiAttackResult = ModScript.ScriptFunc1(
+			victim.Armor.GetScript(ModScript.TryPsiAttackUnit),
+			psiAttackResult,
+			weapon, attacker, victim, attack.skill_rules, attackStrength, defenseStrength, (int)attack.type,
+			_save
+		);
 
 		return psiAttackResult;
 	}
@@ -1395,10 +1425,24 @@ public partial class TileEngine
 
 		int meleeAttackResult = 0;
 
-		// ModScript::TryMeleeAttackItem: the item script is not ported, its built-in default script (BattleItem.cpp) is applied:
-		// "var int r; random.randomRange r 0 99; sub melee_attack_success r; add melee_attack_success attack_strength;
-		//  sub melee_attack_success defense_strength; add melee_attack_success defense_strength_penalty; return melee_attack_success;"
+		BattleUnit attacker = attack.attacker;
+		BattleItem weapon = attack.weapon_item;
+
+		var meleeItemScript = weapon.Rules.GetScriptEvents(ModScript.TryMeleeAttackItem);
+		if (meleeItemScript?.Parser != null)
 		{
+			meleeAttackResult = ModScript.ScriptFunc1(
+				meleeItemScript,
+				meleeAttackResult,
+				weapon, attacker, victim, attack.skill_rules, attackStrength, defenseStrength, (int)attack.type, rng, arc, defenseStrengthPenalty,
+				_save
+			);
+		}
+		else
+		{
+			// rule without loaded scripts (not loaded from a ruleset): the built-in default script (BattleItem.cpp)
+			// "var int r; random.randomRange r 0 99; sub melee_attack_success r; add melee_attack_success attack_strength;
+			//  sub melee_attack_success defense_strength; add melee_attack_success defense_strength_penalty; return melee_attack_success;"
 			int r = rng.Generate(0, 99);
 			meleeAttackResult -= r;
 			meleeAttackResult += attackStrength;
@@ -1406,7 +1450,12 @@ public partial class TileEngine
 			meleeAttackResult += defenseStrengthPenalty;
 		}
 
-		// ModScript::TryMeleeAttackUnit (armor, no default script) not ported: result unmodified
+		meleeAttackResult = ModScript.ScriptFunc1(
+			victim.Armor.GetScript(ModScript.TryMeleeAttackUnit),
+			meleeAttackResult,
+			weapon, attacker, victim, attack.skill_rules, attackStrength, defenseStrength, (int)attack.type,
+			_save
+		);
 
 		return meleeAttackResult;
 	}
@@ -1474,15 +1523,20 @@ public partial class TileEngine
 
 		action.weapon.SpendHealingItemUse(originalMedikitAction);
 
-		// ModScript::HealUnit (armor) not ported: the script arguments keep their initial values
-		int medikitAction = (int)originalMedikitAction;
-		int healthRecovery = rule.HealthRecovery;
-		int woundRecovery = rule.WoundRecovery;
-		int energyRecovery = rule.EnergyRecovery;
-		int stunRecovery = rule.StunRecovery;
-		int manaRecovery = rule.ManaRecovery;
-		int moraleRecovery = rule.MoraleRecovery;
-		float painkillerRecovery = (int)(rule.PainKillerRecovery * 100.0f) / 100.0f; // round trip through the int script argument
+		var args = new ScriptOutputArgs((int)originalMedikitAction, (int)bodyPart, rule.WoundRecovery, rule.HealthRecovery, rule.EnergyRecovery,
+			rule.StunRecovery, rule.ManaRecovery, rule.MoraleRecovery, (int)(rule.PainKillerRecovery * 100.0f));
+
+		ModScript.Execute(target.Armor.GetScript(ModScript.HealUnit), args, action.actor, action.weapon, _save, target, (int)action.type);
+
+		int medikitAction = args.GetInt(0);
+		bodyPart = (UnitBodyPart)args.GetInt(1);
+		int healthRecovery = args.GetInt(3);
+		int woundRecovery = args.GetInt(2);
+		int energyRecovery = args.GetInt(4);
+		int stunRecovery = args.GetInt(5);
+		int manaRecovery = args.GetInt(6);
+		int moraleRecovery = args.GetInt(7);
+		float painkillerRecovery = args.GetInt(8) / 100.0f;
 
 		// 0 = normal, 1 = heal, 2 = stim, 4 = pain
 		if ((medikitAction & (int)BMA_PAINKILLER) != 0)
@@ -1565,8 +1619,12 @@ public partial class TileEngine
 		string message = "";
 		bool hasTu = action.HaveTU(ref message);
 
-		// ModScript::SkillUseUnit (skill) not ported: continueAction and spendTu keep their initial values
-		_ = skill;
+		var args = new ScriptOutputArgs(continueAction ? 1 : 0, spendTu ? 1 : 0);
+
+		ModScript.Execute(skill.GetScript(ModScript.SkillUseUnit), args, action.actor, action.weapon, _save, skill, (int)action.type, hasTu ? 1 : 0);
+
+		continueAction = args.GetFirst() != 0;
+		spendTu = args.GetSecond() != 0;
 
 		if (spendTu)
 		{

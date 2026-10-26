@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/TileEngine.cpp (light propagation helpers)
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Runtime.CompilerServices;

@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Ufopaedia/StatsForNerdsState.h, src/Ufopaedia/StatsForNerdsState.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Globalization;
@@ -771,8 +770,7 @@ public partial class StatsForNerdsState : State
 		AddVectorOfGeneric(ss, vec, propertyName, item => item.Name);
 	}
 
-	// Script API (C++ addIntegerScript/addTextScript/addTextFormat1Script/addTextFormat2Script), callable once the
-	// script engine is ported.
+	// Script API (C++ addIntegerScript/addTextScript/addTextFormat1Script/addTextFormat2Script), see StatsForNerdsState.Script.cs.
 
 	internal void AddIntegerScript(string propertyName, int value)
 	{
@@ -916,6 +914,19 @@ public partial class StatsForNerdsState : State
 		if (value != defaultvalue)
 		{
 			_lstRawData.SetCellColor(_lstRawData.LastRowIndex, 1, _pink);
+		}
+	}
+
+	/// <summary>Adds all script tags of a rule to the table.</summary>
+	private void AddScriptTags<T>(StringBuilder ss, ScriptValues<T> values)
+	{
+		var tagValues = values.GetValuesRaw();
+		ArgEnum index = ScriptTag<T>.Type();
+		var tagNames = _game.Mod.ScriptGlobal.TagNames[index];
+		for (int i = 0; i < tagValues.Count; ++i)
+		{
+			var nameAsString = tagNames.values[i].name.ToString().Substring(4);
+			AddIntegerScriptTag(ss, tagValues[i], nameAsString);
 		}
 	}
 

@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/TileEngine.cpp (field of view, line of sight/fire, voxel checks)
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.BattleActionType;
@@ -537,7 +536,7 @@ public partial class TileEngine
 			}
 		}
 
-		var (visibleDistanceMaxVoxel, _) = GetVisibleDistanceMaxHelper(tile, currentUnit, tile.Unit);
+		var (visibleDistanceMaxVoxel, visibleDistanceUnitMaxTile) = GetVisibleDistanceMaxHelper(tile, currentUnit, tile.Unit);
 
 		Position originVoxel = GetSightOriginVoxel(currentUnit);
 
@@ -558,8 +557,9 @@ public partial class TileEngine
 			// 16 - for voxel scale calculation.
 			// Even if MaxViewDistance will be increased via ruleset, smoke will keep effect.
 			int visibilityQuality = visibleDistanceMaxVoxel - visibleDistanceVoxels - ((densityOfSmoke - densityOfSmokeNearUnit / 2) * smokeDensityFactor + (densityOfFire - densityOfFireeNearUnit / 2) * fireDensityFactor) * visibleDistanceMaxVoxel / (3 * 20 * 100 * 16);
-			// script hook ModScript::VisibilityUnit (armor) not ported: the unmodified quality decides
-			unitSeen = 0 < visibilityQuality;
+			var arg = new ScriptOutputArgs(visibilityQuality, visibilityQuality, 0 /* ScriptTag<BattleUnitVisibility>::getNullTag() */);
+			ModScript.Execute(currentUnit.Armor.GetScript(ModScript.VisibilityUnit), arg, currentUnit, tile.Unit, tile, visibleDistanceVoxels, visibleDistanceMaxVoxel, visibleDistanceUnitMaxTile, densityOfSmoke, densityOfFire, densityOfSmokeNearUnit, densityOfFireeNearUnit);
+			unitSeen = 0 < arg.GetFirst();
 		}
 		return unitSeen;
 	}
@@ -589,7 +589,7 @@ public partial class TileEngine
 			return false;
 		}
 
-		var (visibleDistanceMaxVoxel, _) = GetVisibleDistanceMaxHelper(tile, currentUnit, /*targetUnit*/ null);
+		var (visibleDistanceMaxVoxel, visibleDistanceUnitMaxTile) = GetVisibleDistanceMaxHelper(tile, currentUnit, /*targetUnit*/ null);
 
 		// We MUST build a temp action, because current action doesn't yet have updated target (when only aiming)
 		var tempAction = new BattleAction();
@@ -735,8 +735,9 @@ public partial class TileEngine
 			// 16 - for voxel scale calculation.
 			// Even if MaxViewDistance will be increased via ruleset, smoke will keep effect.
 			int visibilityQuality = visibleDistanceMaxVoxel - visibleDistanceVoxels - ((densityOfSmoke - densityOfSmokeNearUnit / 2) * smokeDensityFactor + (densityOfFire - densityOfFireeNearUnit / 2) * fireDensityFactor) * visibleDistanceMaxVoxel / (3 * 20 * 100 * 16);
-			// script hook ModScript::VisibilityUnit (armor) not ported: the unmodified quality decides
-			seen = 0 < visibilityQuality;
+			var arg = new ScriptOutputArgs(visibilityQuality, visibilityQuality, 0 /* ScriptTag<BattleUnitVisibility>::getNullTag() */);
+			ModScript.Execute(currentUnit.Armor.GetScript(ModScript.VisibilityUnit), arg, currentUnit, /*targetUnit*/ null, tile, visibleDistanceVoxels, visibleDistanceMaxVoxel, visibleDistanceUnitMaxTile, densityOfSmoke, densityOfFire, densityOfSmokeNearUnit, densityOfFireeNearUnit);
+			seen = 0 < arg.GetFirst();
 		}
 		return seen;
 	}

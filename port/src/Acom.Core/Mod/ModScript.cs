@@ -990,26 +990,45 @@ public sealed class ModScript
 	//					helper functions
 	////////////////////////////////////////////////////////////
 
-	/// <summary>Run script with events, arguments stay unchanged if the container was never loaded.</summary>
+	/// <summary>
+	/// Run script with events, arguments stay unchanged if the container was never loaded.
+	/// A container without script and events is skipped: running nothing leaves the outputs unchanged
+	/// (this avoids creating a worker for hot hooks like visibility).
+	/// </summary>
 	public static void Execute(ScriptContainerEventsBase c, ScriptOutputArgs output, params object[] args)
 	{
 		var parser = c?.Parser;
-		if (parser == null)
+		if (parser == null || (c.Data == null && !HaveEvents(c.DataEvents)))
 		{
 			return;
 		}
 		new ScriptWorker(parser.Signature, args).Execute(c, output);
 	}
 
-	/// <summary>Run script without events.</summary>
+	/// <summary>Run script without events (skipped when the container has no script, see above).</summary>
 	public static void Execute(ScriptContainerBase c, ScriptOutputArgs output, params object[] args)
 	{
 		var parser = c?._parser;
-		if (parser == null)
+		if (parser == null || c.Data == null)
 		{
 			return;
 		}
 		new ScriptWorker(parser.Signature, args).Execute(c, output);
+	}
+
+	private static bool HaveEvents(List<ScriptContainerBase> events)
+	{
+		if (events != null)
+		{
+			foreach (var e in events)
+			{
+				if (e.IsValid)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/// <summary>Script helper that call script that do not return any values.</summary>

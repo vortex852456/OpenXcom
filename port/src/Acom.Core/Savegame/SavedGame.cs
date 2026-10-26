@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/SavedGame.h, src/Savegame/SavedGame.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Globalization;

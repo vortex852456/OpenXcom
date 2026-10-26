@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/UnitSprite.h, src/Battlescape/UnitSprite.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.MovementType;
@@ -33,9 +32,8 @@ namespace Acom;
 /// combining the right frames from the surfaceset.
 /// </summary>
 /// <remarks>
-/// The OXCE scripts are not ported: sprite selection uses the default <c>selectUnitSprite</c>/<c>selectItemSprite</c>
-/// scripts (index + offset), body parts are blitted with the default <c>recolorUnitSprite</c> script
-/// (armor recolor + burn shade) and items with the default <c>recolorItemSprite</c> script (shade).
+/// Sprite selection and blitting run the armor/item scripts (<c>selectUnitSprite</c>, <c>selectItemSprite</c>,
+/// <c>recolorUnitSprite</c>, <c>recolorItemSprite</c>); rules without loaded scripts use the equivalent of the default scripts.
 /// </remarks>
 public class UnitSprite
 {
@@ -76,6 +74,8 @@ public class UnitSprite
 	private readonly SurfaceSet _itemSurface, _fireSurface, _breathSurface, _facingArrowSurface;
 	private readonly Surface _dest;
 	private readonly SavedBattleGame _save;
+	/// <summary>Blit script worker (C++ creates one on the stack for every blit; <see cref="ScriptWorkerBlit.Update(ScriptContainerEventsBase, object[])"/> resets it).</summary>
+	private readonly ScriptWorkerBlit _work = new();
 	private readonly Mod _mod;
 	private int _part, _drawingRoutine;
 	private readonly int _animationFrame;
@@ -133,8 +133,14 @@ public class UnitSprite
 			throw new InvalidOperationException("Frame(s) missing in 'HANDOB.PCK' for item '" + item.Rules.Type + "'");
 		}
 
-		// default ModScript::SelectItemSprite: "add sprite_index sprite_offset; return sprite_index;" (script hooks)
-		int result = index + dir;
+		var scr = item.Rules.GetScriptEvents(ModScript.SelectItemSprite);
+		int result = scr?.Parser != null
+			? ModScript.ScriptFunc2(
+				scr,
+				index, dir,
+				item, _save, p.bodyPart, _animationFrame, _shade
+			)
+			: index + dir; // rule without loaded scripts: default script "add sprite_index sprite_offset; return sprite_index;"
 
 		p.src = _itemSurface.GetFrame(result);
 	}
@@ -153,8 +159,14 @@ public class UnitSprite
 			throw new InvalidOperationException("Frame(s) missing in '" + armor.SpriteSheet + "' for armor '" + armor.Type + "'");
 		}
 
-		// default ModScript::SelectUnitSprite: "add sprite_index sprite_offset; return sprite_index;" (script hooks)
-		int result = index + dir;
+		var scr = armor.GetScript(ModScript.SelectUnitSprite);
+		int result = scr?.Parser != null
+			? ModScript.ScriptFunc2(
+				scr,
+				index, dir,
+				_unit, _save, p.bodyPart, _animationFrame, _shade
+			)
+			: index + dir; // armor without loaded scripts: default script "add sprite_index sprite_offset; return sprite_index;"
 
 		p.src = _unitSurface.GetFrame(result);
 	}
@@ -167,10 +179,12 @@ public class UnitSprite
 		{
 			return;
 		}
+		var work = _work;
+		BattleItem.ScriptFill(work, item.bodyPart == BODYPART_ITEM_RIGHTHAND ? _itemR : _itemL, _save, item.bodyPart, _animationFrame, _shade);
+
 		_dest.Lock();
 
-		// default ModScript::RecolorItemSprite: "add_shade new_pixel shade" equals blitNShade for non-negative shades (script hooks)
-		item.src.BlitNShade(_dest, _x + item.offX, _y + item.offY, _shade, _mask);
+		work.ExecuteBlit(item.src, _dest, _x + item.offX, _y + item.offY, _shade, _mask);
 
 		_dest.Unlock();
 	}
@@ -183,10 +197,20 @@ public class UnitSprite
 		{
 			return;
 		}
+		var work = _work;
+		BattleUnit.ScriptFill(work, _unit, _save, body.bodyPart, _animationFrame, _shade, _burn);
+
 		_dest.Lock();
 
-		// default ModScript::RecolorUnitSprite: "unit.getRecolor new_pixel; add_burn_shade new_pixel burn shade;" (script hooks)
-		BlitMasked(body.src, _dest, _x + body.offX, _y + body.offY, _mask, new RecolorBurnShadeOp(_unit.Recolor, _burn, _shade));
+		if (work.HaveScript)
+		{
+			work.ExecuteBlit(body.src, _dest, _x + body.offX, _y + body.offY, _shade, _mask);
+		}
+		else
+		{
+			// armor without loaded scripts: default ModScript::RecolorUnitSprite "unit.getRecolor new_pixel; add_burn_shade new_pixel burn shade;"
+			BlitMasked(body.src, _dest, _x + body.offX, _y + body.offY, _mask, new RecolorBurnShadeOp(_unit.Recolor, _burn, _shade));
+		}
 
 		_dest.Unlock();
 	}

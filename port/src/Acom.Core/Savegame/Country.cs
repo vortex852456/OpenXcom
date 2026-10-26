@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/Country.h, src/Savegame/Country.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -151,7 +150,7 @@ public partial class Country
 	/// <param name="alienTotal">The council's alien score.</param>
 	/// <param name="pactScore">The penalty for signing a pact.</param>
 	/// <param name="averageFunding">Current average funding across all countries (including withdrawn countries).</param>
-	/// <param name="save">The saved game (only used by the script hook in C++).</param>
+	/// <param name="save">The saved game (script argument).</param>
 	public void NewMonth(int xcomTotal, int alienTotal, int pactScore, int averageFunding, SavedGame save)
 	{
 		// Note: this is a TEMPORARY variable! it's not saved in the save file, i.e. we don't know the value from the previous month!
@@ -210,7 +209,14 @@ public partial class Country
 			}
 		}
 
-		// Script hook (ModScript::NewMonthCountry) not ported: newFunding, satisfaction and the pact flags stay unchanged.
+		// call script which can adjust values.
+		var args = new ScriptOutputArgs(newFunding, (int)_satisfaction, _newPact ? 1 : 0, _cancelPact ? 1 : 0);
+		ModScript.Execute(Rules.GetScript(ModScript.NewMonthCountry), args, this, save, xcomTotal, alienTotal);
+
+		newFunding = args.GetInt(0);
+		_satisfaction = (Satisfaction)args.GetInt(1);
+		_newPact = args.GetInt(2) != 0;
+		_cancelPact = args.GetInt(3) != 0;
 
 		// form/cancel pacts
 		if (_newPact)

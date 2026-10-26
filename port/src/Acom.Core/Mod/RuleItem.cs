@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleItem.h, src/Mod/RuleItem.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;

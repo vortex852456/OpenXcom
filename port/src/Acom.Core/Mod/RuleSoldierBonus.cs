@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleSoldierBonus.h, src/Mod/RuleSoldierBonus.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -57,7 +56,7 @@ public partial class RuleSoldierBonus
 		_listOrder = listOrder;
 	}
 
-	/// <summary>Loads the soldier bonus definition from YAML (C++ also takes the ModScript parsers, see port status).</summary>
+	/// <summary>Loads the soldier bonus definition from YAML (the C++ <c>parsers</c> argument is <see cref="Mod.ScriptParsers"/>).</summary>
 	public void Load(YamlNodeReader node, Mod mod)
 	{
 		var reader = node.UseIndex();

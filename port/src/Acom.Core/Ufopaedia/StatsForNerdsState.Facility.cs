@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Ufopaedia/StatsForNerdsState.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Text;
@@ -396,7 +395,7 @@ public partial class StatsForNerdsState
 			EndHeading();
 		}
 
-		// missing: script hooks (ModScript::scriptCallback<StatsForNerds...>)
+		ModScript.ScriptCallback(craftRule.GetScript(ModScript.StatsForNerdsCraft), craftRule, this, _game.SavedGame);
 
 		if (_showDebug)
 		{
@@ -452,7 +451,7 @@ public partial class StatsForNerdsState
 
 			AddSection("{Script tags}", "", _white, true);
 			{
-				// missing: script hooks (addScriptTags)
+				AddScriptTags(ss, craftRule.GetScriptValuesRaw());
 				EndHeading();
 			}
 

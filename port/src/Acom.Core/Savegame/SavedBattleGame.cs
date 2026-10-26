@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/SavedBattleGame.h, src/Savegame/SavedBattleGame.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -94,7 +93,7 @@ public partial class SavedBattleGame
 	private bool _beforeGame;
 	private bool _togglePersonalLight, _toggleNightVision;
 	private int _toggleBrightness;
-	// final values set by scripts and only read by script hooks (not ported)
+	// final values of the toggles, read by the script bindings
 	internal bool _togglePersonalLightTemp, _toggleNightVisionTemp;
 	internal int _toggleBrightnessTemp, _toggleNightVisionColorTemp;
 	private string _hiddenMovementBackground;
@@ -1176,8 +1175,25 @@ public partial class SavedBattleGame
 			return;
 		}
 
-		// script hooks not ported: ModScript::NewTurnUnit for every unit that is not ignored,
-		// ModScript::NewTurnItem for every item whose owner is not ignored
+		foreach (var bu in _units)
+		{
+			if (bu.IsIgnored)
+			{
+				continue;
+			}
+
+			ModScript.ScriptCallback(bu.Armor.GetScript(ModScript.NewTurnUnit), bu, this, Turn, (int)_side);
+		}
+
+		foreach (var item in _items)
+		{
+			if (item.IsOwnerIgnored)
+			{
+				continue;
+			}
+
+			ModScript.ScriptCallback(item.Rules.GetScriptEvents(ModScript.NewTurnItem), item, this, Turn, (int)_side);
+		}
 
 		ReviveUnconsciousUnits(false);
 
@@ -1677,7 +1693,16 @@ public partial class SavedBattleGame
 			}
 		}
 
-		// script hooks not ported: ModScript::CreateUnit, ModScript::ApplySoldierBonuses for each soldier bonus
+		ModScript.ScriptCallback(armor.GetScript(ModScript.CreateUnit), unit, this, Turn);
+
+		var solder = unit.GeoscapeSoldier;
+		if (solder != null)
+		{
+			foreach (var bonus in solder.GetBonuses(null))
+			{
+				ModScript.ScriptCallback(bonus.GetScript(ModScript.ApplySoldierBonuses), unit, this, bonus);
+			}
+		}
 	}
 
 	/// <summary>Init new created item.</summary>
@@ -1688,7 +1713,7 @@ public partial class SavedBattleGame
 			return;
 		}
 
-		// script hook not ported: ModScript::CreateItem
+		ModScript.ScriptCallback(item.Rules.GetScriptEvents(ModScript.CreateItem), item, unit, this, Turn);
 	}
 
 	/// <summary>Create new item for unit.</summary>

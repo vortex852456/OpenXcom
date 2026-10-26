@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/UnitWalkBState.h, src/Battlescape/UnitWalkBState.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.BattleActionType;
@@ -580,7 +579,11 @@ public class UnitWalkBState : BattleState
 			}
 		}
 
-		// C++ lets the armor script (selectMoveSoundUnit) change the sound here; script hooks are not ported.
+		sound = ModScript.ScriptFunc1(
+			_unit.Armor.GetScript(ModScript.SelectMoveSoundUnit),
+			sound,
+			_unit, _unit.WalkingPhase, unitSound, tileSound, Mod.WALK_OFFSET, tileSoundOffset, Mod.FLYING_SOUND, (int)_action.MoveType
+		);
 		if (sound >= 0)
 		{
 			_parent.Mod.GetSoundByDepth((uint)_parent.Depth, (uint)sound).Play(-1, _parent.Map.GetSoundAngle(_unit.Position));

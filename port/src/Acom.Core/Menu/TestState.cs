@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/TestState.h, src/Menu/TestState.cpp
-// Port status: partial (missing: script hooks – test case 3 exports the armor table without script tag columns)
 #nullable disable
 
 using System.Globalization;
@@ -443,8 +442,33 @@ public class TestState : State
 	{
 		_lstOutput.AddRow(1, Tr("STR_TESTS_STARTING"));
 
-		// missing: script hooks – the armor tag values (getScriptValuesRaw) and tag names are not ported, so there are no tag columns
+		var tagMatrix = new Dictionary<Armor, SortedDictionary<string, int>>(ReferenceEqualityComparer.Instance);
+		foreach (var armorName in _game.Mod.ArmorsList)
+		{
+			var armorRule = _game.Mod.GetArmor(armorName, true);
+			var tagValues = armorRule.GetScriptValuesRaw().GetValuesRaw();
+			ArgEnum index = ScriptTag<Armor>.Type();
+			var tagNamesRaw = _game.Mod.ScriptGlobal.TagNames[index];
+			if (!tagMatrix.TryGetValue(armorRule, out var data))
+			{
+				data = new SortedDictionary<string, int>(StringComparer.Ordinal);
+				tagMatrix[armorRule] = data;
+			}
+			for (int i = 0; i < tagValues.Count; ++i)
+			{
+				string nameAsString = tagNamesRaw.values[i].name.ToString().Substring(4);
+				data[nameAsString] = tagValues[i];
+			}
+		}
+
 		var tagNames = new SortedDictionary<string, bool>(StringComparer.Ordinal);
+		foreach (var a in tagMatrix)
+		{
+			foreach (var t in a.Value)
+			{
+				tagNames[t.Key] = true;
+			}
+		}
 
 		Logger.Info("----------------------------------------------");
 		Logger.Info("Copy/paste into a CSV file");
@@ -459,11 +483,20 @@ public class TestState : State
 		}
 		foreach (var armorName in _game.Mod.ArmorsList)
 		{
-			_ = _game.Mod.GetArmor(armorName, true);
+			var armorRule = _game.Mod.GetArmor(armorName, true);
+			if (!tagMatrix.TryGetValue(armorRule, out var armorData))
+			{
+				armorData = new SortedDictionary<string, int>(StringComparer.Ordinal);
+				tagMatrix[armorRule] = armorData;
+			}
 			var ss = new StringBuilder(";").Append(armorName);
 			foreach (var t in tagNames)
 			{
 				ss.Append(';');
+				if (armorData.TryGetValue(t.Key, out var value))
+				{
+					ss.Append(value.ToString(CultureInfo.InvariantCulture));
+				}
 			}
 			Logger.Info(ss.ToString());
 		}

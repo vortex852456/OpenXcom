@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleSkill.h, src/Mod/RuleSkill.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -55,7 +54,7 @@ public partial class RuleSkill
 		_checkHandsOnly2 = false;
 	}
 
-	/// <summary>Loads the skill from YAML (C++ also takes the ModScript parsers, see port status).</summary>
+	/// <summary>Loads the skill from YAML (the C++ <c>parsers</c> argument is <see cref="Mod.ScriptParsers"/>).</summary>
 	public void Load(YamlNodeReader reader, Mod mod)
 	{
 		ArgumentNullException.ThrowIfNull(mod);

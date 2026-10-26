@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/ItemSprite.h, src/Battlescape/ItemSprite.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -33,6 +32,8 @@ public class ItemSprite
 	private readonly int _animationFrame;
 	private readonly Surface _dest;
 	private readonly SavedBattleGame _save;
+	/// <summary>Blit script worker (C++ creates one on the stack for every blit; ScriptFill resets it).</summary>
+	private readonly ScriptWorkerBlit _work = new();
 
 	/// <summary>Sets up a ItemSprite with the specified size and position.</summary>
 	/// <param name="dest">Destination surface.</param>
@@ -59,9 +60,9 @@ public class ItemSprite
 		Surface sprite = item.GetFloorSprite(_itemSurface, _save, _animationFrame, shade);
 		if (sprite != null)
 		{
-			// C++ blits through ScriptWorkerBlit (BattleItem::ScriptFill, BODYPART_ITEM_FLOOR); the default
-			// recolor script ("add_shade new_pixel shade") equals blitNShade for the non-negative map shades (script hooks)
-			sprite.BlitNShade(_dest, x, y, shade);
+			var work = _work;
+			BattleItem.ScriptFill(work, item, _save, (int)UnitBodyPartEx.BODYPART_ITEM_FLOOR, _animationFrame, shade);
+			work.ExecuteBlit(sprite, _dest, x, y, shade);
 		}
 	}
 

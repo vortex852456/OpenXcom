@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/BattleUnit.h, src/Savegame/BattleUnit.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.MovementType;

@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleResearch.h, src/Mod/RuleResearch.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
@@ -78,7 +77,7 @@ public partial class RuleResearch
 	}
 
 	/// <summary>Loads the research project from YAML.</summary>
-	/// <remarks>The C++ <c>parsers</c> argument (script values) is left out with the script hooks.</remarks>
+	/// <remarks>The C++ <c>parsers</c> argument is <see cref="Mod.ScriptParsers"/>.</remarks>
 	public void Load(YamlNodeReader node, Mod mod)
 	{
 		var reader = node.UseIndex();

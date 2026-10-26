@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/AIModule.h, src/Battlescape/AIModule.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.AIMode;
@@ -2957,7 +2956,11 @@ public class AIModule
 			weight = target.GetAITargetWeightAsNeutral(_save.Mod);
 		}
 
-		// C++ lets the armor script (aiCalculateTargetWeight) change the weight here; script hooks are not ported.
+		weight = (AIAttackWeight)ModScript.ScriptFunc2(
+			_unit.Armor.GetScript(ModScript.AiCalculateTargetWeight),
+			(int)weight, (int)weight,
+			_unit, target, _save
+		);
 
 		return weight;
 	}

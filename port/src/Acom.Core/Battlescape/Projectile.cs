@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/Projectile.h, src/Battlescape/Projectile.cpp
-// Port status: partial (missing: script hooks - vaporParticleAmmo/vaporParticleWeapon; the built-in default vaporParticleAmmo script is applied instead)
 #nullable disable
 
 using System.Diagnostics;
@@ -651,9 +650,9 @@ public class Projectile
 
 	/// <summary>
 	/// Built-in default of the <c>vaporParticleAmmo</c> script (BattleItem.cpp, VaporParticleAmmoParser), used by every
-	/// ammo item without its own script. Mod scripts are not supported yet.
+	/// ammo item without its own script; only used for rules whose scripts were not loaded.
 	/// </summary>
-	private static void DefaultVaporParticleAmmoScript(Rng.RandomState random, ref Position subvoxelOffset, ref Position subvoxelVelocity, int particleDensity)
+	internal static void DefaultVaporParticleAmmoScript(Rng.RandomState random, ref Position subvoxelOffset, ref Position subvoxelVelocity, int particleDensity)
 	{
 		int randMax = Particle.SubVoxelAccuracy; // set randMax subvoxel_scale;
 		randMax = (int)((long)randMax * 3 / 2); // muldiv randMax 3 2;
@@ -710,7 +709,20 @@ public class Projectile
 
 			subvoxelUpDirection = VectCrossProduct(subvoxelForwardDirection, subvoxelRightDirection, Particle.SubVoxelAccuracy);
 		}
-		// The trajectory frame (forward/right/up, distance, distance max) is only input of the (missing) mod scripts.
+
+		object[] worker = [
+			_action.weapon,
+			_ammo,
+			_vaporDensity,
+			(int)(_distance * Particle.SubVoxelAccuracy),
+			(int)(_distanceMax * Particle.SubVoxelAccuracy),
+			subvoxelForwardDirection,
+			subvoxelRightDirection,
+			subvoxelUpDirection,
+			rng,
+		];
+		var ammoScript = _ammo.Rules.GetScript(ModScript.VaporParticleAmmo) as ScriptContainerBase;
+		var weaponScript = _action.weapon.Rules.GetScript(ModScript.VaporParticleWeapon) as ScriptContainerBase;
 
 		Position tilePos = voxelPos.ToTile();
 		for (int i = 0; i != _vaporDensity; ++i)
@@ -723,8 +735,24 @@ public class Projectile
 			int density = rng.Generate(48, 224); // "particle_density"
 			int particleLifetime = rng.Generate(32, 44); // "particle_lifetime"
 
-			// script hooks missing: vaporParticleAmmo (default script below) and vaporParticleWeapon (no default)
-			DefaultVaporParticleAmmoScript(rng, ref subVoxelOffset, ref subVoxelVelocity, density);
+			if (ammoScript?._parser == null)
+			{
+				// ammo without loaded scripts (not loaded from a ruleset): built-in default script
+				DefaultVaporParticleAmmoScript(rng, ref subVoxelOffset, ref subVoxelVelocity, density);
+			}
+
+			var arg = new ScriptOutputArgs(varporColor, subVoxelOffset, subVoxelVelocity, subVoxelAcceleration, drift, density, particleLifetime, i);
+
+			ModScript.Execute(ammoScript, arg, worker);
+			ModScript.Execute(weaponScript, arg, worker);
+
+			varporColor = arg.GetInt(0);
+			subVoxelOffset = (Position)arg.data[1];
+			subVoxelVelocity = (Position)arg.data[2];
+			subVoxelAcceleration = (Position)arg.data[3];
+			drift = arg.GetInt(4);
+			density = arg.GetInt(5);
+			particleLifetime = arg.GetInt(6);
 
 			byte size = 0;
 			//size is initialized at 0

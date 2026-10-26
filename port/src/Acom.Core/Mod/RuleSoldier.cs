@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Mod/RuleSoldier.h, src/Mod/RuleSoldier.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 
@@ -119,7 +118,7 @@ public partial class RuleSoldier
 		_skillIconSprite = 1;
 	}
 
-	/// <summary>Loads the soldier from a YAML file (C++ also takes the ModScript parsers for script values, see port status).</summary>
+	/// <summary>Loads the soldier from a YAML file (the C++ <c>parsers</c> argument is <see cref="Mod.ScriptParsers"/>).</summary>
 	public void Load(YamlNodeReader node, Mod mod)
 	{
 		ArgumentNullException.ThrowIfNull(mod);

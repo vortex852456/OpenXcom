@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/Soldier.h, src/Savegame/Soldier.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Globalization;
@@ -162,7 +161,6 @@ public partial class Soldier
 	/// <param name="mod">Game mod.</param>
 	/// <param name="save">Pointer to savegame.</param>
 	/// <param name="soldierTemplate">Is this a soldier template (stats are merged, the id is not read)?</param>
-	/// <remarks>C++ also takes the script globals (<c>ScriptGlobal*</c>); script values are not ported.</remarks>
 	public void Load(YamlNodeReader node, Mod mod, SavedGame save, bool soldierTemplate = false)
 	{
 		var reader = node.UseIndex();
@@ -304,7 +302,6 @@ public partial class Soldier
 	}
 
 	/// <summary>Saves the soldier to a YAML file.</summary>
-	/// <remarks>C++ also takes the script globals (<c>ScriptGlobal*</c>); script values are not ported.</remarks>
 	public void Save(YamlNodeWriter writer, ScriptGlobal shared = null)
 	{
 		ArgumentNullException.ThrowIfNull(writer);

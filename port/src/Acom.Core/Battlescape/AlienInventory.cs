@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/AlienInventory.h, src/Battlescape/AlienInventory.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.InventoryType;
@@ -123,6 +122,7 @@ public class AlienInventory : InteractiveSurface
 	public void DrawItems()
 	{
 		SavedBattleGame save = _game.SavedGame.SavedBattle;
+		var work = new ScriptWorkerBlit();
 		_items.Clear();
 		if (_selUnit != null)
 		{
@@ -146,9 +146,8 @@ public class AlienInventory : InteractiveSurface
 
 					int y = item.Slot.Y + item.Rules.HandSpriteOffY;
 
-					// C++ blits through ScriptWorkerBlit (BattleItem::ScriptFill, BODYPART_ITEM_INVENTORY); without recolor
-					// scripts that is a plain blitNShade (script hooks)
-					frame.BlitNShade(_items, x, y, 0);
+					BattleItem.ScriptFill(work, item, save, (int)UnitBodyPartEx.BODYPART_ITEM_INVENTORY, _animFrame, 0);
+					work.ExecuteBlit(frame, _items, x, y, 0);
 				}
 				else
 				{

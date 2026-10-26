@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/BattleUnit.h, src/Savegame/BattleUnit.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using static Acom.SoldierRank;
@@ -287,7 +286,15 @@ public partial class BattleUnit
 			recovery = 0;
 		}
 
-		// ModScript::ReturnFromMissionUnit (recovery, manaLossOriginal, healthLossOriginal, manaLoss, healthLoss) would run here; not ported.
+		{
+			var arg = new ScriptOutputArgs(recovery, manaLossOriginal, healthLossOriginal, manaLoss, healthLoss);
+
+			ModScript.Execute(Armor.GetScript(ModScript.ReturnFromMissionUnit), arg, this, battle, s, statsDiff, statsOld);
+
+			recovery = arg.GetInt(0);
+			manaLoss = arg.GetInt(3);
+			healthLoss = arg.GetInt(4);
+		}
 
 		//after mod execution this value could change
 		statsDiff.statGrowth = stats - statsOld.statGrowth;

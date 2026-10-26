@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/Craft.h, src/Savegame/Craft.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 using System.Globalization;
@@ -938,8 +937,11 @@ public partial class Craft : MovingTarget
 			}
 		}
 
-		// script hook DetectUfoFromCraft not ported: the unmodified values are used
-		return Rng.Percent(detectionChance) ? detectionType : UfoDetection.DETECTION_NONE;
+		var args = new ScriptOutputArgs((int)detectionType, detectionChance);
+
+		ModScript.Execute(target.Rules.GetScript(ModScript.DetectUfoFromCraft), args, target, save, this, distance, alreadyTracked, _stats.radarChance, _stats.radarRange);
+
+		return Rng.Percent(args.GetSecond()) ? (UfoDetection)args.GetFirst() : UfoDetection.DETECTION_NONE;
 	}
 
 	/// <summary>C++ fmath XcomDistance: inversion of Nautical distance, use same value as in rulesets definitions.</summary>

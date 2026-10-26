@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/Tile.h, src/Savegame/Tile.cpp
-// Port status: partial (missing: script hooks)
 #nullable disable
 
 namespace Acom;
