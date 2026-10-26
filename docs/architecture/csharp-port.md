@@ -112,7 +112,7 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 
 ## Bekannte Probleme
 - Desktop-Host: hohe CPU-Last im Leerlauf unter Xvfb (Software-Rendering) gemessen; auf echter Hardware ungeprüft.
-- Battlescape: Feld-Cursor war im Spieltest unsichtbar, solange der Soldat auf Ebene 1 stand (nicht untersucht).
+- Battlescape: Feld-Cursor war im Spieltest unsichtbar, solange der Soldat auf Ebene 1 stand. Die Cursor-Zeichenlogik (`Map::drawTerrain`) entspricht Zeile für Zeile dem C++-Code; Ursache vermutlich Platzhalterdaten, mit Originaldaten zu prüfen.
 - Platzhalterdaten: Abfangfenster ohne Button-Grafik (`INTERWIN.DAT`); Musik, Intro und Originalschriften werden nicht erzeugt.
 
 ## Offene Entscheidungen
