@@ -36,7 +36,7 @@ public enum TTVMode : uint
 
 public class TechTreeViewerState : State
 {
-	public TechTreeViewerState(RuleResearch r, RuleManufacture m, RuleBaseFacility f, RuleCraft c) => throw new NotImplementedException();
+	public TechTreeViewerState(RuleResearch r = null, RuleManufacture m = null, RuleBaseFacility f = null, RuleCraft c = null) => throw new NotImplementedException();
 	public override void Init() => throw new NotImplementedException();
 	public void BtnOkClick(Action action) => throw new NotImplementedException();
 	public void BtnBackClick(Action action) => throw new NotImplementedException();
