@@ -137,6 +137,11 @@ public sealed class Game
 	/// <summary>Currently pressed modifier keys (replaces SDL_GetModState).</summary>
 	public SDLMod ModState { get; set; }
 
+	private readonly bool[] _keyState = new bool[(int)SDLKey.SDLK_LAST];
+
+	/// <summary>Whether a key is currently held down (replaces SDL_GetKeyState).</summary>
+	public bool IsKeyDown(SDLKey key) => (uint)key < (uint)_keyState.Length && _keyState[(int)key];
+
 	/// <summary>Focus state of the window (replaces SDL_GetAppState); the host updates it along with SDL_ACTIVEEVENT.</summary>
 	public byte AppState { get; set; } = SDLApp.SDL_APPMOUSEFOCUS | SDLApp.SDL_APPINPUTFOCUS | SDLApp.SDL_APPACTIVE;
 
@@ -219,7 +224,11 @@ public sealed class Game
 					break;
 				default:
 					if (ev.type is SDLEventType.SDL_KEYDOWN or SDLEventType.SDL_KEYUP)
+					{
 						ModState = ev.key.keysym.mod;
+						if ((uint)ev.key.keysym.sym < (uint)_keyState.Length)
+							_keyState[(int)ev.key.keysym.sym] = ev.type == SDLEventType.SDL_KEYDOWN;
+					}
 					HandleEvent(ev);
 					break;
 			}
