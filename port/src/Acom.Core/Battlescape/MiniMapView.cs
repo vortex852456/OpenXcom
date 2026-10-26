@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/MiniMapView.h, src/Battlescape/MiniMapView.cpp
-// Port status: partial (missing: SDL_WarpMouse/SDL_EventState pointer warping while drag-scrolling)
 #nullable disable
 
 namespace Acom;
@@ -364,8 +363,13 @@ public class MiniMapView : InteractiveSurface
 
 			_isMouseScrolled = true;
 
-			// C++ (without touch): sets the mouse cursor back with SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling)
-			// while ignoring the resulting motion event. Missing: the host cannot warp the pointer yet.
+			if (Options.touchEnabled == false)
+			{
+				// Set the mouse cursor back
+				SDLEvents.SDL_EventState(SDLEventType.SDL_MOUSEMOTION, SDLEvents.SDL_IGNORE);
+				SDLMouse.SDL_WarpMouse((ushort)_xBeforeMouseScrolling, (ushort)_yBeforeMouseScrolling);
+				SDLEvents.SDL_EventState(SDLEventType.SDL_MOUSEMOTION, SDLEvents.SDL_ENABLE);
+			}
 
 			// Check the threshold
 			_totalMouseMoveX += action.Details.motion.xrel;
@@ -462,7 +466,7 @@ public class MiniMapView : InteractiveSurface
 		ArgumentNullException.ThrowIfNull(action);
 		if (!Options.battleDragScrollInvert)
 		{
-			// C++: SDL_WarpMouse(_cursorPosition.x, _cursorPosition.y); missing, the host cannot warp the pointer yet.
+			SDLMouse.SDL_WarpMouse((ushort)_cursorPosition.x, (ushort)_cursorPosition.y);
 			action.SetMouseAction(_cursorPosition.x, _cursorPosition.y, X, Y);
 		}
 		// reset our "mouse position stored" flag

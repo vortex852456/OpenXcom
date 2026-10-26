@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Basescape/CraftSoldiersState.h, src/Basescape/CraftSoldiersState.cpp
-// Port status: partial (missing: SDL_WarpMouse after reordering, the host cannot warp the pointer yet)
 #nullable disable
 
 using System.Globalization;
@@ -471,7 +470,7 @@ public class CraftSoldiersState : TouchState
 			soldiers[r - 1] = s;
 			if (r != _lstSoldiers.Scroll)
 			{
-				// C++: SDL_WarpMouse(x, y - 8 * yScale); missing, the host cannot warp the pointer yet.
+				SDLMouse.SDL_WarpMouse((ushort)(action.LeftBlackBand + action.XMouse), (ushort)(action.TopBlackBand + action.YMouse - (ushort)(8 * action.YScale)));
 			}
 			else
 			{
@@ -525,7 +524,7 @@ public class CraftSoldiersState : TouchState
 			soldiers[r + 1] = s;
 			if (r != _lstSoldiers.VisibleRows - 1 + _lstSoldiers.Scroll)
 			{
-				// C++: SDL_WarpMouse(x, y + 8 * yScale); missing, the host cannot warp the pointer yet.
+				SDLMouse.SDL_WarpMouse((ushort)(action.LeftBlackBand + action.XMouse), (ushort)(action.TopBlackBand + action.YMouse + (ushort)(8 * action.YScale)));
 			}
 			else
 			{

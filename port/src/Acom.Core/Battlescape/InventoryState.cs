@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/InventoryState.h, src/Battlescape/InventoryState.cpp
-// Port status: partial (missing: SDL_WarpMouse in refreshMouse)
 #nullable disable
 
 using System.Globalization;
@@ -1675,9 +1674,12 @@ public class InventoryState : State
 	/// <summary>Refresh the hover status of the mouse.</summary>
 	private static void RefreshMouse()
 	{
-		// C++ sends a mouse motion event to refresh any hover actions:
-		// SDL_WarpMouse(x+1, y) and back to (x, y) to avoid cursor creep.
-		// missing: the host cannot warp the pointer yet.
+		// send a mouse motion event to refresh any hover actions
+		SDLMouse.SDL_GetMouseState(out int x, out int y);
+		SDLMouse.SDL_WarpMouse((ushort)(x + 1), (ushort)y);
+
+		// move the mouse back to avoid cursor creep
+		SDLMouse.SDL_WarpMouse((ushort)x, (ushort)y);
 	}
 
 	/// <summary>Handler for hitting the Clear Inventory hotkey.</summary>

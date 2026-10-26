@@ -15,3 +15,5 @@ src/lodepng | PNG-Decoder -> Engine/ImageDecoder.cs (behaelt Palettenindizes, zl
 src/fmath | C++-Mathehelfer -> System.Math
 src/fallthrough | C++-Makro
 src/resource | Windows-Ressourcen-IDs
+src/Engine/NullableValue | -> T? (Nullable<T>); YAML "null" handling in Engine/Yaml.cs, coalesceNullValues -> ?? (siehe Mod/RuleItem.cs)
+src/Engine/Functions | FuncRef (Callback ohne Allokation) -> .NET-Delegates (Func<>/Action<>)

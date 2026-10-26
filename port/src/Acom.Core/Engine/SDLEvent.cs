@@ -53,6 +53,30 @@ public static class SDLMouse
 
 	/// <summary>Bit mask of a button, like the SDL_BUTTON(X) macro.</summary>
 	public static byte SDL_BUTTON(int button) => (byte)(1 << (button - 1));
+
+	/// <summary>SDL 1.2 SDL_WarpMouse (window coordinates), see <see cref="Game.WarpMouse"/>.</summary>
+	public static void SDL_WarpMouse(ushort x, ushort y) => State.GamePtr?.WarpMouse(x, y);
+
+	/// <summary>SDL 1.2 SDL_GetMouseState, see <see cref="Game.GetMouseState"/>.</summary>
+	public static byte SDL_GetMouseState(out int x, out int y)
+	{
+		if (State.GamePtr is { } game)
+			return game.GetMouseState(out x, out y);
+		x = y = 0;
+		return 0;
+	}
+}
+
+/// <summary>Event processing states of SDL 1.2 (SDL_EventState).</summary>
+public static class SDLEvents
+{
+	public const int SDL_QUERY = -1;
+	public const int SDL_IGNORE = 0;
+	public const int SDL_DISABLE = 0;
+	public const int SDL_ENABLE = 1;
+
+	/// <summary>SDL 1.2 SDL_EventState, see <see cref="Game.EventState"/>.</summary>
+	public static byte SDL_EventState(SDLEventType type, int state) => State.GamePtr?.EventState(type, state) ?? SDL_ENABLE;
 }
 
 /// <summary>Keyboard settings of SDL 1.2 that the engine changes at run time (SDL_keyboard.h).</summary>

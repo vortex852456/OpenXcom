@@ -75,6 +75,12 @@ public sealed class Screen
 	/// <summary>Logical height.</summary>
 	public int Height => _surface.Height;
 
+	/// <summary>Window width in pixels (C++ <c>Screen::getWidth</c>: the SDL video surface).</summary>
+	public int WindowWidth => _windowWidth;
+
+	/// <summary>Window height in pixels (C++ <c>Screen::getHeight</c>: the SDL video surface).</summary>
+	public int WindowHeight => _windowHeight;
+
 	/// <summary>Horizontal offset of the 320x200 layout centered on the logical screen.</summary>
 	public int DX => (Width - ORIGINAL_WIDTH) / 2;
 

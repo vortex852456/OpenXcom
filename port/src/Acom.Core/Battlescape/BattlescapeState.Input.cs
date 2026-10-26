@@ -974,7 +974,7 @@ public partial class BattlescapeState
 		ArgumentNullException.ThrowIfNull(action);
 		if (Options.battleDragScrollInvert)
 		{
-			// C++: SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling); missing, the host cannot warp the pointer yet.
+			SDLMouse.SDL_WarpMouse((ushort)_xBeforeMouseScrolling, (ushort)_yBeforeMouseScrolling);
 			action.SetMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map.X, _map.Y);
 			_battleGame.SetupCursor();
 			if (_battleGame.CurrentAction.actor == null && (_save.Side == FACTION_PLAYER || _save.DebugMode))
@@ -984,7 +984,7 @@ public partial class BattlescapeState
 		}
 		else
 		{
-			// C++: SDL_WarpMouse(_cursorPosition.x, _cursorPosition.y); missing, the host cannot warp the pointer yet.
+			SDLMouse.SDL_WarpMouse((ushort)_cursorPosition.x, (ushort)_cursorPosition.y);
 			action.SetMouseAction(_cursorPosition.x, _cursorPosition.y, _map.X, _map.Y);
 			_map.SetSelectorPosition((int)action.AbsoluteXMouse, (int)action.AbsoluteYMouse);
 		}

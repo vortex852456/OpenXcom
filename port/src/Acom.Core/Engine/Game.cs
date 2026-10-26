@@ -77,6 +77,14 @@ public sealed class Game
 	private short _xrel, _yrel;
 	private int _mouseX, _mouseY;
 
+	// SDL 1.2 mouse/event state (SDL_mouse.c, SDL_events.c) for SDL_WarpMouse, SDL_GetMouseState and SDL_EventState.
+	private readonly byte[] _eventStates = CreateEventStates();
+	/// <summary>SDL_MouseX/SDL_MouseY/SDL_ButtonState: the pointer as of the last posted mouse event or warp.</summary>
+	private int _sdlMouseX, _sdlMouseY;
+	private byte _sdlButtonState;
+	/// <summary>Target of the last warp while the host's echo of it (the platform's own motion event) may still arrive.</summary>
+	private (int X, int Y)? _warpEcho;
+
 	/// <summary>
 	/// Starts up the engine with the given screen and sets up the cursor.
 	/// In C++ this also initializes SDL and creates the window and screen; here the host does that.
@@ -151,8 +159,106 @@ public sealed class Game
 	/// <summary>The state stack, bottom first.</summary>
 	public IReadOnlyList<State> States => _states;
 
-	/// <summary>Queues an input or window event for the next frame.</summary>
-	public void PushEvent(SDL_Event ev) => _events.Enqueue(ev);
+	/// <summary>
+	/// Queues an input or window event for the next frame (SDL 1.2 posting an event).
+	/// Mouse events update the SDL-side pointer position; events of ignored types are dropped (<see cref="EventState"/>).
+	/// </summary>
+	public void PushEvent(SDL_Event ev)
+	{
+		ArgumentNullException.ThrowIfNull(ev);
+		switch (ev.type)
+		{
+			case SDLEventType.SDL_MOUSEMOTION:
+				// The platform's own motion event for a warp we already posted: SDL 1.2 drops motion without change.
+				if (_warpEcho is var (wx, wy) && ev.motion.x == wx && ev.motion.y == wy && _sdlMouseX == wx && _sdlMouseY == wy)
+				{
+					_warpEcho = null;
+					return;
+				}
+				_warpEcho = null;
+				_sdlMouseX = ev.motion.x;
+				_sdlMouseY = ev.motion.y;
+				break;
+			case SDLEventType.SDL_MOUSEBUTTONDOWN:
+				_warpEcho = null;
+				_sdlMouseX = ev.button.x;
+				_sdlMouseY = ev.button.y;
+				_sdlButtonState |= SDLMouse.SDL_BUTTON(ev.button.button);
+				break;
+			case SDLEventType.SDL_MOUSEBUTTONUP:
+				_warpEcho = null;
+				_sdlMouseX = ev.button.x;
+				_sdlMouseY = ev.button.y;
+				_sdlButtonState &= (byte)~SDLMouse.SDL_BUTTON(ev.button.button);
+				break;
+		}
+		if (_eventStates[(int)ev.type] != SDLEvents.SDL_ENABLE)
+			return;
+		_events.Enqueue(ev);
+	}
+
+	/// <summary>
+	/// Host hook that moves the platform's mouse pointer to a window position (SDL's video driver WarpWMCursor).
+	/// Null when there is no window (tests, headless runs): only the motion event is generated then.
+	/// </summary>
+	public System.Action<int, int>? WarpMouseHandler { get; set; }
+
+	/// <summary>
+	/// SDL 1.2 SDL_WarpMouse: moves the pointer to a window position and posts the resulting
+	/// SDL_MOUSEMOTION event like SDL_PrivateMouseMotion (clamped to the window, relative motion
+	/// from the last position, no event without change or while motion events are ignored).
+	/// </summary>
+	public void WarpMouse(ushort x, ushort y)
+	{
+		WarpMouseHandler?.Invoke(x, y);
+
+		// SDL_PrivateMouseMotion(0, 0, x, y) takes Sint16 coordinates
+		int sx = (short)x, sy = (short)y;
+		int X = sx < 0 ? 0 : (sx >= _screen.WindowWidth ? _screen.WindowWidth - 1 : sx);
+		int Y = sy < 0 ? 0 : (sy >= _screen.WindowHeight ? _screen.WindowHeight - 1 : sy);
+		int xrel = X - _sdlMouseX;
+		int yrel = Y - _sdlMouseY;
+		// Drop events that don't change state
+		if (xrel == 0 && yrel == 0)
+			return;
+		_sdlMouseX = X;
+		_sdlMouseY = Y;
+		_warpEcho = (X, Y);
+		if (_eventStates[(int)SDLEventType.SDL_MOUSEMOTION] == SDLEvents.SDL_ENABLE)
+			_events.Enqueue(SDL_Event.MouseMotion(X, Y, xrel, yrel, _sdlButtonState));
+	}
+
+	/// <summary>SDL 1.2 SDL_GetMouseState: the pointer's window position and the pressed buttons as SDL knows them.</summary>
+	public byte GetMouseState(out int x, out int y)
+	{
+		x = _sdlMouseX;
+		y = _sdlMouseY;
+		return _sdlButtonState;
+	}
+
+	/// <summary>
+	/// SDL 1.2 SDL_EventState: queries (<see cref="SDLEvents.SDL_QUERY"/>) or sets whether events of a type are posted.
+	/// Setting <see cref="SDLEvents.SDL_IGNORE"/> or <see cref="SDLEvents.SDL_ENABLE"/> discards all pending events, as SDL 1.2 does.
+	/// </summary>
+	/// <returns>The previous state.</returns>
+	public byte EventState(SDLEventType type, int state)
+	{
+		byte current = _eventStates[(int)type];
+		if (state == SDLEvents.SDL_IGNORE || state == SDLEvents.SDL_ENABLE)
+		{
+			// Set state and discard pending events
+			_eventStates[(int)type] = (byte)state;
+			_events.Clear();
+		}
+		return current;
+	}
+
+	private static byte[] CreateEventStates()
+	{
+		var states = new byte[256];
+		Array.Fill(states, (byte)SDLEvents.SDL_ENABLE);
+		return states;
+	}
 
 	/// <summary>Drops all queued events (C++ drains the SDL queue with SDL_PollEvent to ignore input from impatient users).</summary>
 	public void ClearEvents() => _events.Clear();

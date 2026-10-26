@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/ModListState.h, src/Menu/ModListState.cpp
-// Port status: partial (missing: SDL_WarpMouse – the mouse pointer does not follow a mod moved with the arrows)
 #nullable disable
 
 namespace Acom;
@@ -485,15 +484,8 @@ public class ModListState : State
 		}
 	}
 
-	/// <summary>
-	/// SDL_WarpMouse: would move the mouse pointer to the given window position (truncated to Uint16 like SDL).
-	/// Port status: the host cannot move the system pointer yet, so this does nothing.
-	/// </summary>
-#pragma warning disable IDE0060 // parameters kept for the call sites of the C++ code
-	private static void WarpMouse(int x, int y)
-	{
-	}
-#pragma warning restore IDE0060
+	/// <summary>SDL_WarpMouse: moves the mouse pointer to the given window position (truncated to Uint16 like the C++ call).</summary>
+	private static void WarpMouse(int x, int y) => SDLMouse.SDL_WarpMouse((ushort)x, (ushort)y);
 
 	/// <summary>Handler for showing tooltip.</summary>
 	public void TxtTooltipIn(Action action)

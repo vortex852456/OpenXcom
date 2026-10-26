@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Geoscape/Globe.h, src/Geoscape/Globe.cpp
-// Port status: partial (missing: SDL_WarpMouse/SDL_EventState pointer warping while drag-scrolling, the host cannot warp the pointer yet)
 #nullable disable
 
 namespace Acom;
@@ -1810,8 +1809,13 @@ public class Globe : InteractiveSurface
 
 			_isMouseScrolled = true;
 
-			// C++ (without touch): sets the mouse cursor back with SDL_WarpMouse((screen width - 100) / 2, screen height / 2)
-			// while ignoring the resulting motion event. Missing: the host cannot warp the pointer yet.
+			if (Options.touchEnabled == false)
+			{
+				// Set the mouse cursor back
+				SDLEvents.SDL_EventState(SDLEventType.SDL_MOUSEMOTION, SDLEvents.SDL_IGNORE);
+				SDLMouse.SDL_WarpMouse((ushort)((_game.Screen.WindowWidth - 100) / 2), (ushort)(_game.Screen.WindowHeight / 2));
+				SDLEvents.SDL_EventState(SDLEventType.SDL_MOUSEMOTION, SDLEvents.SDL_ENABLE);
+			}
 
 			// Check the threshold
 			_totalMouseMoveX += action.Details.motion.xrel;
@@ -2092,7 +2096,7 @@ public class Globe : InteractiveSurface
 	public void StopScrolling(Action action)
 	{
 		ArgumentNullException.ThrowIfNull(action);
-		// C++: SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling); missing, the host cannot warp the pointer yet.
+		SDLMouse.SDL_WarpMouse((ushort)_xBeforeMouseScrolling, (ushort)_yBeforeMouseScrolling);
 		action.SetMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, X, Y);
 	}
 

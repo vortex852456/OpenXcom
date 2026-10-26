@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Geoscape/AllocatePsiTrainingState.h, src/Geoscape/AllocatePsiTrainingState.cpp
-// Port status: partial (missing: SDL_WarpMouse – the mouse pointer does not follow a soldier moved with the arrows)
 #nullable disable
 
 using System.Globalization;

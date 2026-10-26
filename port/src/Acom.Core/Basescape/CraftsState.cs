@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Basescape/CraftsState.h, src/Basescape/CraftsState.cpp
-// Port status: partial (missing: SDL_WarpMouse after reordering, the host cannot warp the pointer yet)
 #nullable disable
 
 using System.Globalization;
@@ -176,7 +175,7 @@ public class CraftsState : State
 				// warp mouse
 				if (row != _lstCrafts.VisibleRows - 1 + _lstCrafts.Scroll)
 				{
-					// C++: SDL_WarpMouse(x, y + 8 * yScale); missing, the host cannot warp the pointer yet.
+					SDLMouse.SDL_WarpMouse((ushort)(action.LeftBlackBand + action.XMouse), (ushort)(action.TopBlackBand + action.YMouse + (ushort)(8 * action.YScale)));
 				}
 				else
 				{
@@ -194,7 +193,7 @@ public class CraftsState : State
 				// warp mouse
 				if (row != _lstCrafts.Scroll)
 				{
-					// C++: SDL_WarpMouse(x, y - 8 * yScale); missing, the host cannot warp the pointer yet.
+					SDLMouse.SDL_WarpMouse((ushort)(action.LeftBlackBand + action.XMouse), (ushort)(action.TopBlackBand + action.YMouse - (ushort)(8 * action.YScale)));
 				}
 				else
 				{

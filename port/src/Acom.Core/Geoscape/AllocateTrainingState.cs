@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Geoscape/AllocateTrainingState.h, src/Geoscape/AllocateTrainingState.cpp
-// Port status: partial (missing: SDL_WarpMouse – the mouse pointer does not follow a soldier moved with the arrows)
 #nullable disable
 
 using System.Globalization;
@@ -601,15 +600,8 @@ internal static class AllocateTrainingSort
 		}
 	}
 
-	/// <summary>
-	/// SDL_WarpMouse: would move the mouse pointer to the given window position (truncated to Uint16 like SDL).
-	/// Port status: the host cannot move the system pointer yet, so this does nothing.
-	/// </summary>
-#pragma warning disable IDE0060 // parameters kept for the call sites of the C++ code
-	private static void WarpMouse(int x, int y)
-	{
-	}
-#pragma warning restore IDE0060
+	/// <summary>SDL_WarpMouse: moves the mouse pointer to the given window position (truncated to Uint16 like the C++ call).</summary>
+	private static void WarpMouse(int x, int y) => SDLMouse.SDL_WarpMouse((ushort)x, (ushort)y);
 
 	/// <summary>Moves a soldier up (moveSoldierUp without the list refresh); returns true if the list must scroll up.</summary>
 	internal static bool MoveUp(List<Soldier> soldiers, uint row, bool max, TextList list, Action action)

@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/BattlescapeState.h, src/Battlescape/BattlescapeState.cpp
-// Port status: partial (missing: SDL_WarpMouse/SDL_EventState pointer warping while drag-scrolling, saveAIMap/saveVoxelMap/saveVoxelView debug image dumps (no PNG encoder yet))
+// Port status: partial (missing: saveAIMap/saveVoxelMap/saveVoxelView debug image dumps (no PNG encoder yet))
 #nullable disable
 
 using System.Runtime.CompilerServices;
@@ -871,8 +871,13 @@ public partial class BattlescapeState : State
 
 			_isMouseScrolled = true;
 
-			// C++ (without touch): sets the mouse cursor back with SDL_WarpMouse(screen width / 2, screen height / 2 - icon height / 2)
-			// while ignoring the resulting motion event. Missing: the host cannot warp the pointer yet.
+			if (Options.touchEnabled == false)
+			{
+				// Set the mouse cursor back
+				SDLEvents.SDL_EventState(SDLEventType.SDL_MOUSEMOTION, SDLEvents.SDL_IGNORE);
+				SDLMouse.SDL_WarpMouse((ushort)(_game.Screen.WindowWidth / 2), (ushort)(_game.Screen.WindowHeight / 2 - _map.IconHeight / 2));
+				SDLEvents.SDL_EventState(SDLEventType.SDL_MOUSEMOTION, SDLEvents.SDL_ENABLE);
+			}
 
 			// Check the threshold
 			_totalMouseMoveX += action.Details.motion.xrel;
@@ -928,8 +933,8 @@ public partial class BattlescapeState : State
 				int barHeight = _game.Screen.CursorTopBlackBand;
 				int cursorX = _cursorPosition.x + Round(delta.x * action.XScale);
 				int cursorY = _cursorPosition.y + Round(delta.y * action.YScale);
-				_cursorPosition.x = (short)Clamp(cursorX, barWidth, _game.Screen.Width - barWidth - Round(action.XScale));
-				_cursorPosition.y = (short)Clamp(cursorY, barHeight, _game.Screen.Height - barHeight - Round(action.YScale));
+				_cursorPosition.x = (short)Clamp(cursorX, barWidth, _game.Screen.WindowWidth - barWidth - Round(action.XScale));
+				_cursorPosition.y = (short)Clamp(cursorY, barHeight, _game.Screen.WindowHeight - barHeight - Round(action.YScale));
 
 				if (Options.touchEnabled == false)
 				{
