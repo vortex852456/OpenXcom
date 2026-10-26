@@ -1175,6 +1175,7 @@ public class DebriefingState : State
 					ms.Ufo = null;
 				}
 				_missionStatistics.alienRace = ms.AlienRace;
+				ms.Destroy(); // C++ delete
 				save.MissionSites.RemoveAt(msIt);
 				break;
 			}
@@ -1294,6 +1295,7 @@ public class DebriefingState : State
 							ufo.SetDamage(ufo.CraftStats.damageMax, _game.Mod);
 						}
 					}
+					ufo.Destroy(); // C++ delete
 					save.Ufos.RemoveAt(ufoIt);
 				}
 				break;
@@ -1361,6 +1363,7 @@ public class DebriefingState : State
 						AddStat(objectiveCompleteText, 1, objectiveCompleteScore);
 					}
 					save.ClearLinksForAlienBase(ab, _game.Mod);
+					ab.Destroy(); // C++ delete
 					save.AlienBases.RemoveAt(abIt);
 					break;
 				}
@@ -1633,6 +1636,7 @@ public class DebriefingState : State
 				save.StopHuntingXcomCraft(craft); // lost during ground mission
 				save.RemoveAllSoldiersFromXcomCraft(craft); // needed in case some soldiers couldn't spawn
 				@base.RemoveCraft(craft, false);
+				craft.Destroy(); // C++ delete
 				save.IncreaseCraftLostMission();
 				craft = null; // To avoid a crash down there!!
 				lostCraft = true;
@@ -1967,6 +1971,12 @@ public class DebriefingState : State
 					if (xbase == @base)
 					{
 						save.StopHuntingXcomCrafts(xbase); // destroyed together with the base
+						// C++ delete: ~Base deletes its crafts, then runs ~Target
+						foreach (Craft xcraft in xbase.Crafts)
+						{
+							xcraft.Destroy();
+						}
+						xbase.Destroy();
 						@base = null; // To avoid similar (potential) problems as with the deleted craft
 						save.Bases.RemoveAt(xbaseIt);
 						break;

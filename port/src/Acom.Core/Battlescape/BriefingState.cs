@@ -277,7 +277,7 @@ public class BriefingState : State
 			Options.baseXResolution = Options.baseXGeoscape;
 			Options.baseYResolution = Options.baseYGeoscape;
 			_game.Screen.ResetDisplay(false);
-			// (C++ deletes bs here)
+			bs.Destroy(); // C++ delete bs
 			_game.PushState(new AliensCrashState());
 		}
 	}
