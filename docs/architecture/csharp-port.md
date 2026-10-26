@@ -89,7 +89,7 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | parallel | Eigenes Inhaltspaket (Setting, Texte, HD-Grafik, Sound, Karten) | siehe `content-rights.md` |
 
 ## Offene Entscheidungen
-- Skript-Engine: portieren oder ersetzen.
+- Keine. (Skript-Engine: wird 1:1 portiert, damit OXCE-Mods laufen; das Grundspiel `xcom1` nutzt sie nicht.)
 
 ## Befehle
 ```sh
