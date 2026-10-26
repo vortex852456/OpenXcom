@@ -71,6 +71,8 @@ public class BattleAction : BattleActionCost
 	public BattleActionOrigin relativeOrigin;
 	public int terrainMeleeTilePart;
 	public BattleAction() => throw new NotImplementedException();
+	/// <summary>Copy constructor (C++ copies BattleAction by value, e.g. into Projectile).</summary>
+	public BattleAction(BattleAction other) => throw new NotImplementedException();
 	public BattleActionMove MoveType { get => throw new NotImplementedException(); }
 }
 
