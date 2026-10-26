@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/BriefingState.h, src/Battlescape/BriefingState.cpp
-// Port status: partial (missing: Screen::resetDisplay)
 #nullable disable
 
 namespace Acom;
@@ -50,7 +49,7 @@ public class BriefingState : State
 
 		Options.baseXResolution = Options.baseXGeoscape;
 		Options.baseYResolution = Options.baseYGeoscape;
-		// missing: _game->getScreen()->resetDisplay(false);
+		_game.Screen.ResetDisplay(false);
 
 		_screen = true;
 		// Create objects
@@ -253,7 +252,7 @@ public class BriefingState : State
 		_game.PopState();
 		Options.baseXResolution = Options.baseXBattlescape;
 		Options.baseYResolution = Options.baseYBattlescape;
-		// missing: _game->getScreen()->resetDisplay(false);
+		_game.Screen.ResetDisplay(false);
 		if (_infoOnly) return;
 
 		BattlescapeState bs = new();
@@ -277,7 +276,7 @@ public class BriefingState : State
 		{
 			Options.baseXResolution = Options.baseXGeoscape;
 			Options.baseYResolution = Options.baseYGeoscape;
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 			// (C++ deletes bs here)
 			_game.PushState(new AliensCrashState());
 		}

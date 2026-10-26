@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/DebriefingState.h, src/Battlescape/DebriefingState.cpp
-// Port status: partial (missing: Screen::resetDisplay, script hooks)
 #nullable disable
 
 using System.Globalization;
@@ -118,7 +117,7 @@ public class DebriefingState : State
 
 		Options.baseXResolution = Options.baseXGeoscape;
 		Options.baseYResolution = Options.baseYGeoscape;
-		// missing: _game->getScreen()->resetDisplay(false);
+		_game.Screen.ResetDisplay(false);
 
 		// Restore the cursor in case something weird happened
 		_game.Cursor.Visible = true;

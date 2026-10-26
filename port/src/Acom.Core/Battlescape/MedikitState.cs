@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/MedikitState.h, src/Battlescape/MedikitState.cpp
-// Port status: partial (missing: Screen::resetDisplay)
 #nullable disable
 
 using System.Globalization;
@@ -92,7 +91,7 @@ public class MedikitState : State
 		{
 			Options.baseXResolution = Screen.ORIGINAL_WIDTH;
 			Options.baseYResolution = Screen.ORIGINAL_HEIGHT;
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 
 		_item = action.weapon;
@@ -177,7 +176,7 @@ public class MedikitState : State
 		if (Options.maximizeInfoScreens)
 		{
 			Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, true);
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 		_game.PopState();
 		_tileEngine.MedikitRemoveIfEmpty(_action);

@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/MiniMapState.h, src/Battlescape/MiniMapState.cpp
-// Port status: partial (missing: Screen::resetDisplay)
 #nullable disable
 
 namespace Acom;
@@ -45,7 +44,7 @@ public class MiniMapState : State
 		{
 			Options.baseXResolution = Screen.ORIGINAL_WIDTH;
 			Options.baseYResolution = Screen.ORIGINAL_HEIGHT;
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 
 		_bg = new Surface(320, 200);
@@ -114,7 +113,7 @@ public class MiniMapState : State
 		if (Options.maximizeInfoScreens)
 		{
 			Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, true);
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 		_game.PopState();
 	}
