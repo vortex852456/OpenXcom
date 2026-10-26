@@ -25,6 +25,8 @@
 // Deviation: frames decode into a palette-indexed surface of their own (at least the screen size, so a video larger
 // than the screen is cropped instead of switching the display resolution); reads past the end of a truncated file
 // end the video instead of reading foreign memory; palette updates are clamped to 256 entries.
+// Deviation: the audio callback continues the output stream after a buffer swap (C++ copies to the start of the
+// stream again, overwriting the samples it just wrote).
 
 using System.Runtime.InteropServices;
 
