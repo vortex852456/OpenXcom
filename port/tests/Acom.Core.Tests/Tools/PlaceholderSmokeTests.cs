@@ -247,11 +247,8 @@ public sealed class PlaceholderSmokeTests : IDisposable
 				try
 				{
 					state.BtnOkClick(null!);
-					failures.Add(what + ": no briefing");
-				}
-				catch (NotImplementedException e) when (e.StackTrace?.Contains("BriefingState..ctor", StringComparison.Ordinal) == true)
-				{
-					// BriefingState is still a stub; the battle itself was generated
+					if (game.States[^1] is not BriefingState)
+						failures.Add(what + ": no briefing");
 					var battle = game.SavedGame!.SavedBattle!;
 					if (battle.MapSizeX * battle.MapSizeY == 0 || battle.Units.Count == 0)
 						failures.Add(what + ": empty battle");
@@ -267,7 +264,7 @@ public sealed class PlaceholderSmokeTests : IDisposable
 		Assert.True(battles > 40, $"only {battles} battles generated");
 	}
 
-	/// <summary>Generates one battle through the New Battle screen (the briefing is skipped, see <see cref="EnterBattle"/>).</summary>
+	/// <summary>Generates one battle through the New Battle screen (up to the briefing).</summary>
 	private static void GenerateBattle(Game game, string missionType, int terrain = 0)
 	{
 		game.SetState(new MainMenuState());
@@ -279,26 +276,16 @@ public sealed class PlaceholderSmokeTests : IDisposable
 		state.CbxMissionChange(null!);
 		Field<ComboBox>(state, "_cbxTerrain").Selected = terrain;
 		state.CbxTerrainChange(null!);
-		var ex = Assert.Throws<NotImplementedException>(() => state.BtnOkClick(null!));
-		Assert.Contains("BriefingState..ctor", ex.StackTrace, StringComparison.Ordinal);
+		state.BtnOkClick(null!);
+		Assert.IsType<BriefingState>(game.States[^1]);
 	}
 
-	/// <summary>What BriefingState::btnOkClick does (BriefingState is still a stub).</summary>
+	/// <summary>Leaves the briefing through its OK button.</summary>
 	private static BattlescapeState EnterBattle(Game game)
 	{
-		while (game.States.Count > 0)
-			game.PopState();
-		Options.baseXResolution = Options.baseXBattlescape;
-		Options.baseYResolution = Options.baseYBattlescape;
-		game.Screen.ResetDisplay(false);
-		var bs = new BattlescapeState();
-		bs.BattleGame.SpawnFromPrimedItems();
-		Assert.True(bs.BattleGame.TallyUnits().liveAliens > 0);
-		game.PushState(bs);
-		game.SavedGame!.SavedBattle!.BattleState = bs;
-		game.PushState(new NextTurnState(game.SavedGame.SavedBattle, bs));
-		game.PushState(new InventoryState(false, bs, null!));
-		return bs;
+		Assert.IsType<BriefingState>(game.States[^1]).BtnOkClick(null!);
+		Assert.True(game.States[^1] is InventoryState, "no inventory after briefing");
+		return Assert.IsType<BattlescapeState>(game.States[^3]);
 	}
 
 	[Theory]
