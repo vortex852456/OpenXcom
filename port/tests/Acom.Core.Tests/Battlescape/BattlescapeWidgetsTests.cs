@@ -56,10 +56,10 @@ public class BattlescapeWidgetsTests
 		Assert.Equal(100, Field<Text>(message, "_text").Height);
 	}
 
-	private sealed class DisposableState : State, IDisposable
+	private sealed class DisposableState : State
 	{
 		public int Disposed { get; private set; }
-		public void Dispose() => Disposed++;
+		public override void Destroy() => Disposed++;
 	}
 
 	[Fact]

@@ -51,6 +51,14 @@ public class State
 	protected byte _cursorColor;
 
 	/// <summary>
+	/// C++ destructor logic beyond freeing memory (e.g. resetting shared objects).
+	/// Called by <see cref="Game"/> when a popped state is deleted; overrides call the base last.
+	/// </summary>
+	public virtual void Destroy()
+	{
+	}
+
+	/// <summary>
 	/// Initializes a brand new state with no child elements.
 	/// By default states are full-screen; the palette starts all black.
 	/// </summary>

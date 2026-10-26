@@ -33,7 +33,7 @@ namespace Acom;
 /// Battlescape screen which shows the tactical battle.
 /// </summary>
 /// <remarks>The C++ destructor logic (palette reset) runs in <see cref="Dispose()"/>, called by <see cref="Acom.Game"/> when the state is deleted.</remarks>
-public partial class BattlescapeState : State, IDisposable
+public partial class BattlescapeState : State
 {
 	public const int DEFAULT_ANIM_SPEED = 100;
 	private const int SPECIAL_BUTTONS_MAX = 3;
@@ -680,22 +680,12 @@ public partial class BattlescapeState : State, IDisposable
 	/// <summary>
 	/// Deletes the battlescapestate (C++ destructor): restores the palettes.
 	/// </summary>
-	public void Dispose()
-	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
-
-	/// <summary>C++ destructor logic.</summary>
-	protected virtual void Dispose(bool disposing)
+	public override void Destroy()
 	{
 		if (_disposed)
 			return;
 		_disposed = true;
-		if (disposing)
-		{
-			ResetPalettes();
-		}
+		ResetPalettes();
 	}
 
 	/// <summary>Restores the palettes changed by the environmental effects.</summary>
