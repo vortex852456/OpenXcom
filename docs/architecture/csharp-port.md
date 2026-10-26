@@ -110,8 +110,10 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | 5 ✅ | OXCE-Skript-Engine (`Engine/Script*`, `Mod/ModScript`, Bindings, Hooks) | Golden-Tests gegen `Script.cpp`, Metadaten-Vergleich aller Parser |
 | parallel | Eigenes Inhaltspaket (Setting, Texte, HD-Grafik, Sound, Karten) | siehe `content-rights.md` |
 
+## Messwerte
+- CPU-Last des Desktop-Hosts (Xvfb, Software-Rendering): skaliert mit `Options::FPS` (60 → ~67 %, 10 → ~15 %); zwischen den Bildern schläft die Schleife wie das Original (`SDL_Delay`), keine Leerlaufschleife.
+
 ## Bekannte Probleme
-- Desktop-Host unter Xvfb: CPU-Last skaliert mit `FPS` (60 → ~67 %, 10 → ~15 %), also Kosten des Software-Renderings je Bild, keine Leerlaufschleife; auf echter Hardware mit GPU ungeprüft.
 - Platzhalterdaten: Abfangfenster-Buttons mit eigener 3x5-Kurzbeschriftung (`INTERWIN.DAT`); Musik, Intro und Originalschriften werden nicht erzeugt.
 
 ## Offene Entscheidungen
