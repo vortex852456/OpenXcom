@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Acom.Core\Acom.Core.csproj" />
     <ProjectReference Include="..\..\tools\Acom.AssetSpec\Acom.AssetSpec.csproj" />
+    <ProjectReference Include="..\..\tools\Acom.Placeholder\Acom.Placeholder.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

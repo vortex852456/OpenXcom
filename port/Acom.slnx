@@ -8,5 +8,6 @@
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Acom.AssetSpec/Acom.AssetSpec.csproj" />
+    <Project Path="tools/Acom.Placeholder/Acom.Placeholder.csproj" />
   </Folder>
 </Solution>

@@ -112,4 +112,5 @@ xvfb-run -a dotnet run --project src/Acom.Desktop -- --screenshot out.png --fram
 tools/golden/generate.sh                       # Golden-Dateien aus C++ neu erzeugen (g++, Dev-Pakete SDL 1.2, SDL_image, SDL_gfx, SDL_mixer)
 python3 tools/port-status.py [Bereich]         # Fortschritt / offene Units
 dotnet run --project tools/Acom.AssetSpec -- --data <Originaldaten> --game ufo   # Asset-Liste nach content/spec/ (nur Metadaten)
+dotnet run --project tools/Acom.Placeholder -- --out /tmp/acom/UFO   # Platzhalter-Daten (dann: -data <repo>/bin -user /tmp/acom/), siehe README dort
 ```
