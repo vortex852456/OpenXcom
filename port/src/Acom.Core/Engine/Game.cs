@@ -174,7 +174,9 @@ public sealed class Game
 		if (_quit)
 			return;
 
-		// Clean up states (C++ deletes them here)
+		// Clean up states (C++ deletes them here); states with destructor logic implement IDisposable
+		foreach (State deleted in _deleted)
+			(deleted as IDisposable)?.Dispose();
 		_deleted.Clear();
 
 		if (_states.Count == 0)
