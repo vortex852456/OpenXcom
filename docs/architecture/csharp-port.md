@@ -74,6 +74,17 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. E
 | `Timer`-Spielzeit (`slowTick`) | erster Aufruf springt einmalig, 32-Bit-Überlauf nach 74 h | gleichmäßig, 64 Bit | Offensichtlicher Fehler ohne gewollte Wirkung |
 | Font-Zeichen außerhalb der BMP (z. B. Emoji) | eigene Glyphe | belegen ihren Platz, sind aber nicht abrufbar | Text ist im Port UTF-16 (`char`) |
 | Abgeschnittene GIF-Dateien | SDL_image hängt in Erweiterungen bzw. liest alte Pufferbytes | Fehler bzw. Bildende | Kein Hänger, kein Datenmüll |
+| Container mit Zeiger-Schlüsseln (`std::map<T*,…>`, `std::set<T*>`) | Reihenfolge nach Speicheradresse | Einfügereihenfolge (Regel-Listen nach Mod-Reihenfolge) | C++-Reihenfolge ist nicht reproduzierbar |
+| `std::sort` bei gleichen Schlüsseln | instabil | stabil, bzw. Nachbau der libstdc++-Sortierung (`StdAlgorithm`, Pfadsuche/Listen) | Deterministisch; gleiche Ergebnisse wie der GCC-Build wo es zählt |
+| Undefiniertes Verhalten in C++ (Lesen hinter Listenende, ungültige Iteratoren, 64-Bit-`size_t`-Vergleiche) | Absturz oder Datenmüll | Ausnahme bzw. Begrenzung auf gültigen Bereich (im Code kommentiert) | Kein Absturz bei gültigen Daten gleich |
+| Locale (`CrossPlatform::getLocale`) | Linux-Zweig schneidet `de_DE.UTF-8` falsch ab | `LC_ALL`/`LC_MESSAGES`/`LANG` auf allen Systemen | Offensichtlicher Fehler |
+| Spielstand-Kopf `build` | Git-Version von OXCE | `ACOM <Version>` | Eigenes Projekt; alle Schlüssel/Reihenfolgen sonst gleich |
+| Natürliche Sortierung von Namenslisten (`.nam`) | `StrCmpLogicalW` bzw. Locale | eigene deterministische natürliche Sortierung | Gleiches Ergebnis auf allen Systemen |
+| Nicht initialisierte C++-Felder (z. B. Zähler in Mission-/Arc-Skripten) | unbestimmt | 0 bzw. -1 | Definierter Startwert |
+| YAML-Gleitkommazahlen | c4core/fast_float direkt nach `float` | über `double` nach `float`, keine Hex-Floats | Praktisch gleiche Werte |
+| Fenster/Anzeige (`Screen`) | SDL-Videomodus, Software-Skalierer | Host (MonoGame) besitzt das Fenster; Pixeldichte auf 2560×1600 begrenzt | GPU-Skalierung, HD-Konzept |
+| Ladebildschirm (`StartState`) | eigener SDL-Thread | `Task` | Gleicher Ablauf, MonoGame besitzt die Schleife |
+| Destruktoren mit Logik | `delete` | `State.Destroy()` (vom Game aufgerufen) bzw. `Target.Destroy()` | Kein deterministisches `delete` in .NET |
 
 ## Phasen
 Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilweise/fertig).
@@ -81,11 +92,11 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | Phase | Inhalt | Prüfung |
 |---|---|---|
 | 0 ✅ | Gerüst, RNG, Pluralregeln, Palette, Surface (HD), Action, InteractiveSurface, State, Game-Loop, Screen, MonoGame-Host | Golden-Tests, Headless-Screenshot |
-| 1 (begonnen: Logger, SurfaceSet, CatFile, SCR/SPK/BDY-Leser, YAML-Schicht, OptionInfo/Options (generiert, Golden-Test gegen C++-`options.cfg`), CrossPlatform-Ordner, Language/LocalizedText, FileMap/ModInfo inkl. Zip-Mods, `Surface.LoadImage` mit eigenem PNG/GIF-Leser, SurfaceCrop, Timer, Font inkl. DOS-Terminalschrift) | Engine-Rest: Logger, Options/OptionInfo (cfg-kompatibel), CrossPlatform (Pfade), FileMap (Mod-Dateisystem), YAML-Schicht, Language/Unicode/LocalizedText, Font, SurfaceSet + PNG/GIF mit Paletten-Indizes, Timer, Sound/Music; danach `Interface/` (Widgets) | Golden-Tests für Optionen/Text, Widget-Tests |
-| 2 | `Mod/` (Rule*, Laden/Mergen von Rulesets) und `Savegame/` (Modell + YAML-Saves) | Rulesets/Saves in C++ und C# laden, Dumps vergleichen |
-| 3 | `Menu/`, `Geoscape/`, `Basescape/`, `Ufopaedia/` | Bedienbare Kampagne mit Testinhalten |
-| 4 | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine) | Golden-Tests Pfadsuche/LOS/Schaden mit festem Seed |
-| 5 | OXCE-Skript-Engine (`Engine/Script*`, ~9k Zeilen) | Mod-Skripte aus Testmods |
+| 1 ✅ | Engine-Rest (Options, YAML, FileMap, Language, Font, PNG/GIF, Timer, Zeichenfunktionen, Audio mit Adlib-Emulation, FLC-Video) und `Interface/` | Golden-Tests (Optionen, Bilder, SDL_gfx, Widgets, Adlib/SDL_mixer) |
+| 2 ✅ | `Mod/` (alle Rule*, `Mod.cpp`; alle `xcom1`-Regelwerke laden) und `Savegame/` (inkl. Konverter für Original-Spielstände) | YAML-Round-Trips, Ruleset-Ladetest |
+| 3 ✅ | `Menu/`, `Geoscape/`, `Basescape/`, `Ufopaedia/` | Unit-Tests der Logik, End-to-End mit Platzhalterdaten |
+| 4 ✅ | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine, Generator, alle States) | Golden-Tests Pfadsuche/Flugbahnen |
+| 5 | OXCE-Skript-Engine (`Engine/Script*`, `Mod/ModScript`) und Skript-Hooks in den portierten Klassen | Mod-Skripte aus Testmods |
 | parallel | Eigenes Inhaltspaket (Setting, Texte, HD-Grafik, Sound, Karten) | siehe `content-rights.md` |
 
 ## Offene Entscheidungen
