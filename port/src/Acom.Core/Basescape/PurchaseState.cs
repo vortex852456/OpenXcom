@@ -94,10 +94,28 @@ public class PurchaseState : TouchState
 			s += "(";
 			if (change > 0.05)
 				s += "+";
-			s += change.ToString("F1", CultureInfo.InvariantCulture) + ")";
+			s += FormatFixed1(change) + ")";
 		}
 		s += ":" + Str(availableStores);
 		return s;
+	}
+
+	/// <summary>
+	/// Formats like <c>std::fixed &lt;&lt; std::setprecision(1)</c> (glibc printf "%.1f"): the exact
+	/// binary value is rounded, ties to even (.NET "F1" rounds ties away from zero, e.g. 2.25).
+	/// </summary>
+	internal static string FormatFixed1(double value)
+	{
+		string sign = (value < 0.0 || (value == 0.0 && double.IsNegative(value))) ? "-" : "";
+		string exact = Math.Abs(value).ToString("F40", CultureInfo.InvariantCulture); // exact decimal digits
+		int dot = exact.IndexOf('.', StringComparison.Ordinal);
+		decimal truncated = decimal.Parse(exact.AsSpan(0, dot + 2), NumberStyles.Number, CultureInfo.InvariantCulture);
+		string rest = exact[(dot + 2)..];
+		int lastDigit = exact[dot + 1] - '0';
+		bool roundUp = rest[0] > '5' || (rest[0] == '5' && (rest.AsSpan(1).ContainsAnyExcept('0') || lastDigit % 2 == 1));
+		if (roundUp)
+			truncated += 0.1m;
+		return sign + truncated.ToString("0.0", CultureInfo.InvariantCulture);
 	}
 
 	/// <summary>
