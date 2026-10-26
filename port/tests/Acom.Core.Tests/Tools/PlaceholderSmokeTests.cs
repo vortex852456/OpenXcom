@@ -266,4 +266,129 @@ public sealed class PlaceholderSmokeTests : IDisposable
 		Assert.Empty(failures);
 		Assert.True(battles > 40, $"only {battles} battles generated");
 	}
+
+	/// <summary>Generates one battle through the New Battle screen (the briefing is skipped, see <see cref="EnterBattle"/>).</summary>
+	private static void GenerateBattle(Game game, string missionType, int terrain = 0)
+	{
+		game.SetState(new MainMenuState());
+		var state = new NewBattleState();
+		game.PushState(state);
+		game.RunFrame();
+		var missionTypes = Field<List<string>>(state, "_missionTypes");
+		Field<ComboBox>(state, "_cbxMission").Selected = missionTypes.IndexOf(missionType);
+		state.CbxMissionChange(null!);
+		Field<ComboBox>(state, "_cbxTerrain").Selected = terrain;
+		state.CbxTerrainChange(null!);
+		var ex = Assert.Throws<NotImplementedException>(() => state.BtnOkClick(null!));
+		Assert.Contains("BriefingState..ctor", ex.StackTrace, StringComparison.Ordinal);
+	}
+
+	/// <summary>What BriefingState::btnOkClick does (BriefingState is still a stub).</summary>
+	private static BattlescapeState EnterBattle(Game game)
+	{
+		while (game.States.Count > 0)
+			game.PopState();
+		Options.baseXResolution = Options.baseXBattlescape;
+		Options.baseYResolution = Options.baseYBattlescape;
+		game.Screen.ResetDisplay(false);
+		var bs = new BattlescapeState();
+		bs.BattleGame.SpawnFromPrimedItems();
+		Assert.True(bs.BattleGame.TallyUnits().liveAliens > 0);
+		game.PushState(bs);
+		game.SavedGame!.SavedBattle!.BattleState = bs;
+		game.PushState(new NextTurnState(game.SavedGame.SavedBattle, bs));
+		game.PushState(new InventoryState(false, bs, null!));
+		return bs;
+	}
+
+	[Theory]
+	[InlineData("STR_SMALL_SCOUT")]
+	[InlineData("STR_TERROR_MISSION")]
+	[InlineData("STR_BASE_DEFENSE")]
+	public async Task Battle_turns_run_on_placeholder_data(string missionType)
+	{
+		var game = await StartGame();
+		WaitFor<MainMenuState>(game);
+		GenerateBattle(game, missionType);
+		var bs = EnterBattle(game);
+		var battle = game.SavedGame!.SavedBattle!;
+		var screens = new List<string>();
+		int turn = battle.Turn, moves = 0, shots = 0, plannedTurn = -1;
+		var plan = new Queue<System.Action>();
+		for (int i = 0; i < 30000 && battle.Turn < turn + 3; ++i)
+		{
+			var top = game.States[^1];
+			switch (top)
+			{
+				case InventoryState inventory:
+					inventory.BtnOkClick(null!);
+					break;
+				case NextTurnState next:
+					next.Close();
+					break;
+				case BattlescapeState when battle.Side == UnitFaction.FACTION_PLAYER && !bs.BattleGame.IsBusy && i % 5 == 0:
+					if (plannedTurn != battle.Turn)
+					{
+						plannedTurn = battle.Turn;
+						PlanPlayerTurn(battle, bs.BattleGame, plan, () => ++moves, () => ++shots);
+					}
+					if (plan.Count > 0)
+						plan.Dequeue()();
+					else
+						bs.BtnEndTurnClick(null!);
+					break;
+				case BattlescapeState:
+					break;
+				default:
+					screens.Add(top.GetType().Name);
+					game.PopState();
+					break;
+			}
+			Frame(game);
+		}
+		Assert.True(moves > 0, "no soldier moved");
+		Assert.True(battle.Turn >= turn + 3, $"battle stuck in turn {battle.Turn}, side {battle.Side}, screens: {string.Join(", ", screens)}");
+	}
+
+	/// <summary>
+	/// Player input for one turn, as the battlescape UI would send it: select up to four soldiers, walk each a few
+	/// tiles and take a snap shot at a visible enemy.
+	/// </summary>
+	private static void PlanPlayerTurn(SavedBattleGame battle, BattlescapeGame bg, Queue<System.Action> plan, System.Action moved, System.Action shot)
+	{
+		var soldiers = battle.Units.Where(u => u.Faction == UnitFaction.FACTION_PLAYER && !u.IsOut).Take(4).ToList();
+		foreach (var unit in soldiers)
+		{
+			plan.Enqueue(() => bg.PrimaryAction(unit.Position)); // select
+			plan.Enqueue(() =>
+			{
+				if (unit.IsOut || battle.SelectedUnit != unit)
+					return;
+				int dx = (battle.Turn + unit.Id) % 2 == 0 ? 3 : -3;
+				var dest = unit.Position + new Position(dx, 2, 0);
+				if (battle.GetTile(dest) != null)
+				{
+					bg.PrimaryAction(dest);
+					moved();
+				}
+			});
+			plan.Enqueue(() =>
+			{
+				var target = unit.IsOut ? null : unit.VisibleUnits.FirstOrDefault(u => u.Faction == UnitFaction.FACTION_HOSTILE && !u.IsOut);
+				var weapon = unit.IsOut ? null : unit.GetMainHandWeapon();
+				if (target == null || weapon == null || battle.SelectedUnit != unit)
+					return;
+				var action = bg.CurrentAction;
+				action.actor = unit;
+				action.weapon = weapon;
+				action.type = BattleActionType.BA_SNAPSHOT;
+				action.UpdateTU();
+				if (!action.HaveTU())
+					return;
+				action.targeting = true;
+				bg.PrimaryAction(target.Position);
+				shot();
+			});
+		}
+	}
 }

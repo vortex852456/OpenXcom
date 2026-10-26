@@ -17,7 +17,7 @@ xvfb-run -a dotnet run --project src/Acom.Desktop -- --screenshot out.png --fram
 ```
 `-data` liefert `standard/` und `common/` aus dem Repo, `-user` den Platzhalter-Ordner. Mit `-load <datei>.sav` (aus `<user>/xcom1/`) startet direkt ein Spielstand.
 
-Der Smoke-Test `tests/Acom.Core.Tests/Tools/PlaceholderSmokeTests.cs` erzeugt die Daten in einen Temp-Ordner, lädt `xcom1` mit allen Ressourcen und spielt headless: Startbildschirm → Hauptmenü → neues Spiel → erste Basis → 35 Tage Geoscape (inkl. Monatsbericht, Speichern/Laden). Ein zweiter Test erzeugt über „Neue Schlacht“ jede Mission auf jedem Gelände. Dabei werden `MAPS/ROUTES/TERRAIN/UFOGRAPH/UNITS` des Mods weggelassen, alle Kampfdaten kommen also aus dem Platzhalter-Satz.
+Der Smoke-Test `tests/Acom.Core.Tests/Tools/PlaceholderSmokeTests.cs` erzeugt die Daten in einen Temp-Ordner, lädt `xcom1` mit allen Ressourcen und spielt headless: Startbildschirm → Hauptmenü → neues Spiel → erste Basis → 35 Tage Geoscape (inkl. Monatsbericht, Speichern/Laden). Weitere Tests erzeugen über „Neue Schlacht“ jede Mission auf jedem Gelände und spielen drei Kämpfe einige Runden lang (Soldaten laufen und schießen, KI-Züge); die noch fehlende `BriefingState` wird dabei übersprungen. Dabei werden `MAPS/ROUTES/TERRAIN/UFOGRAPH/UNITS` des Mods weggelassen, alle Kampfdaten kommen also aus dem Platzhalter-Satz.
 
 ## Inhalt
 | Bereich | Erzeugt | Regeln |
