@@ -105,11 +105,11 @@ public partial class BattleUnit
 			damage = args.GetFirst();
 			bodypart = (UnitBodyPart)args.GetSecond();
 			side = (UnitSide)args.GetThird();
-			if ((uint)bodypart >= (uint)BODYPART_MAX)
+			if ((uint)bodypart >= (uint)BODYPART_MAX) // C++ compares signed: a negative part is undefined behavior there (array index)
 			{
 				bodypart = default;
 			}
-			if ((uint)side >= (uint)SIDE_MAX)
+			if (side >= SIDE_MAX) // Uint8 like C++
 			{
 				side = default;
 			}
