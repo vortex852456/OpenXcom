@@ -44,7 +44,7 @@ public class SelectDestinationState : State
 	/// <param name="globe">Pointer to the Geoscape globe.</param>
 	public SelectDestinationState(List<Craft> crafts, Globe globe)
 	{
-		_crafts = crafts;
+		_crafts = [.. crafts]; // passed by value in C++
 		_globe = globe;
 
 		int dx = _game.Screen.DX;

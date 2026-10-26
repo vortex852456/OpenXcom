@@ -51,7 +51,7 @@ public class MultipleTargetsState : State
 	public MultipleTargetsState(List<Target> targets, List<Craft> crafts, GeoscapeState state, bool useCustomSound)
 	{
 		_targets = [.. targets];
-		_crafts = crafts;
+		_crafts = [.. crafts]; // passed by value in C++
 		_state = state;
 		_useCustomSound = useCustomSound;
 		_screen = false;
