@@ -19,7 +19,7 @@
  */
 // Ported from: src/Engine/CrossPlatform.h, src/Engine/CrossPlatform.cpp
 // Port status: partial (command line, folder discovery, file/path helpers, versions, locale, quit shortcut; missing: screenshots, embedded assets,
-// save headers, error dialogs, path conversions).
+// save headers, error dialogs, path conversions; flashWindow is a no-op).
 // Deviation: folder listings are sorted case-insensitively (like NTFS); the C++ code uses the unspecified readdir order.
 // Deviation: ACOM uses its own folder names ("acom"/"ACOM") instead of "openxcom"/"OpenXcom",
 // so it never touches an existing OpenXcom installation.
@@ -189,6 +189,59 @@ public static class CrossPlatform
 	public static bool FileExists(string path) => File.Exists(path);
 
 	public static bool FolderExists(string path) => Directory.Exists(path);
+
+	/// <summary>Removes a file from the specified path; false if it doesn't exist or can't be removed (like remove()).</summary>
+	public static bool DeleteFile(string path)
+	{
+		if (!File.Exists(path))
+			return false;
+		try
+		{
+			File.Delete(path);
+			return true;
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			return false;
+		}
+	}
+
+	/// <summary>Replaces invalid filesystem characters with _.</summary>
+	public static string SanitizeFilename(string filename)
+	{
+		ArgumentNullException.ThrowIfNull(filename);
+		var newFilename = filename.ToCharArray();
+		for (int i = 0; i < newFilename.Length; ++i)
+		{
+			char c = newFilename[i];
+			if (c == '<' || c == '>' || c == ':' || c == '*' || c == '|' || c == '"' || c == '\'' || c == '/' || c == '?' || c == '\0' || c == '\\')
+				newFilename[i] = '_';
+		}
+		return new string(newFilename);
+	}
+
+	/// <summary>Moves a file from one path to another, replacing any existing file.</summary>
+	/// <returns>True if the operation succeeded, False otherwise.</returns>
+	public static bool MoveFile(string src, string dest)
+	{
+		try
+		{
+			File.Move(src, dest, true);
+			return true;
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			return false;
+		}
+	}
+
+	/// <summary>Notifies the user that maybe he should have a look (C++ only flashes the window on Windows; no-op here).</summary>
+	public static void FlashWindow()
+	{
+	}
+
+	/// <summary>Generates a timestamp of the current (local) time in D-M-Y_H-M-S format.</summary>
+	public static string Now() => DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss", System.Globalization.CultureInfo.InvariantCulture);
 
 	/// <summary>Creates a folder; false if it already exists or can't be created (like mkdir).</summary>
 	public static bool CreateFolder(string path)

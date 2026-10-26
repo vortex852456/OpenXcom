@@ -154,6 +154,9 @@ public sealed class Game
 	/// <summary>Queues an input or window event for the next frame.</summary>
 	public void PushEvent(SDL_Event ev) => _events.Enqueue(ev);
 
+	/// <summary>Drops all queued events (C++ drains the SDL queue with SDL_PollEvent to ignore input from impatient users).</summary>
+	public void ClearEvents() => _events.Clear();
+
 	/// <summary>Runs one full iteration of the original main loop: <see cref="Update"/> then <see cref="Render"/>.</summary>
 	/// <returns>True if a new frame was flipped to the screen.</returns>
 	public bool RunFrame()

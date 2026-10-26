@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Unicode.h, src/Engine/Unicode.cpp
-// Port status: partial (text tokens, character classes and naturalCompare; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
+// Port status: partial (text tokens, character classes, naturalCompare and number formatting; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
 
 namespace Acom;
 
@@ -100,4 +100,37 @@ public static class Unicode
 
 	/// <summary>Compares two strings in natural order: true if <paramref name="a"/> comes before <paramref name="b"/> (C++ naturalCompare).</summary>
 	public static bool NaturalCompare(string a, string b) => NaturalComparison(a, b) < 0;
+
+	/// <summary>Takes an integer value and formats it as number with separators (spacing the thousands).</summary>
+	/// <param name="value">The value.</param>
+	/// <param name="currency">Currency symbol (prefix if one byte in UTF-8, otherwise suffix).</param>
+	public static string FormatNumber(long value, string currency = "")
+	{
+		const string thousands_sep = "\u00A0"; // TOK_NBSP
+
+		bool negative = value < 0;
+		var s = new System.Text.StringBuilder(unchecked((ulong)(negative ? -value : value)).ToString(System.Globalization.CultureInfo.InvariantCulture));
+		int spacer = s.Length - 3;
+		while (spacer > 0 && spacer < s.Length)
+		{
+			s.Insert(spacer, thousands_sep);
+			spacer -= 3;
+		}
+		if (!string.IsNullOrEmpty(currency))
+		{
+			if (System.Text.Encoding.UTF8.GetByteCount(currency) > 1) // Note: size in bytes, not characters!
+				s.Append(currency);
+			else
+				s.Insert(0, currency);
+		}
+		if (negative)
+			s.Insert(0, '-');
+		return s.ToString();
+	}
+
+	/// <summary>Takes an integer value and formats it as currency, spacing the thousands and adding a $ sign to the front.</summary>
+	public static string FormatFunding(long funds) => FormatNumber(funds, OXCE_CURRENCY_SYMBOL);
+
+	/// <summary>Takes an integer value and formats it as percentage, adding a % sign.</summary>
+	public static string FormatPercentage(int value) => value.ToString(System.Globalization.CultureInfo.InvariantCulture) + "%";
 }

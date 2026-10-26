@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Screen.h, src/Engine/Screen.cpp
-// Port status: partial (no OpenGL/shader/scaler paths; the platform host scales the frame on the GPU).
+// Port status: partial (no OpenGL/shader/scaler paths; the platform host scales the frame on the GPU; missing: resetDisplay, updateScale).
 
 using System.Runtime.InteropServices;
 
@@ -92,6 +92,12 @@ public sealed class Screen
 	{
 		colors[..Math.Min(ncolors, colors.Length)].CopyTo(_palette.AsSpan(firstcolor));
 	}
+
+	/// <summary>Resets the screen surfaces based on the current display options (not ported yet).</summary>
+	public void ResetDisplay(bool resetVideo = true, bool noShaders = false) => throw new NotImplementedException();
+
+	/// <summary>Updates the scale and base resolution for a given scale type (not ported yet).</summary>
+	public static void UpdateScale(int type, ref int width, ref int height, bool change) => throw new NotImplementedException();
 
 	/// <summary>Clears all the contents out of the internal buffer.</summary>
 	public void Clear() => _surface.Clear();
