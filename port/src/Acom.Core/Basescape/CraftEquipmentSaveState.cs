@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
-// Ported from: src/Basescape/MonthlyCostsState.h, src/Basescape/MonthlyCostsState.cpp
 // Ported from: src/Basescape/CraftEquipmentSaveState.h, src/Basescape/CraftEquipmentSaveState.cpp
 #nullable disable
 
