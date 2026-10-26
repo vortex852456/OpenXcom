@@ -452,6 +452,28 @@ public static class CrossPlatform
 	/// <summary>Gets the DOS-style path shown on the start screen (the C++ Windows build shortens the exe path).</summary>
 	public static string GetDosPath() => "C:\\GAMES\\ACOM";
 
+	/// <summary>Gets the folder of the executable, with a trailing slash (C++ returns it only on Windows; the port searches it for data on every platform).</summary>
+	public static string GetExeFolder() => Slash(AppContext.BaseDirectory);
+
+	/// <summary>
+	/// Opens a folder or URL in the system's file browser (C++ openExplorer: ShellExecute/open/xdg-open).
+	/// .NET picks the same handler per platform through the shell.
+	/// </summary>
+	/// <returns>True if the handler was started.</returns>
+	public static bool OpenExplorer(string url)
+	{
+		try
+		{
+			// null means an existing process handled it, which is a success too
+			System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true })?.Dispose();
+			return true;
+		}
+		catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or PlatformNotSupportedException)
+		{
+			return false;
+		}
+	}
+
 	private static string s_logFileName = "standard error output";
 
 	/// <summary>Where the log goes (C++ writes a log file; the port's <see cref="Logger"/> writes to <see cref="Logger.Sink"/>).</summary>
