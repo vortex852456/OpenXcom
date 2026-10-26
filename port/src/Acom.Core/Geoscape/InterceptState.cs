@@ -386,7 +386,7 @@ public class InterceptState : State
 	}
 
 	/// <summary>Stable insertion sort by distance (std::stable_sort with operator&lt;).</summary>
-	private static void StableSortByDistance(List<(Craft craft, double distance, Base xbase)> list)
+	internal static void StableSortByDistance<TCraft, TBase>(List<(TCraft craft, double distance, TBase xbase)> list)
 	{
 		for (int i = 1; i < list.Count; ++i)
 		{
