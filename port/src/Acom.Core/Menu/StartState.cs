@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/StartState.h, src/Menu/StartState.cpp
-// Port status: partial (missing: Screen::resetDisplay, the port's screen keeps its logical size and the host scales it)
 // Deviation: loading runs on a Task instead of an SDL thread; a running load cannot be killed when the state is dropped.
 // Deviation: the terminal names the program "ACOM" (the C++ text says "openxcom"/"OpenXcom").
 #nullable disable
@@ -69,7 +68,7 @@ public class StartState : State
 		Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, false);
 		Options.baseXResolution = Options.displayWidth;
 		Options.baseYResolution = Options.displayHeight;
-		// missing: _game->getScreen()->resetDisplay(false, true);
+		_game.Screen.ResetDisplay(false, true);
 
 		// Create objects
 		_thread = null;
@@ -81,8 +80,7 @@ public class StartState : State
 		_font.LoadTerminal();
 		_lang = new Language();
 
-		// C++ uses Options::baseXResolution, which resetDisplay just made the screen size.
-		_text = new Text(_game.Screen.Width, _game.Screen.Height, 0, 0);
+		_text = new Text(Options.baseXResolution, Options.baseYResolution, 0, 0);
 		_cursor = new Text(_font.Width, _font.Height, 0, 0);
 		_timer = new Timer(150);
 

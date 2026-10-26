@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/AbandonGameState.h, src/Menu/AbandonGameState.cpp
-// Port status: partial (missing: Screen::resetDisplay, the port's screen keeps its logical size)
 #nullable disable
 
 namespace Acom;
@@ -105,7 +104,7 @@ public class AbandonGameState : State
 		if (!_game.SavedGame.IsIronman)
 		{
 			Screen.UpdateScale(Options.geoscapeScale, ref Options.baseXGeoscape, ref Options.baseYGeoscape, true);
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 
 			_game.SetState(new MainMenuState());
 			_game.SavedGame = null;

@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Game.h, src/Engine/Game.cpp
-// Port status: partial (missing: Screen::handle, SDL_VIDEORESIZE (Screen::updateScale/resetDisplay), mouse grab (host), frame pacing (Options::FPS/FPSInactive, SDL_Delay: host))
+// Port status: partial (missing: Screen::handle, mouse grab (host), frame pacing (Options::FPS/FPSInactive, SDL_Delay: host))
 
 namespace Acom;
 
@@ -210,8 +210,20 @@ public sealed class Game
 					HandleActiveEvent(ev);
 					break;
 				case SDLEventType.SDL_VIDEORESIZE:
-					// missing: changing the logical resolution with the window (Options::allowResize,
-					// Screen::updateScale, State::resize, Screen::resetDisplay); the host letterboxes instead.
+					// The host only sends this for real window resizes, so C++'s startupEvent (skips the first one) is left out.
+					if (Options.allowResize)
+					{
+						Options.newDisplayWidth = Options.displayWidth = Math.Max(Screen.ORIGINAL_WIDTH, ev.resize.w);
+						Options.newDisplayHeight = Options.displayHeight = Math.Max(Screen.ORIGINAL_HEIGHT, ev.resize.h);
+						int dX = 0, dY = 0;
+						Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, false);
+						Screen.UpdateScale(Options.geoscapeScale, ref Options.baseXGeoscape, ref Options.baseYGeoscape, false);
+						foreach (var state in _states)
+						{
+							state.Resize(ref dX, ref dY);
+						}
+						_screen.ResetDisplay();
+					}
 					break;
 				case SDLEventType.SDL_MOUSEMOTION:
 				case SDLEventType.SDL_MOUSEBUTTONDOWN:

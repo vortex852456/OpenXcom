@@ -76,12 +76,16 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 			// Options.Init ran in Program (like C++ main before creating the Game)
 			Options.baseXResolution = Options.displayWidth;
 			Options.baseYResolution = Options.displayHeight;
+			// C++ Screen() opens the window with the configured display mode (resetDisplay -> SDL_SetVideoMode)
+			ApplyVideoMode(Options.displayWidth, Options.displayHeight);
 		}
+		screen.VideoModeHandler = ApplyVideoMode;
 		Mixer.Device = _audio; // Game.InitAudio opens it (or runs muted without audio hardware)
 		_game = new Acom.Game(screen);
+		UpdateWindowSize(); // states created below may call Screen.ResetDisplay, which reads the window size
 		_game.SetState(_options.Demo ? new DemoState() : new StartState());
 		_input = new SdlInput();
-		Window.ClientSizeChanged += (_, _) => UpdateWindowSize();
+		Window.ClientSizeChanged += (_, _) => OnClientSizeChanged();
 		base.Initialize();
 		UpdateWindowSize();
 	}
@@ -107,6 +111,37 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 		_spriteBatch?.Dispose();
 	}
 
+	/// <summary>Applies the configured window mode and display size (C++ SDL_SetVideoMode, see <see cref="Screen.VideoModeHandler"/>).</summary>
+	private void ApplyVideoMode(int width, int height)
+	{
+		width = Math.Max(width, Screen.ORIGINAL_WIDTH);
+		height = Math.Max(height, Screen.ORIGINAL_HEIGHT);
+		if (_graphics.PreferredBackBufferWidth != width || _graphics.PreferredBackBufferHeight != height
+			|| _graphics.IsFullScreen != Options.fullscreen || Window.IsBorderless != Options.borderless)
+		{
+			_graphics.PreferredBackBufferWidth = width;
+			_graphics.PreferredBackBufferHeight = height;
+			_graphics.IsFullScreen = Options.fullscreen;
+			Window.IsBorderless = Options.borderless;
+			_graphics.ApplyChanges();
+		}
+		UpdateWindowSize();
+	}
+
+	private void OnClientSizeChanged()
+	{
+		UpdateWindowSize();
+		// Options::allowResize: the game adapts its base resolution to the window (Game: SDL_VIDEORESIZE)
+		var bounds = Window.ClientBounds;
+		if (_game != null && Options.allowResize && bounds.Width > 0 && bounds.Height > 0
+			&& (bounds.Width != Options.displayWidth || bounds.Height != Options.displayHeight))
+		{
+			_graphics.PreferredBackBufferWidth = bounds.Width;
+			_graphics.PreferredBackBufferHeight = bounds.Height;
+			_game.PushEvent(new SDL_Event { type = SDLEventType.SDL_VIDEORESIZE, resize = { w = bounds.Width, h = bounds.Height } });
+		}
+	}
+
 	private void UpdateWindowSize()
 	{
 		var bounds = Window.ClientBounds;
@@ -128,6 +163,15 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 	{
 		var screen = _game!.Screen;
 		_game.Render();
+		var surface = screen.Surface;
+		if (_texture!.Width != surface.PhysicalWidth || _texture.Height != surface.PhysicalHeight)
+		{
+			// Screen.ResetDisplay changed the base resolution
+			_texture.Dispose();
+			_texture = new Texture2D(GraphicsDevice, surface.PhysicalWidth, surface.PhysicalHeight, false, SurfaceFormat.Color);
+			_upload = new byte[surface.PhysicalWidth * surface.PhysicalHeight * 4];
+			_uploadedFrame = -1;
+		}
 		if (screen.FrameNumber != _uploadedFrame)
 		{
 			screen.Frame.CopyTo(_upload);
@@ -138,7 +182,7 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 		GraphicsDevice.Clear(Color.Black);
 		var (w, h) = screen.DisplaySize;
 		_spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
-		_spriteBatch.Draw(_texture, new Rectangle(screen.CursorLeftBlackBand, screen.CursorTopBlackBand, w, h), Color.White);
+		_spriteBatch.Draw(_texture, new Rectangle(screen.LeftBlackBand, screen.TopBlackBand, w, h), Color.White);
 		_spriteBatch.End();
 		base.Draw(gameTime);
 

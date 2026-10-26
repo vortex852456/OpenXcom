@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/MainMenuState.h, src/Menu/MainMenuState.cpp
-// Port status: partial (missing: Screen::resetDisplay; the Windows-only update check and self-updater are left out on purpose, see oxceUpdateCheck in docs/architecture/csharp-port.md)
+// Deviation: the Windows-only update check and self-updater are left out on purpose, see oxceUpdateCheck in docs/architecture/csharp-port.md.
 // Deviation: the title names ACOM and the OXCE version it is based on.
 #nullable disable
 
@@ -41,7 +41,7 @@ public class GoToMainMenuState : State
 	public override void Init()
 	{
 		Screen.UpdateScale(Options.geoscapeScale, ref Options.baseXGeoscape, ref Options.baseYGeoscape, true);
-		// missing: _game->getScreen()->resetDisplay(false);
+		_game.Screen.ResetDisplay(false);
 		_game.SetState(new MainMenuState(_updateCheck));
 	}
 }

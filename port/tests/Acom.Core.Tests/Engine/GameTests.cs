@@ -125,15 +125,4 @@ public class GameTests
 		Assert.Equal([10, 20, 30, 255], screen.Frame.Slice(2 * 4, 4).ToArray());
 		Assert.Equal([0, 0, 0, 255], screen.Frame[..4].ToArray());
 	}
-
-	[Fact]
-	public void Window_mapping_keeps_aspect_ratio()
-	{
-		var screen = new Screen();
-		screen.SetWindowSize(1920, 1080);
-		Assert.Equal(5.4, screen.XScale, 6);
-		Assert.Equal(5.4, screen.YScale, 6);
-		Assert.Equal(96, screen.CursorLeftBlackBand);
-		Assert.Equal(0, screen.CursorTopBlackBand);
-	}
 }

@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Screen.h, src/Engine/Screen.cpp
-// Port status: partial (no OpenGL/shader/scaler paths; the platform host scales the frame on the GPU; missing: resetDisplay, updateScale).
+// Port status: partial (no OpenGL/shader/scaler paths, no Screen::handle/screenshot; the platform host owns the window and scales the frame on the GPU)
 
 using System.Runtime.InteropServices;
 
@@ -29,26 +29,44 @@ namespace Acom;
 /// frame for the platform host. Also knows how the logical screen is mapped into the window
 /// (scale and black bands), which <see cref="Action"/> needs to translate mouse coordinates.
 /// </summary>
+/// <remarks>
+/// C++ owns the SDL window (<c>SDL_SetVideoMode</c>). Here the host owns it: it reports the client size with
+/// <see cref="SetWindowSize"/> and applies video mode requests through <see cref="VideoModeHandler"/>.
+/// </remarks>
 public sealed class Screen
 {
 	public const int ORIGINAL_WIDTH = 320;
 	public const int ORIGINAL_HEIGHT = 200;
 
-	private readonly Surface _surface;
+	/// <summary>
+	/// Largest screen buffer in pixels (port only): when a big base resolution would exceed it, the screen's
+	/// pixel density is lowered (not below 1), see <see cref="ResetDisplay"/>.
+	/// </summary>
+	public const int MAX_PHYSICAL_WIDTH = ORIGINAL_WIDTH * 8, MAX_PHYSICAL_HEIGHT = ORIGINAL_HEIGHT * 8;
+
+	private readonly int _scale;
+	private Surface _surface;
 	private readonly Rgba[] _palette = new Rgba[256];
-	private readonly byte[] _frame;
+	private byte[] _frame;
+	private int _baseWidth, _baseHeight;
+	private int _windowWidth, _windowHeight;
+	private double _scaleX = 1.0, _scaleY = 1.0;
+	private int _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, _cursorTopBlackBand, _cursorLeftBlackBand;
 
 	/// <param name="baseWidth">Logical width (320 for the classic layout).</param>
 	/// <param name="baseHeight">Logical height (200 for the classic layout).</param>
 	/// <param name="scale">Pixel density of the screen buffer (1 = classic, 4 = HD).</param>
 	public Screen(int baseWidth = ORIGINAL_WIDTH, int baseHeight = ORIGINAL_HEIGHT, int scale = 1)
 	{
+		_scale = scale;
+		_baseWidth = baseWidth;
+		_baseHeight = baseHeight;
 		_surface = new Surface(baseWidth, baseHeight, 0, 0, scale);
 		_frame = new byte[_surface.PhysicalWidth * _surface.PhysicalHeight * 4];
 		SetWindowSize(_surface.PhysicalWidth, _surface.PhysicalHeight);
 	}
 
-	/// <summary>The surface everything is blit onto.</summary>
+	/// <summary>The surface everything is blit onto. Replaced by <see cref="ResetDisplay"/> when the base resolution changes.</summary>
 	public Surface Surface => _surface;
 
 	/// <summary>Logical width.</summary>
@@ -63,20 +81,35 @@ public sealed class Screen
 	/// <summary>Vertical offset of the 320x200 layout centered on the logical screen.</summary>
 	public int DY => (Height - ORIGINAL_HEIGHT) / 2;
 
-	/// <summary>Window pixels per logical pixel (horizontal).</summary>
-	public double XScale { get; private set; }
+	/// <summary>Window pixels per logical pixel (horizontal), as used for mouse input.</summary>
+	public double XScale => _scaleX;
 
-	/// <summary>Window pixels per logical pixel (vertical).</summary>
-	public double YScale { get; private set; }
+	/// <summary>Window pixels per logical pixel (vertical), as used for mouse input.</summary>
+	public double YScale => _scaleY;
 
-	/// <summary>Height of the black band above the image, in window pixels.</summary>
-	public int CursorTopBlackBand { get; private set; }
+	/// <summary>Height of the black band above the image that the cursor may enter, in window pixels.</summary>
+	public int CursorTopBlackBand => _cursorTopBlackBand;
 
-	/// <summary>Width of the black band left of the image, in window pixels.</summary>
-	public int CursorLeftBlackBand { get; private set; }
+	/// <summary>Width of the black band left of the image that the cursor may enter, in window pixels.</summary>
+	public int CursorLeftBlackBand => _cursorLeftBlackBand;
+
+	/// <summary>Height of the black band above the image, in window pixels (where the host draws the frame).</summary>
+	public int TopBlackBand => _topBlackBand;
+
+	/// <summary>Width of the black band left of the image, in window pixels (where the host draws the frame).</summary>
+	public int LeftBlackBand => _leftBlackBand;
 
 	/// <summary>Size of the scaled image inside the window, in window pixels.</summary>
-	public (int Width, int Height) DisplaySize { get; private set; }
+	public (int Width, int Height) DisplaySize
+		=> (_windowWidth - _leftBlackBand - _rightBlackBand, _windowHeight - _topBlackBand - _bottomBlackBand);
+
+	/// <summary>
+	/// Host callback for a video mode change (C++ <c>SDL_SetVideoMode</c> in resetDisplay): it applies
+	/// <see cref="Options.fullscreen"/>/<see cref="Options.borderless"/> and the requested display size
+	/// (width, height) to the window and reports the resulting client size through <see cref="SetWindowSize"/>
+	/// before returning. Without a host the window keeps its size.
+	/// </summary>
+	public System.Action<int, int>? VideoModeHandler { get; set; }
 
 	/// <summary>Incremented on every <see cref="Flip"/>; lets the host skip unchanged frames.</summary>
 	public long FrameNumber { get; private set; }
@@ -93,9 +126,44 @@ public sealed class Screen
 		colors[..Math.Min(ncolors, colors.Length)].CopyTo(_palette.AsSpan(firstcolor));
 	}
 
-	/// <summary>Resets the screen surfaces based on the current display options (not ported yet).</summary>
-	public void ResetDisplay(bool resetVideo = true, bool noShaders = false) => throw new NotImplementedException();
+	/// <summary>
+	/// Resets the screen surfaces based on the current display options,
+	/// as they don't automatically take effect.
+	/// </summary>
+	/// <param name="resetVideo">Reset display surface (window mode and size, through <see cref="VideoModeHandler"/>).</param>
+	/// <param name="noShaders">Don't load shaders (no OpenGL path in the port).</param>
+	public void ResetDisplay(bool resetVideo = true, bool noShaders = false)
+	{
+		_ = noShaders; // OpenGL shaders are not ported
+		int width = Options.displayWidth;
+		int height = Options.displayHeight;
+		// makeVideoFlags: the window flags are the host's business
+		_baseWidth = Options.baseXResolution;
+		_baseHeight = Options.baseYResolution;
 
+		if (_surface.Width != _baseWidth || _surface.Height != _baseHeight) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
+		{
+			// Port: keep the pixel density, unless the buffer would get too big (the palette lives in _palette and is kept).
+			int scale = Math.Clamp(Math.Min(MAX_PHYSICAL_WIDTH / _baseWidth, MAX_PHYSICAL_HEIGHT / _baseHeight), 1, _scale);
+			_surface = new Surface(_baseWidth, _baseHeight, 0, 0, scale);
+			_frame = new byte[_surface.PhysicalWidth * _surface.PhysicalHeight * 4];
+		}
+
+		if (resetVideo)
+		{
+			Logger.Info($"Attempting to set display to {width}x{height}x8...");
+			VideoModeHandler?.Invoke(width, height);
+			Logger.Info($"Display set to {_windowWidth}x{_windowHeight}x8.");
+		}
+		else
+		{
+			Clear();
+		}
+
+		Options.displayWidth = _windowWidth;
+		Options.displayHeight = _windowHeight;
+		UpdateBlackBands();
+	}
 
 	/// <summary>Clears all the contents out of the internal buffer.</summary>
 	public void Clear() => _surface.Clear();
@@ -123,18 +191,97 @@ public sealed class Screen
 	}
 
 	/// <summary>
-	/// Fits the logical screen into a window of the given size, keeping the aspect ratio
-	/// (black bands fill the rest).
+	/// Tells the screen the window's client size (the host calls this whenever it changes) and fits the
+	/// logical screen into it like resetDisplay does (black bands with <see cref="Options.keepAspectRatio"/>).
 	/// </summary>
 	public void SetWindowSize(int windowWidth, int windowHeight)
 	{
-		double scale = Math.Min((double)windowWidth / Width, (double)windowHeight / Height);
-		int w = (int)Math.Round(Width * scale), h = (int)Math.Round(Height * scale);
-		XScale = (double)w / Width;
-		YScale = (double)h / Height;
-		CursorLeftBlackBand = (windowWidth - w) / 2;
-		CursorTopBlackBand = (windowHeight - h) / 2;
-		DisplaySize = (w, h);
+		_windowWidth = windowWidth;
+		_windowHeight = windowHeight;
+		UpdateBlackBands();
+	}
+
+	/// <summary>Scale and black bands, the second half of C++ resetDisplay (getWidth/getHeight = window size).</summary>
+	private void UpdateBlackBands()
+	{
+		_scaleX = _windowWidth / (double)_baseWidth;
+		_scaleY = _windowHeight / (double)_baseHeight;
+
+		double pixelRatioY = 1.0;
+		if (Options.nonSquarePixelRatio && !Options.allowResize)
+		{
+			pixelRatioY = 1.2;
+		}
+		bool cursorInBlackBands;
+		if (!Options.keepAspectRatio)
+		{
+			cursorInBlackBands = false;
+		}
+		else if (Options.fullscreen)
+		{
+			cursorInBlackBands = Options.cursorInBlackBandsInFullscreen;
+		}
+		else if (!Options.borderless)
+		{
+			cursorInBlackBands = Options.cursorInBlackBandsInWindow;
+		}
+		else
+		{
+			cursorInBlackBands = Options.cursorInBlackBandsInBorderlessWindow;
+		}
+
+		if (_scaleX > _scaleY && Options.keepAspectRatio)
+		{
+			int targetWidth = (int)Math.Floor(_scaleY * (double)_baseWidth);
+			_topBlackBand = _bottomBlackBand = 0;
+			_leftBlackBand = (_windowWidth - targetWidth) / 2;
+			if (_leftBlackBand < 0)
+			{
+				_leftBlackBand = 0;
+			}
+			_rightBlackBand = _windowWidth - targetWidth - _leftBlackBand;
+			_cursorTopBlackBand = 0;
+
+			if (cursorInBlackBands)
+			{
+				_scaleX = _scaleY;
+				_cursorLeftBlackBand = _leftBlackBand;
+			}
+			else
+			{
+				_cursorLeftBlackBand = 0;
+			}
+		}
+		else if (_scaleY > _scaleX && Options.keepAspectRatio)
+		{
+			int targetHeight = (int)Math.Floor(_scaleX * (double)_baseHeight * pixelRatioY);
+			_topBlackBand = (_windowHeight - targetHeight) / 2;
+			if (_topBlackBand < 0)
+			{
+				_topBlackBand = 0;
+			}
+			_bottomBlackBand = _windowHeight - targetHeight - _topBlackBand;
+			if (_bottomBlackBand < 0)
+			{
+				_bottomBlackBand = 0;
+			}
+			_leftBlackBand = _rightBlackBand = 0;
+			_cursorLeftBlackBand = 0;
+
+			if (cursorInBlackBands)
+			{
+				_scaleY = _scaleX;
+				_cursorTopBlackBand = _topBlackBand;
+			}
+			else
+			{
+				_cursorTopBlackBand = 0;
+			}
+		}
+		else
+		{
+			_topBlackBand = _bottomBlackBand = _leftBlackBand = _rightBlackBand = _cursorTopBlackBand = _cursorLeftBlackBand = 0;
+		}
 	}
 
 	/// <summary>

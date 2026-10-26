@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/VideoState.h, src/Menu/VideoState.cpp
-// Port status: partial (missing: Screen::resetDisplay, the port's screen keeps its logical size)
 // Deviation: C++ init() plays all videos and the fade-out in a blocking loop of its own (polling events, SDL_Delay,
 // flipping the screen). MonoGame owns the main loop here, so init() only starts the first video; think() advances
 // the FlcPlayer (one frame per game cycle at most), handle() passes clicks/keys on to it, blit() shows the decoded

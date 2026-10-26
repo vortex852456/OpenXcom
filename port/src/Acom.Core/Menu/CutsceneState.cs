@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/CutsceneState.h, src/Menu/CutsceneState.cpp
-// Port status: partial (missing: Screen::resetDisplay, the port's screen keeps its logical size)
 #nullable disable
 
 namespace Acom;
@@ -90,7 +89,7 @@ public class CutsceneState : State
 		Options.keepAspectRatio = true;
 		Options.baseXResolution = Screen.ORIGINAL_WIDTH;
 		Options.baseYResolution = Screen.ORIGINAL_HEIGHT;
-		// missing: _game->getScreen()->resetDisplay(false);
+		_game.Screen.ResetDisplay(false);
 		return letterboxed;
 	}
 
@@ -99,6 +98,6 @@ public class CutsceneState : State
 	{
 		Options.keepAspectRatio = wasLetterboxed;
 		Screen.UpdateScale(Options.geoscapeScale, ref Options.baseXGeoscape, ref Options.baseYGeoscape, true);
-		// missing: _game->getScreen()->resetDisplay(false);
+		_game.Screen.ResetDisplay(false);
 	}
 }
