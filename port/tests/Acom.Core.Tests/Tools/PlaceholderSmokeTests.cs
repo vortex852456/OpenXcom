@@ -289,6 +289,40 @@ public sealed class PlaceholderSmokeTests : IDisposable
 	}
 
 	[Theory]
+	[InlineData(0)]
+	[InlineData(1)]
+	public async Task Map_cursor_is_drawn_on_upper_levels(int level)
+	{
+		var game = await StartGame();
+		WaitFor<MainMenuState>(game);
+		GenerateBattle(game, "STR_TERROR_MISSION");
+		var bs = EnterBattle(game);
+		var battle = game.SavedGame!.SavedBattle!;
+		Assert.True(battle.MapSizeZ > level);
+		var map = bs.Map;
+		var unit = battle.Units.First(u => u.Faction == UnitFaction.FACTION_PLAYER);
+		var pos = new Position(unit.Position.x, unit.Position.y, level);
+		map.Camera.CenterOnPosition(pos, false);
+		map.Camera.ViewLevel = level;
+		var screen = new Position();
+		map.Camera.ConvertMapToScreen(pos, ref screen);
+		screen += map.Camera.MapOffset;
+		map.SetSelectorPosition(screen.x + 16, screen.y + 12);
+		byte[] Render(CursorType type)
+		{
+			map.SetCursorType(type);
+			map.Invalidate();
+			map.Draw();
+			var px = new byte[map.Width * map.Height];
+			for (int y = 0; y < map.Height; ++y)
+				for (int x = 0; x < map.Width; ++x)
+					px[y * map.Width + x] = map.GetPixel(x, y);
+			return px;
+		}
+		Assert.NotEqual(Render(CursorType.CT_NONE), Render(CursorType.CT_NORMAL));
+	}
+
+	[Theory]
 	[InlineData("STR_SMALL_SCOUT")]
 	[InlineData("STR_TERROR_MISSION")]
 	[InlineData("STR_BASE_DEFENSE")]
