@@ -1632,8 +1632,11 @@ public class GeoscapeState : State
 		var activeCrafts = UpdateActiveCrafts();
 		var save = _game.SavedGame;
 
-		foreach (var ab in save.AlienBases)
+		// index loop: a started mission may add alien bases (C++ would invalidate its iterator)
+		var alienBases = save.AlienBases;
+		for (int abIdx = 0; abIdx < alienBases.Count; ++abIdx)
 		{
+			AlienBase ab = alienBases[abIdx];
 			if (ab.Deployment.BaseDetectionRange > 0)
 			{
 				// Increase counter by 10 minutes
