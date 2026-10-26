@@ -98,7 +98,7 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. T
 | Destruktoren mit Logik | `delete` | `State.Destroy()` (vom Game aufgerufen) bzw. `Target.Destroy()` | Kein deterministisches `delete` in .NET |
 
 ## Phasen
-Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilweise/fertig).
+Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilweise/fertig). Stand: alle Units portiert, keine `partial`-Köpfe mehr; Abweichungen stehen in der Tabelle oben. Spieltest im Desktop-Build mit Platzhalterdaten: Kampagne, Abfangen, Einsatz, Speichern/Laden ohne Absturz.
 
 | Phase | Inhalt | Prüfung |
 |---|---|---|
@@ -109,6 +109,11 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 | 4 ✅ | `Battlescape/` (Karte, Pfadsuche, Sichtlinien, KI, TileEngine, Generator, alle States) | Golden-Tests Pfadsuche/Flugbahnen |
 | 5 ✅ | OXCE-Skript-Engine (`Engine/Script*`, `Mod/ModScript`, Bindings, Hooks) | Golden-Tests gegen `Script.cpp`, Metadaten-Vergleich aller Parser |
 | parallel | Eigenes Inhaltspaket (Setting, Texte, HD-Grafik, Sound, Karten) | siehe `content-rights.md` |
+
+## Bekannte Probleme
+- Desktop-Host: hohe CPU-Last im Leerlauf unter Xvfb (Software-Rendering) gemessen; auf echter Hardware ungeprüft.
+- Battlescape: Feld-Cursor war im Spieltest unsichtbar, solange der Soldat auf Ebene 1 stand (nicht untersucht).
+- Platzhalterdaten: Abfangfenster ohne Button-Grafik (`INTERWIN.DAT`); Musik, Intro und Originalschriften werden nicht erzeugt.
 
 ## Offene Entscheidungen
 - Keine. (Skript-Engine: wird 1:1 portiert, damit OXCE-Mods laufen; das Grundspiel `xcom1` nutzt sie nicht.)
