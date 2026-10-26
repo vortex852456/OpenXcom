@@ -441,6 +441,9 @@ public sealed class PlaceholderGenerator
 			? Art.Sprite(kind, w, h, frame, Noise.Hash(seed, variant))
 			: Art.Sprite(kind, w, h, frame, seed);
 
+	/// <summary>Positions (x, y, height; width 36) of the six ImageButtons in DogfightState's window.</summary>
+	private static readonly (int x, int y, int h)[] s_dogfightButtons = [(83, 4, 15), (120, 4, 15), (83, 20, 15), (120, 20, 15), (120, 36, 15), (120, 52, 17)];
+
 	private static Image Screen(string name, int w, int h, uint seed, int group)
 	{
 		if (name == "GEOBORD.SCR")
@@ -455,6 +458,21 @@ public sealed class PlaceholderGenerator
 		}
 		if (name.StartsWith("BACK", StringComparison.Ordinal))
 			return Art.Backdrop(w, h, seed);
+		if (name == "INTERWIN.DAT" && w >= 160 && h >= 96)
+		{
+			// dogfight window (top 160x96): ImageButtons copy their faces from it (DogfightState), so draw button boxes
+			var img = Art.Picture(w, h, seed, group, false);
+			for (int y = 0; y < 96; ++y)
+				for (int x = 0; x < 160; ++x)
+					img[x, y] = Art.Color(9, 12 + Noise.Range(seed, 2, x / 2, y / 2));
+			Art.Border(img, 0, 0, 160, 96, 9, 1);
+			foreach (var (bx, by, bh) in s_dogfightButtons)
+			{
+				Art.Rect(img, bx, by, 36, bh, Art.Color(9, 5));
+				Art.Border(img, bx, by, 36, bh, 9, 1);
+			}
+			return img;
+		}
 		bool emblem = name.StartsWith("UP", StringComparison.Ordinal) || name.StartsWith("MAN_", StringComparison.Ordinal) || name.StartsWith("BIGOB_", StringComparison.Ordinal);
 		return Art.Picture(w, h, seed, group, emblem);
 	}
