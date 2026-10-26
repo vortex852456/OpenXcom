@@ -40,6 +40,17 @@ public sealed class SurfaceSet
 		_height = height;
 	}
 
+	/// <summary>Creates a deep copy of an existing surface set (C++ default copy constructor; frames are values there).</summary>
+	public SurfaceSet(SurfaceSet other)
+	{
+		ArgumentNullException.ThrowIfNull(other);
+		_width = other._width;
+		_height = other._height;
+		_sharedFrames = other._sharedFrames;
+		foreach (var frame in other._frames)
+			_frames.Add(frame == null ? null : new Surface(frame));
+	}
+
 	/// <summary>Frame width.</summary>
 	public int Width => _width;
 
