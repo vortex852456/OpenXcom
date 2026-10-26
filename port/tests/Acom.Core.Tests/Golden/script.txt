@@ -1,0 +1,504 @@
+case add\sr\s5;\smul\sr\s3;\sreturn\sr\ss; 2 0 0 0 0
+result 1 21 0
+case set\sr\s-7;\sdiv\sr\s2;\sset\ss\s-7;\smod\ss\s2;\sreturn\sr\ss; 0 0 0 0 0
+result 1 -3 -1
+case set\sr\s0x7FFFFFFF;\sadd\sr\s1;\sset\ss\s-2147483648;\ssub\ss\s1;\sreturn\sr\ss; 0 0 0 0 0
+result 1 -2147483648 2147483647
+case set\sr\s0x7FFFFFFF;\smul\sr\s3;\sset\ss\s65536;\smul\ss\s65536;\sreturn\sr\ss; 0 0 0 0 0
+result 1 2147483645 0
+case muldiv\sr\s100\s10000;\sset\ss\s0x7FFFFFFF;\smuldiv\ss\s50\s100;\sreturn\sr\ss; 100 0 0 0 0
+result 1 1 1073741823
+case offsetmod\sr\s100\s1\s100;\sset\ss\s-7;\soffsetmod\ss\s1\s0\s5;\sreturn\sr\ss; 2147483647 0 0 0 0
+result 1 1 3
+case aggregate\sr\s4\s5;\soffset\ss\s4\s5;\sreturn\sr\ss; 1 2 0 0 0
+result 1 21 13
+case pow\sr\s3;\spow\ss\s-3;\sreturn\sr\ss; 2 2 0 0 0
+result 1 8 1
+case pow\sr\s20;\sset\ss\s-3;\spow\ss\s3;\sreturn\sr\ss; 10 0 0 0 0
+result 1 -2147483648 -27
+case sqrt\sr;\ssqrt\ss;\sreturn\sr\ss; 15 -15 0 0 0
+result 1 3 0
+case abs\sr;\sabs\ss;\sreturn\sr\ss; -2147483648 -5 0 0 0
+result 1 -2147483648 5
+case limit\sr\s0\s10;\slimit_upper\ss\s3;\sreturn\sr\ss; 50 7 0 0 0
+result 1 10 3
+case limit_lower\sr\s3;\slimit\ss\s10\s0;\sreturn\sr\ss; 1 5 0 0 0
+result 1 3 10
+case bit_count\sr;\sbit_not\ss;\sreturn\sr\ss; 11 15 0 0 0
+result 1 3 -16
+case bit_and\sr\s0x0F;\sbit_or\ss\s0xF0;\sreturn\sr\ss; 60 15 0 0 0
+result 1 12 255
+case bit_xor\sr\s0xFF;\sbit_count\ss;\sreturn\sr\ss; 15 -1 0 0 0
+result 1 240 32
+case shl\sr\s31;\sshr\ss\s1;\sreturn\sr\ss; 1 -8 0 0 0
+result 1 -2147483648 -4
+case shl\sr\s33;\sshr\ss\s35;\sreturn\sr\ss; 1 -64 0 0 0
+result 1 2 -8
+case set\sr\s0o10;\sset\ss\s-0x10;\sreturn\sr\ss; 0 0 0 0 0
+result 1 8 -16
+case set\sr\s012;\sset\ss\s+5;\sreturn\sr\ss; 0 0 0 0 0
+result 1 12 5
+case set\sr\s0b102;\sreturn\sr\ss; 0 0 0 0 0
+log Unknown\sargument\s'0b102'
+log Error\sin\smatching\sarguments\sfor\soperator\s'set'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'set\sr\s0b102;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case set\sr\s99999999999;\sset\ss\s-0x80000000;\sreturn\sr\ss; 0 0 0 0 0
+result 1 1215752191 -2147483648
+case swap\sr\ss;\sreturn\sr\ss; 1 2 0 0 0
+result 1 2 1
+case clear\sr;\sset\ss\sa;\sadd\ss\sb;\sreturn\sr\ss; 9 9 3 4 0
+result 1 0 7
+case get_color\sr\sr;\sget_shade\ss\ss;\sreturn\sr\ss; 53 53 0 0 0
+result 1 3 5
+case set_color\sr\s7;\sset_shade\ss\s0x1A;\sreturn\sr\ss; 53 53 0 0 0
+result 1 117 58
+case add_shade\sr\s20;\sadd_shade\ss\s2;\sreturn\sr\ss; 53 53 0 0 0
+result 1 15 55
+case add_shade\sr\s-5;\sadd_shade\ss\s-10;\sreturn\sr\ss; 53 5 0 0 0
+result 1 48 1
+case add_shade\sr\s-10;\sadd_shade\ss\s0;\sreturn\sr\ss; 0 0 0 0 0
+result 1 1 1
+case wavegen_rect\sr\s10\s5\s7;\swavegen_rect\ss\s10\s5\s7;\sreturn\sr\ss; 13 17 0 0 0
+result 1 7 0
+case wavegen_saw\sr\s10\s8\s5;\swavegen_saw\ss\s10\s5\s9;\sreturn\sr\ss; -3 17 0 0 0
+result 1 5 0
+case wavegen_tri\sr\s10\s8\s7;\swavegen_tri\ss\s10\s8\s2;\sreturn\sr\ss; 13 16 0 0 0
+result 1 3 2
+case wavegen_sin\sr\s100\s100;\swavegen_cos\ss\s100\s100;\sreturn\sr\ss; 25 50 0 0 0
+result 1 100 -100
+case wavegen_sin\sr\s360\s1000;\swavegen_cos\ss\s7\s33;\sreturn\sr\ss; 30 3 0 0 0
+result 1 499 -29
+case wavegen_rect\sr\s0\s5\s7;\sreturn\sr\ss; 13 0 0 0 0
+log Invalid\sscript\soperation
+result 1 13 0
+case set\sr\s10;\sdiv\sr\s0;\sset\sr\s5;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\sscript\soperation
+result 1 10 0
+case set\sr\s10;\smod\sr\sa;\sset\sr\s5;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\sscript\soperation
+result 1 10 0
+case muldiv\sr\s1\s0;\sset\sr\s5;\sreturn\sr\ss; 3 0 0 0 0
+log Invalid\sscript\soperation
+result 1 3 0
+case if\sgt\sa\s5;\sset\sr\s1;\selse\slt\sa\s0;\sset\sr\s2;\selse;\sset\sr\s3;\send;\sreturn\sr\ss; 0 0 6 0 0
+result 1 1 0
+case if\sgt\sa\s5;\sset\sr\s1;\selse\slt\sa\s0;\sset\sr\s2;\selse;\sset\sr\s3;\send;\sreturn\sr\ss; 0 0 -1 0 0
+result 1 2 0
+case if\sgt\sa\s5;\sset\sr\s1;\selse\slt\sa\s0;\sset\sr\s2;\selse;\sset\sr\s3;\send;\sreturn\sr\ss; 0 0 5 0 0
+result 1 3 0
+case if\sand\sgt\sa\s1\slt\sa\s10\sneq\sa\s5;\sset\sr\s1;\send;\sreturn\sr\ss; 0 0 2 0 0
+result 1 1 0
+case if\sand\sgt\sa\s1\slt\sa\s10\sneq\sa\s5;\sset\sr\s1;\send;\sreturn\sr\ss; 0 0 5 0 0
+result 1 0 0
+case if\sor\seq\sa\s1\seq\sa\s3\sge\sa\s10;\sset\sr\s1;\send;\sreturn\sr\ss; 0 0 3 0 0
+result 1 1 0
+case if\sor\seq\sa\s1\seq\sa\s3\sge\sa\s10;\sset\sr\s1;\send;\sreturn\sr\ss; 0 0 9 0 0
+result 1 0 0
+case if\sle\sa\sb;\sset\sr\s1;\send;\sif\sge\sa\sb;\sset\ss\s1;\send;\sreturn\sr\ss; 0 0 4 4 0
+result 1 1 1
+case if\seq\sa\s1;\sset\sr\s1;\selse\seq\sa\s2;\sset\sr\s2;\send;\sreturn\sr\ss; 0 0 2 0 0
+result 1 2 0
+case begin;\svar\sint\sx\s6;\sset\sr\sx;\send;\sbegin;\svar\sint\sx\s7;\sset\ss\sx;\send;\sreturn\sr\ss; 0 0 0 0 0
+result 1 6 7
+case var\sint\sx\s0;\sloop\svar\si\s10;\sadd\sx\si;\send;\sset\sr\sx;\sreturn\sr\ss; 0 0 0 0 0
+result 1 45 0
+case loop\svar\si\s10;\sif\seq\si\s4;\sbreak;\send;\sadd\sr\si;\send;\sreturn\sr\ss; 0 0 0 0 0
+result 1 6 0
+case loop\svar\si\s10;\svar\sint\st\si;\smod\st\s2;\sif\seq\st\s0;\scontinue;\send;\sadd\sr\si;\send;\sreturn\sr\ss; 0 0 0 0 0
+result 1 25 0
+case loop\svar\si\sa;\sadd\sr\s1;\send;\sreturn\sr\ss; 0 0 -5 0 0
+result 1 0 0
+case loop\svar\si\sa;\sloop\svar\sj\sb;\sadd\sr\s1;\send;\send;\sreturn\sr\ss; 0 0 3 4 0
+result 1 12 0
+case var\sint\sx;\svar\sint\sy\s5;\sset\sr\sx;\sset\ss\sy;\sreturn\sr\ss; 9 9 0 0 0
+result 1 0 5
+case const\sint\sx\s42;\sset\sr\sx;\sreturn\sr\ss; 0 0 0 0 0
+result 1 42 0
+case const\sint\sx\sa;\sset\sr\sx;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\svalue\s'a'\sfor\sconst\stype\s'x'
+log Error\sin\smatching\sarguments\sfor\soperator\s'const'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'const\sint\sx\sa;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\stext\st\s"abc";\sif\seq\st\s"abc";\sset\sr\s1;\send;\sif\seq\st\s"ab";\sset\ss\s1;\send;\sreturn\sr\ss; 0 0 0 0 0
+result 1 1 0
+case var\stext\st;\svar\stext\su\s"";\sif\seq\st\su;\sset\sr\s1;\send;\sreturn\sr\ss; 0 0 0 0 0
+result 1 1 0
+case var\stext\st\s"a\\"b\\\\";\sif\seq\st\s"a\\"b\\\\";\sset\sr\s1;\send;\sreturn\sr\ss; 0 0 0 0 0
+result 1 1 0
+case var\stext\st\s"abc;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\sline:\s'var\stext\st\s"abc;\sreturn\sr\ss;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\stext\st\s"a\\b";\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\sargument\s'"a\\b'\sin\sline:\s'var\stext\st\s"a\\b";\sreturn\sr\ss;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case if\seq\snull\snull;\sset\sr\s1;\send;\sreturn\sr\ss; 0 0 0 0 0
+result 1 1 0
+case return\ss\sr; 1 2 0 0 0
+result 1 2 1
+case var\sint\sx\s7;\sreturn\sx\sr; 1 2 0 0 0
+result 1 1 1
+case var\sint\sx\s7;\sreturn\sx\ss; 1 1 0 0 0
+result 1 7 1
+case return\s3\s4; 1 2 0 0 0
+result 1 3 4
+case return\sr\sr; 1 2 0 0 0
+result 1 1 1
+case return\sa\sr; 1 2 0 0 0
+log Invalid\sreturn\sargument\s'a'
+log Error\sin\smatching\sarguments\sfor\soperator\s'return'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'return\sa\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 1 2
+case return\sr; 1 2 0 0 0
+log Invalid\slength\sof\sreturns\sarguments
+log Error\sin\smatching\sarguments\sfor\soperator\s'return'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'return\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 1 2
+case add\sr\s5; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sscript\sneed\sto\send\swith\sreturn\sstatement
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case if\seq\sr\s1;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sscript\shave\smissed\s'end;'
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sq\s5;\sreturn\sr\ss; 0 0 0 0 0
+log Incorrect\stype\sof\sargument\s'q'\sof\stype\s[]
+log Error\sin\smatching\sarguments\sfor\soperator\s'add'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'add\sq\s5;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s0x;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\sargument\s'0x'\sin\sline:\s'add\sr\s0x;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case return\sr\ss;\sadd\sr\s1; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sunreachable\scode\safter\sreturn\sin\sline:\s'add\sr\s1;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s1;\svar\sint\sx;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\svariable\sdefinition\safter\sother\soperations\sin\sline:\s'var\sint\sx;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case set\sa\s1;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'set'\sfor:
+log \s\s[int]\s[int]
+log Expected:
+log \s\s[var\stext]\s[text]
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'set\sa\s1;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case foo\sr;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\soperation\s'foo'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'foo\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case r.foo\s1;\sreturn\sr\ss; 0 0 0 0 0
+log Unsupported\stype\sfor\svariable\s'r'
+log Invalid\soperation\s'r.foo'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'r.foo\s1;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case x.foo\s1;\sreturn\sr\ss; 0 0 0 0 0
+log Unknown\svariable\sname\s'x'
+log Invalid\soperation\s'x.foo'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'x.foo\s1;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case end;\sreturn\sr\ss; 0 0 0 0 0
+log Unexpected\s'end'
+log Error\sin\smatching\sarguments\sfor\soperator\s'end'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'end;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case else;\sreturn\sr\ss; 0 0 0 0 0
+log Unexpected\s'else'
+log Error\sin\smatching\sarguments\sfor\soperator\s'else'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'else;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case break;\sreturn\sr\ss; 0 0 0 0 0
+log Operation\s'break'\soutside\s'loop'
+log Error\sin\smatching\sarguments\sfor\soperator\s'break'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'break;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case continue;\sreturn\sr\ss; 0 0 0 0 0
+log Operation\s'continue'\soutside\s'loop'
+log Error\sin\smatching\sarguments\sfor\soperator\s'continue'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'continue;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'add'\sfor:
+log \s\s[var\sint]
+log Expected:
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'add\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s1\s2;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'add'\sfor:
+log \s\s[var\sint]\s[int]\s[int]
+log Expected:
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'add\sr\s1\s2;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s1\s2\s3\s4\s5\s6\s7\s8\s9\s10\s11\s12\s13\s14\s15\s16;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\sline:\s'add\sr\s1\s2\s3\s4\s5\s6\s7\s8\s9\s10\s11\s12\s13\s14\s15\s16;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s1\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'add'\sfor:
+log \s\s[var\sint]\s[int]\s[]\s[var\sint]\s[var\sint]
+log Expected:
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'add\sr\s1\sreturn\sr\ss;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case lab:\sadd\sr\s1;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\slabel\s'lab'\sin\sline:\s'lab:\sadd\sr\s1;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case lab:\svar\sint\sx;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\slabel\scan't\sbe\sbefore\svariable\sdefinition\sin\sline:\s'lab:\svar\sint\sx;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\sint;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\slength\sof\s'var'\sdefinition
+log Error\sin\smatching\sarguments\sfor\soperator\s'var'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'var\sint;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\sfoo\sx;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\stype\s'foo'
+log Error\sin\smatching\sarguments\sfor\soperator\s'var'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'var\sfoo\sx;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\sint\sint;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\svariable\sname\s'int'\ssame\sas\sexisting\stype
+log Error\sin\smatching\sarguments\sfor\soperator\s'var'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'var\sint\sint;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\sint\sadd;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\svariable\sname\s'add'\ssame\sas\sexisting\sfunction
+log Error\sin\smatching\sarguments\sfor\soperator\s'var'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'var\sint\sadd;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\sint\sr;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\svariable\sname\s'r'
+log Error\sin\smatching\sarguments\sfor\soperator\s'var'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'var\sint\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case var\slabel\sx;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\screate\svariable\sof\stype\s'label',\srequire\s'ptr'
+log Error\sin\smatching\sarguments\sfor\soperator\s'var'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'var\slabel\sx;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case loop\si\s10;\send;\sreturn\sr\ss; 0 0 0 0 0
+log Missing\ssymbols\safter\s'loop'
+log Error\sin\smatching\sarguments\sfor\soperator\s'loop'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'loop\si\s10;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case loop\svar\si;\send;\sreturn\sr\ss; 0 0 0 0 0
+log Missing\ssymbols\safter\s'loop'
+log Error\sin\smatching\sarguments\sfor\soperator\s'loop'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'loop\svar\si;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case loop\svar\si\sr.foo.list;\send;\sreturn\sr\ss; 0 0 0 0 0
+log Unsupported\stype\sfor\svariable\s'r'
+log Unsupported\sfunction\s'r.foo.list'\sfor\s'loop'
+log Error\sin\smatching\sarguments\sfor\soperator\s'loop'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'loop\svar\si\sr.foo.list;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case if\sfoo\sr\s1;\send;\sreturn\sr\ss; 0 0 0 0 0
+log Unknown\scondition:\s'foo'
+log Error\sin\smatching\sarguments\sfor\soperator\s'if'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'if\sfoo\sr\s1;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case if\seq\sr;\send;\sreturn\sr\ss; 0 0 0 0 0
+log Invalid\slength\sof\scondition\sarguments
+log Error\sin\smatching\sarguments\sfor\soperator\s'if'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'if\seq\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case if\seq\sr\s"a";\send;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'test_eq'\sfor:
+log \s\s[var\sint]\s[text]\s[label]\s[label]
+log Expected:
+log \s\s[null]\s[null]\s[label]\s[label]
+log \s\s[text]\s[text]\s[label]\s[label]
+log Unsupported\soperator:\s'eq'
+log Error\sin\smatching\sarguments\sfor\soperator\s'if'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'if\seq\sr\s"a";'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case debug_assert\sr;\sreturn\sr\ss; 0 0 0 0 0
+log Reserved\soperation\sfor\sfuture\suse
+log Error\sin\smatching\sarguments\sfor\soperator\s'debug_assert'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'debug_assert\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case call\sr;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'call'\sfor:
+log \s\s[var\sint]
+log Expected:
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'call\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case goto\sr;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'goto'\sfor:
+log \s\s[var\sint]
+log Expected:
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'goto\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case exit;\sreturn\sr\ss; 0 0 0 0 0
+log Can't\smatch\soverload\sfor\soperator\s'exit'\sfor:
+log \s\s
+log Expected:
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'exit;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case begin\sr;\send;\sreturn\sr\ss; 0 0 0 0 0
+log Unexpected\ssymbols\safter\s'begin'
+log Error\sin\smatching\sarguments\sfor\soperator\s'begin'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'begin\sr;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case \e 0 0 0 0 0
+result 0 0 0
+case \s\s\s#\sonly\scomment 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sscript\sneed\sto\send\swith\sreturn\sstatement
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case #\scomment\nadd\sr\s1;\s#\sother\n\tadd\sr\s2;\nreturn\sr\ss;\s#\send 0 0 0 0 0
+result 1 3 0
+case add\sr\s1;\nadd\sr\sx;\nreturn\sr\ss; 0 0 0 0 0
+log Incorrect\stype\sof\sargument\s'x'\sof\stype\s[]
+log Error\sin\smatching\sarguments\sfor\soperator\s'add'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'add\sr\sx;'\s(at\s2)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s1:2;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\sargument\s':'\sin\sline:\s'add\sr\s1:2;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\sa.b;\sreturn\sr\ss; 0 0 0 0 0
+log Incorrect\stype\sof\sargument\s'a.b'\sof\stype\s[]
+log Error\sin\smatching\sarguments\sfor\soperator\s'add'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'add\sr\sa.b;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s1a;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\sargument\s'1a'\sin\sline:\s'add\sr\s1a;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s"a"b;\sreturn\sr\ss; 0 0 0 0 0
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\sargument\s'"a"'\sin\sline:\s'add\sr\s"a"b;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case debug_log\s"value"\sa\s5;\sdebug_log;\sreturn\sr\ss; 0 0 3 0 1
+log Script\sdebug\slog:\svalue\s3\s5
+log Script\sdebug\slog:\s
+result 1 0 0
+case debug_log\s"value"\sa;\sreturn\sr\ss; 0 0 3 0 0
+result 1 0 0
+case debug_log\sr.x;\sreturn\sr\ss; 0 0 3 0 1
+log Conflicting\soverloads\sfor\soperator\s'debug_impl'\sfor:
+log \s\s[]
+log Expected:
+log \s\s[int]
+log \s\s[text]
+log Invalid\sdebug\sargument\s'r.x'
+log Error\sin\smatching\sarguments\sfor\soperator\s'debug_log'
+log Error\sin\sparsing\sscript\s'test'\sfor\s'golden':\sinvalid\soperation\sin\sline:\s'debug_log\sr.x;'\s(at\s1)
+log \s\s\s\sfor\scode\sin\s
+log \e
+result 0 0 0
+case add\sr\s5;\sreturn\sr\ss; 1 3 0 0 0
+events scripts:\n\s\stest:\n\s\s\s\s-\soffset:\s-1\n\s\s\s\s\s\scode:\s'mul\sr\s10;\sadd\sr\ss;\sreturn\sr\ss;'\n\s\s\s\s-\soffset:\s2\n\s\s\s\s\s\scode:\s'add\sr\s1000;\sreturn\sr\ss;'\n\s\s\s\s-\soffset:\s1\n\s\s\s\s\s\scode:\s'mul\sr\s2;\sreturn\sr\ss;'\n
+result 1 1036 3
+case add\sr\s5;\sreturn\sr\ss; 1 3 0 0 0
+events scripts:\n\s\stest:\n\s\s\s\s-\snew:\sA\n\s\s\s\s\s\soffset:\s1\n\s\s\s\s\s\scode:\s'add\sr\s1;\sreturn\sr\ss;'\n\s\s\s\s-\supdate:\sA\n\s\s\s\s\s\soffset:\s2\n\s\s\s\s\s\scode:\s'add\sr\s2;\sreturn\sr\ss;'\n\s\s\s\s-\snew:\sB\n\s\s\s\s\s\soffset:\s3\n\s\s\s\s\s\scode:\s'mul\sr\s3;\sreturn\sr\ss;'\n\s\s\s\s-\sdelete:\sB\n\s\s\s\s-\sdelete:\sC\n\s\s\s\s-\signore:\sD\n\s\s\s\s\s\soffset:\s4\n\s\s\s\s\s\scode:\s'mul\sr\s4;\sreturn\sr\ss;'\n
+log Unknown\sscript\sname\s'C'\sfor\s'delete'\sat\sline\s13
+log \s\s\s\sin\s
+log \e
+result 1 8 3
+case add\sr\s5;\sreturn\sr\ss; 1 3 0 0 0
+events scripts:\n\s\stest:\n\s\s\s\s-\soffset:\s0\n\s\s\s\s\s\scode:\s'add\sr\s1;\sreturn\sr\ss;'\n\s\s\s\s-\soffset:\s1\n\s\s\s\s\s\scode:\s'add\sr;\sreturn\sr\ss;'\n\s\s\s\s-\soffset:\s100\n\s\s\s\s\s\scode:\s'add\sr\s3;\sreturn\sr\ss;'\n
+log Invalid\soffset\sfor\s'test'\sequal:\s'0'
+log \s\s\s\sfor\snode\sat\sline\s3\sin\s
+log \e
+log Can't\smatch\soverload\sfor\soperator\s'add'\sfor:
+log \s\s[var\sint]
+log Expected:
+log Error\sin\sparsing\sscript\s'test'\sfor\s'Global\soff:\s1':\sinvalid\soperation\sin\sline:\s'add\sr;'\s(at\s1)
+log \s\s\s\sfor\snode\swith\scode\sat\sline\s6\sin\s
+log \e
+log Invalid\soffset\sfor\s'test'\sequal:\s'100'
+log \s\s\s\sfor\snode\sat\sline\s7\sin\s
+log \e
+result 1 6 3

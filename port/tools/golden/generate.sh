@@ -43,6 +43,10 @@ done
 g++ -std=c++17 -O1 -DNDEBUG -I"$root/src" -I"$root/libs/rapidyaml" $(pkg-config --cflags sdl) "$here/widgets.cpp" $widgets "$root/src/lodepng.cpp" \
 	$(pkg-config --libs SDL_gfx SDL_image SDL_mixer sdl) -Wl,--unresolved-symbols=ignore-all -o "$tmp/widgets"
 "$tmp/widgets" "$root/bin/common" > "$out/widgets.txt"
+# OXCE script engine (Script.cpp): parse/run cases with all log lines; YAML via Yaml.cpp + rapidyaml, the rest stays unresolved
+g++ -std=c++17 -O1 -DNDEBUG -I"$root/src" -I"$root/libs/rapidyaml" $(pkg-config --cflags sdl) "$here/script.cpp" "$root/src/Engine/Script.cpp" \
+	"$root/src/Engine/Yaml.cpp" "$root"/libs/rapidyaml/c4/*.cpp "$root"/libs/rapidyaml/c4/yml/*.cpp -Wl,--unresolved-symbols=ignore-all -o "$tmp/script"
+"$tmp/script" "$out/script.txt"
 rm -rf "$tmp"
 echo "Golden files written to $out"
 echo "options-defaults.cfg: build the C++ game (see docs/architecture/build.md), then run"
