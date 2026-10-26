@@ -820,10 +820,6 @@ public partial class BattlescapeGenerator
 		}
 	}
 
-	/// <summary>Node rank to search for a spawn point: <c>Node::nodeRank[alienRank][i]</c>.</summary>
-	/// <remarks>Read through <see cref="Array"/> so this compiles against both the <c>int[]</c> Node skeleton and the ported <c>int[,]</c> table.</remarks>
-	private static int SpawnNodeRank(int alienRank, int i) => (int)((Array)Node.nodeRank).GetValue(alienRank, i);
-
 	/// <summary>Adds an alien to the game and places him on a free spawnpoint.</summary>
 	/// <param name="rules">Pointer to the Unit which holds info about the alien.</param>
 	/// <param name="alienRank">The rank of the alien, used for spawn point search.</param>
@@ -845,7 +841,7 @@ public partial class BattlescapeGenerator
 			if (outside)
 				node = _save.GetSpawnNode(0, unit); // when alien is instructed to spawn outside, we only look for node 0 spawnpoints
 			else
-				node = _save.GetSpawnNode(SpawnNodeRank(alienRank, i), unit);
+				node = _save.GetSpawnNode(Node.nodeRank[alienRank, i], unit);
 		}
 
 		int aliensFacingCraftOdds = 20 * _game.SavedGame.DifficultyCoefficient;

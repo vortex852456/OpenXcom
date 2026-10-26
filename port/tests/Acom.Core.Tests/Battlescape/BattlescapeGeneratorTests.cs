@@ -91,3 +91,73 @@ public class BattlescapeGeneratorTests
 		Assert.Equal([-1, 3, -1, -1, -1], nodes[2].Links);
 	}
 }
+
+[Collection(nameof(Acom.Tests.Mod.GlobalRng))] // seeds the global generator
+public class BattlescapeGeneratorLayoutTests
+{
+	private static MapBlock[][] Grid(int sizeX, int sizeY)
+	{
+		var grid = new MapBlock[sizeX][];
+		for (int x = 0; x < sizeX; ++x)
+		{
+			grid[x] = new MapBlock[sizeY];
+		}
+		return grid;
+	}
+
+	[Fact]
+	public void SelectPosition_picks_evenly_from_free_positions_in_x_major_order()
+	{
+		// 4x3 block map; (1,0) and (2,1) are used; a 20x20 block needs 2x2 free blocks
+		var blocks = Grid(4, 3);
+		blocks[1][0] = new MapBlock("used");
+		blocks[2][1] = new MapBlock("used");
+		// free 2x2 positions in x-major order: (0,1)
+		(int, int)[] valid2 = [(0, 1)];
+		// free 1x1 positions: all except the used ones
+		var valid1 = new List<(int, int)>();
+		for (int x = 0; x < 4; ++x)
+			for (int y = 0; y < 3; ++y)
+				if (blocks[x][y] == null) valid1.Add((x, y));
+
+		for (ulong seed = 1; seed < 20; ++seed)
+		{
+			Rng.Seed = seed;
+			int expected = Rng.Generate(0, valid1.Count - 1);
+			Rng.Seed = seed;
+			int x = -1, y = -1;
+			Assert.True(BattlescapeGenerator.SelectPosition(blocks, 40, 30, [], ref x, ref y, 10, 10));
+			Assert.Equal(valid1[expected], (x, y));
+		}
+
+		int bx = -1, by = -1;
+		Assert.True(BattlescapeGenerator.SelectPosition(blocks, 40, 30, [], ref bx, ref by, 20, 20));
+		Assert.Equal(valid2[0], (bx, by));
+	}
+
+	[Fact]
+	public void SelectPosition_respects_rects_dedups_overlaps_and_fails_without_room()
+	{
+		var blocks = Grid(4, 4);
+		// overlapping rects: (1..2, 1..2) and (2..3, 2..3) share (2,2)
+		List<SDL_Rect> rects = [new SDL_Rect(1, 1, 2, 2), new SDL_Rect(2, 2, 2, 2)];
+		(int, int)[] valid = [(1, 1), (1, 2), (2, 1), (2, 2), (2, 3), (3, 2), (3, 3)];
+
+		Rng.Seed = 12345;
+		var expected = new List<(int, int)>();
+		for (int i = 0; i < 10; ++i) expected.Add(valid[Rng.Generate(0, valid.Length - 1)]);
+		Rng.Seed = 12345;
+		for (int i = 0; i < 10; ++i)
+		{
+			int x = 0, y = 0;
+			Assert.True(BattlescapeGenerator.SelectPosition(blocks, 40, 40, rects, ref x, ref y, 10, 10));
+			Assert.Equal(expected[i], (x, y));
+		}
+
+		// a rect smaller than the block, and a rect clipped by the map edge
+		int fx = 7, fy = 8;
+		Assert.False(BattlescapeGenerator.SelectPosition(blocks, 40, 40, [new SDL_Rect(0, 0, 1, 1)], ref fx, ref fy, 20, 20));
+		Assert.False(BattlescapeGenerator.SelectPosition(blocks, 40, 40, [new SDL_Rect(3, 3, 2, 2)], ref fx, ref fy, 20, 20));
+		Assert.Equal((7, 8), (fx, fy));
+	}
+}
