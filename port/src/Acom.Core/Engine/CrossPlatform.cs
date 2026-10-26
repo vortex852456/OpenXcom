@@ -452,11 +452,6 @@ public static class CrossPlatform
 	/// <summary>Gets the DOS-style path shown on the start screen (the C++ Windows build shortens the exe path).</summary>
 	public static string GetDosPath() => "C:\\GAMES\\ACOM";
 
-	/// <summary>Makes the window flash in the taskbar (Windows only in C++; the host owns the window, so nothing happens here).</summary>
-	public static void FlashWindow()
-	{
-	}
-
 	private static string s_logFileName = "standard error output";
 
 	/// <summary>Where the log goes (C++ writes a log file; the port's <see cref="Logger"/> writes to <see cref="Logger.Sink"/>).</summary>
