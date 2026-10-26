@@ -177,33 +177,8 @@ public class ManufactureState : State
 		_lstManufacture.ClearList();
 		foreach (var prod in _base.Productions)
 		{
-			string s1 = prod.AssignedEngineers.ToString(CultureInfo.InvariantCulture);
-			StringBuilder s2 = new StringBuilder();
-			s2.Append(prod.AmountProduced.ToString(CultureInfo.InvariantCulture)).Append('/');
-			if (prod.InfiniteAmount) s2.Append('∞');
-			else s2.Append(prod.AmountTotal.ToString(CultureInfo.InvariantCulture));
-			if (prod.SellItems) s2.Append(" $");
-			string s3 = Unicode.FormatFunding(prod.Rules.ManufactureCost);
-			string s4;
-			if (prod.InfiniteAmount)
-			{
-				s4 = "∞";
-			}
-			else if (prod.AssignedEngineers > 0)
-			{
-				int timeLeft = prod.AmountTotal * prod.Rules.ManufactureTime - prod.TimeSpent;
-				int numEffectiveEngineers = prod.AssignedEngineers;
-				// ensure we round up since it takes an entire hour to manufacture any part of that hour's capacity
-				int hoursLeft = (timeLeft + numEffectiveEngineers - 1) / numEffectiveEngineers;
-				int daysLeft = hoursLeft / 24;
-				int hours = hoursLeft % 24;
-				s4 = daysLeft.ToString(CultureInfo.InvariantCulture) + "/" + hours.ToString(CultureInfo.InvariantCulture);
-			}
-			else
-			{
-				s4 = "-";
-			}
-			_lstManufacture.AddRow(5, Tr(prod.Rules.Name), s1, s2.ToString(), s3, s4);
+			var (s1, s2, s3, s4) = FormatProduction(prod);
+			_lstManufacture.AddRow(5, Tr(prod.Rules.Name), s1, s2, s3, s4);
 		}
 		_txtAvailable.SetText(Tr("STR_ENGINEERS_AVAILABLE").Arg(_base.AvailableEngineers));
 		_txtAllocated.SetText(Tr("STR_ENGINEERS_ALLOCATED").Arg(_base.AllocatedEngineers));
@@ -212,6 +187,41 @@ public class ManufactureState : State
 
 		if (scrl != 0)
 			_lstManufacture.ScrollTo(scrl);
+	}
+
+	/// <summary>
+	/// Formats the engineers, produced/total, cost and days/hours left columns of a production
+	/// (shared by ManufactureState and GlobalManufactureState, inline in C++).
+	/// </summary>
+	internal static (string s1, string s2, string s3, string s4) FormatProduction(Production prod)
+	{
+		string s1 = prod.AssignedEngineers.ToString(CultureInfo.InvariantCulture);
+		StringBuilder s2 = new StringBuilder();
+		s2.Append(prod.AmountProduced.ToString(CultureInfo.InvariantCulture)).Append('/');
+		if (prod.InfiniteAmount) s2.Append('∞');
+		else s2.Append(prod.AmountTotal.ToString(CultureInfo.InvariantCulture));
+		if (prod.SellItems) s2.Append(" $");
+		string s3 = Unicode.FormatFunding(prod.Rules.ManufactureCost);
+		string s4;
+		if (prod.InfiniteAmount)
+		{
+			s4 = "∞";
+		}
+		else if (prod.AssignedEngineers > 0)
+		{
+			int timeLeft = prod.AmountTotal * prod.Rules.ManufactureTime - prod.TimeSpent;
+			int numEffectiveEngineers = prod.AssignedEngineers;
+			// ensure we round up since it takes an entire hour to manufacture any part of that hour's capacity
+			int hoursLeft = (timeLeft + numEffectiveEngineers - 1) / numEffectiveEngineers;
+			int daysLeft = hoursLeft / 24;
+			int hours = hoursLeft % 24;
+			s4 = daysLeft.ToString(CultureInfo.InvariantCulture) + "/" + hours.ToString(CultureInfo.InvariantCulture);
+		}
+		else
+		{
+			s4 = "-";
+		}
+		return (s1, s2.ToString(), s3, s4);
 	}
 
 	/// <summary>
