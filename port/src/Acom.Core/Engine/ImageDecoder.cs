@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
-// Replaces lodepng (src/lodepng.cpp) and the SDL_image loaders (IMG_png.c, IMG_gif.c) used by Surface::loadImage.
+// Replaces lodepng (src/lodepng.cpp) and the SDL_image 1.2 loaders (IMG_png.c, IMG_gif.c, IMG_bmp.c, IMG_lbm.c) used by Surface::loadImage.
 // Only what yields an 8-bit surface is decoded; true colour images are reported as such (null).
 
 using System.Buffers.Binary;
@@ -45,7 +45,7 @@ internal sealed class IndexedImage(int width, int height, Rgba[] palette, int co
 /// <summary>
 /// Reads palette images without converting them to true colour.
 /// <see cref="DecodeLodePng"/> behaves like lodepng with <c>color_convert = 0</c>,
-/// <see cref="DecodeSdl"/> like <c>IMG_Load</c> of SDL_image 1.2 (PNG via libpng, GIF).
+/// <see cref="DecodeSdl"/> like <c>IMG_Load</c> of SDL_image 1.2 (BMP, GIF, LBM, PNG via libpng).
 /// </summary>
 internal static class ImageDecoder
 {
@@ -70,8 +70,12 @@ internal static class ImageDecoder
 		ArgumentNullException.ThrowIfNull(data);
 		if (data.Length >= 4 && data[0] == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G')
 			return DecodeSdlPng(data);
+		if (data.Length >= 2 && data[0] == 'B' && data[1] == 'M')
+			return BmpReader.Read(data);
 		if (data.Length >= 6 && "GIF"u8.SequenceEqual(data.AsSpan(0, 3)) && ("87a"u8.SequenceEqual(data.AsSpan(3, 3)) || "89a"u8.SequenceEqual(data.AsSpan(3, 3))))
 			return new GifReader(data).Read();
+		if (data.Length >= 12 && "FORM"u8.SequenceEqual(data.AsSpan(0, 4)) && ("PBM "u8.SequenceEqual(data.AsSpan(8, 4)) || "ILBM"u8.SequenceEqual(data.AsSpan(8, 4))))
+			return LbmReader.Read(data);
 		throw new InvalidDataException("Unsupported image format");
 	}
 
@@ -692,6 +696,492 @@ internal static class ImageDecoder
 					return _stack[--_sp];
 			}
 			return code;
+		}
+	}
+
+	/// <summary>
+	/// Port of the BMP reader of SDL_image 1.2.12 (IMG_bmp.c LoadBMP_RW, SDL's loader plus RLE4/RLE8):
+	/// 1 and 4 bit images are expanded to 8 bits, the palette always has 1 &lt;&lt; bits entries. No colour key.
+	/// </summary>
+	private static class BmpReader
+	{
+		private const int BI_RGB = 0, BI_RLE8 = 1, BI_RLE4 = 2;
+
+		public static IndexedImage? Read(byte[] data)
+		{
+			int pos = 2;
+			// The Win32 BMP file header (14 bytes)
+			_ = ReadLE32(data, ref pos); // bfSize
+			pos += 4; // bfReserved1, bfReserved2
+			uint bfOffBits = ReadLE32(data, ref pos);
+
+			// The Win32 BITMAPINFOHEADER struct (40 bytes)
+			uint biSize = ReadLE32(data, ref pos);
+			int biWidth, biHeight, biBitCount;
+			uint biCompression;
+			if (biSize == 12)
+			{
+				biWidth = ReadLE16(data, ref pos);
+				biHeight = ReadLE16(data, ref pos);
+				pos += 2; // biPlanes
+				biBitCount = ReadLE16(data, ref pos);
+				biCompression = BI_RGB;
+			}
+			else
+			{
+				biWidth = (int)ReadLE32(data, ref pos);
+				biHeight = (int)ReadLE32(data, ref pos);
+				pos += 2; // biPlanes
+				biBitCount = ReadLE16(data, ref pos);
+				biCompression = ReadLE32(data, ref pos);
+				// biSizeImage, biXPelsPerMeter, biYPelsPerMeter, biClrUsed, biClrImportant are not used
+				if (pos + 20 > data.Length)
+					throw new InvalidDataException("Error reading from BMP");
+			}
+			bool topDown = false;
+			if (biHeight < 0)
+			{
+				topDown = true;
+				biHeight = -biHeight;
+			}
+
+			// Expand 1 and 4 bit bitmaps to 8 bits per pixel
+			int expandBMP = 0;
+			if (biBitCount is 1 or 4)
+			{
+				expandBMP = biBitCount;
+				biBitCount = 8;
+			}
+			// Only 8-bit surfaces are of use (Surface::loadImage rejects the others).
+			if (biBitCount != 8)
+				return null;
+			// Security fix of SDL_image (Debian 1.2.12 build, SDL2_image >= 2.0.5); the size limit stands for a failing SDL_CreateRGBSurface
+			if (biWidth <= 0 || biHeight == 0)
+				throw new InvalidDataException($"BMP file with bad dimensions ({biWidth}x{biHeight})");
+			if (biWidth > 0x7FFF || biHeight > 0x7FFF)
+				throw new InvalidDataException("Width or height is too large");
+
+			// Create a compatible surface (8 bits: pitch aligned to 4 bytes, palette of 256 black colours)
+			int pitch = (biWidth + 3) & ~3;
+			var pixels = new byte[pitch * biHeight];
+			var palette = new Rgba[256];
+			Array.Fill(palette, new Rgba(0, 0, 0));
+
+			// Load the palette: guich: always use 1<<bpp b/c some bitmaps can bring wrong information for colorsUsed
+			int biClrUsed = 1 << biBitCount;
+			long p = 14 + (long)biSize;
+			int entry = biSize == 12 ? 3 : 4;
+			for (int i = 0; i < biClrUsed; ++i, p += entry)
+			{
+				// failed reads keep the zeroed colours
+				byte b = p < data.Length ? data[p] : (byte)0;
+				byte g = p + 1 < data.Length ? data[p + 1] : (byte)0;
+				byte r = p + 2 < data.Length ? data[p + 2] : (byte)0;
+				palette[i] = new Rgba(r, g, b);
+			}
+
+			// Read the surface pixels. Note that the bmp image is upside down
+			if (bfOffBits > data.Length)
+				throw new InvalidDataException("Error seeking in datastream");
+			pos = (int)bfOffBits;
+			if (biCompression is BI_RLE4 or BI_RLE8)
+			{
+				if (ReadRlePixels(data, ref pos, pixels, pitch, biHeight, biCompression == BI_RLE8))
+					throw new InvalidDataException("Error reading from BMP");
+			}
+			else
+			{
+				int pad;
+				switch (expandBMP)
+				{
+					case 1:
+					{
+						int bmpPitch = (biWidth + 7) >> 3;
+						pad = (bmpPitch % 4) != 0 ? 4 - (bmpPitch % 4) : 0;
+						break;
+					}
+					case 4:
+					{
+						int bmpPitch = (biWidth + 1) >> 1;
+						pad = (bmpPitch % 4) != 0 ? 4 - (bmpPitch % 4) : 0;
+						break;
+					}
+					default:
+						pad = (pitch % 4) != 0 ? 4 - (pitch % 4) : 0;
+						break;
+				}
+				for (int row = 0; row < biHeight; ++row)
+				{
+					int bits = (topDown ? row : biHeight - 1 - row) * pitch;
+					if (expandBMP != 0)
+					{
+						byte pixel = 0;
+						int shift = 8 - expandBMP;
+						for (int i = 0; i < biWidth; ++i)
+						{
+							if (i % (8 / expandBMP) == 0)
+							{
+								if (pos >= data.Length)
+									throw new InvalidDataException("Error reading from BMP");
+								pixel = data[pos++];
+							}
+							pixels[bits + i] = (byte)(pixel >> shift);
+							pixel = (byte)(pixel << expandBMP);
+						}
+					}
+					else
+					{
+						if (pos + pitch > data.Length)
+							throw new InvalidDataException("Error reading from datastream");
+						data.AsSpan(pos, pitch).CopyTo(pixels.AsSpan(bits, pitch));
+						pos += pitch;
+					}
+					// Skip padding bytes, ugh
+					pos += pad;
+				}
+			}
+
+			var image = new IndexedImage(biWidth, biHeight, palette);
+			for (int y = 0; y < biHeight; ++y)
+				pixels.AsSpan(y * pitch, biWidth).CopyTo(image.Pixels.AsSpan(y * biWidth));
+			return image;
+		}
+
+		/// <summary>readRlePixels: decodes RLE4/RLE8 bottom-up into the pitched buffer.</summary>
+		/// <returns>True on a read error (like the original).</returns>
+		private static bool ReadRlePixels(byte[] data, ref int pos, byte[] pixels, int pitch, int height, bool isRle8)
+		{
+			int end = height * pitch;
+			int bits = end - pitch;
+			int ofs = 0;
+
+			void CopyPixel(int bits, ref int ofs, byte x)
+			{
+				int spot = bits + ofs++;
+				if (spot >= 0 && spot < end)
+					pixels[spot] = x;
+			}
+
+			for (;;)
+			{
+				if (pos >= data.Length) return true;
+				byte ch = data[pos++];
+				// encoded mode starts with a run length, and then a byte
+				// with two colour indexes to alternate between for the run
+				if (ch != 0)
+				{
+					if (pos >= data.Length) return true;
+					byte pixel = data[pos++];
+					if (isRle8)
+					{
+						// 256-color bitmap, compressed
+						do
+						{
+							CopyPixel(bits, ref ofs, pixel);
+						}
+						while (--ch != 0);
+					}
+					else
+					{
+						// 16-color bitmap, compressed
+						byte pixel0 = (byte)(pixel >> 4);
+						byte pixel1 = (byte)(pixel & 0x0F);
+						for (;;)
+						{
+							CopyPixel(bits, ref ofs, pixel0); // even count, high nibble
+							if (--ch == 0) break;
+							CopyPixel(bits, ref ofs, pixel1); // odd count, low nibble
+							if (--ch == 0) break;
+						}
+					}
+				}
+				else
+				{
+					// A leading zero is an escape; it may signal the end of the bitmap,
+					// a cursor move, or some absolute data.
+					if (pos >= data.Length) return true;
+					ch = data[pos++];
+					switch (ch)
+					{
+						case 0: // end of line
+							ofs = 0;
+							bits -= pitch; // go to previous
+							break;
+						case 1: // end of bitmap
+							return false; // success!
+						case 2: // delta
+							if (pos >= data.Length) return true;
+							ofs += data[pos++];
+							if (pos >= data.Length) return true;
+							bits -= data[pos++] * pitch;
+							break;
+						default: // no compression
+						{
+							bool needsPad;
+							if (isRle8)
+							{
+								needsPad = (ch & 1) != 0;
+								do
+								{
+									if (pos >= data.Length) return true;
+									CopyPixel(bits, ref ofs, data[pos++]);
+								}
+								while (--ch != 0);
+							}
+							else
+							{
+								needsPad = (((ch + 1) >> 1) & 1) != 0; // (ch+1)>>1: bytes size
+								for (;;)
+								{
+									if (pos >= data.Length) return true;
+									byte pixel = data[pos++];
+									CopyPixel(bits, ref ofs, (byte)(pixel >> 4));
+									if (--ch == 0) break;
+									CopyPixel(bits, ref ofs, (byte)(pixel & 0x0F));
+									if (--ch == 0) break;
+								}
+							}
+							// pad at even boundary
+							if (needsPad)
+							{
+								if (pos >= data.Length) return true;
+								pos++;
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		private static uint ReadLE32(byte[] data, ref int pos)
+		{
+			if (pos + 4 > data.Length)
+				throw new InvalidDataException("Error reading from BMP");
+			uint v = BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(pos));
+			pos += 4;
+			return v;
+		}
+
+		private static ushort ReadLE16(byte[] data, ref int pos)
+		{
+			if (pos + 2 > data.Length)
+				throw new InvalidDataException("Error reading from BMP");
+			ushort v = BinaryPrimitives.ReadUInt16LittleEndian(data.AsSpan(pos));
+			pos += 2;
+			return v;
+		}
+	}
+
+	/// <summary>
+	/// Port of the IFF reader of SDL_image 1.2.12 (IMG_lbm.c): ILBM (interleaved bit planes) and PBM (packed bytes),
+	/// ByteRun1 compression, EHB palettes, transparent colour as colour key. The surface width is rounded up to 16
+	/// pixels like in the original. 24-bit and HAM pictures give true colour surfaces (null).
+	/// </summary>
+	private static class LbmReader
+	{
+		private const int MAXCOLORS = 256;
+
+		public static IndexedImage? Read(byte[] data)
+		{
+			int pos = 12; // "FORM", size, "PBM "/"ILBM" (checked by IMG_isLBM)
+			bool pbm = data[8] == 'P';
+			uint nbcolors = 0;
+			var colormap = new byte[MAXCOLORS * 3];
+			int w = 0, h = 0, planes = 0, mask = 0, tcomp = 0, tcolor = 0;
+			bool flagHAM = false, flagEHB = false;
+
+			var id = new byte[4];
+			for (;;)
+			{
+				Read(data, ref pos, id, "error reading IFF chunk");
+				uint size = BinaryPrimitives.ReadUInt32BigEndian(Read(data, ref pos, 4, "error reading IFF chunk size"));
+				if ("BODY"u8.SequenceEqual(id))
+					break;
+				uint bytesloaded = 0;
+
+				if ("BMHD"u8.SequenceEqual(id)) // Bitmap header
+				{
+					var bmhd = Read(data, ref pos, 20, "error reading BMHD chunk");
+					bytesloaded = 20;
+					w = BinaryPrimitives.ReadUInt16BigEndian(bmhd);
+					h = BinaryPrimitives.ReadUInt16BigEndian(bmhd[2..]);
+					planes = bmhd[8];
+					mask = bmhd[9];
+					tcomp = bmhd[10];
+					tcolor = BinaryPrimitives.ReadUInt16BigEndian(bmhd[12..]);
+				}
+
+				if ("CMAP"u8.SequenceEqual(id)) // palette ( Color Map )
+				{
+					if (size > colormap.Length)
+						throw new InvalidDataException("colormap size is too large");
+					Read(data, ref pos, (int)size, "error reading CMAP chunk").CopyTo(colormap);
+					bytesloaded = size;
+					nbcolors = size / 3;
+				}
+
+				if ("CAMG"u8.SequenceEqual(id)) // Amiga ViewMode
+				{
+					uint viewmodes = BinaryPrimitives.ReadUInt32BigEndian(Read(data, ref pos, 4, "error reading CAMG chunk"));
+					bytesloaded = 4;
+					if ((viewmodes & 0x0800) != 0)
+						flagHAM = true;
+					if ((viewmodes & 0x0080) != 0)
+						flagEHB = true;
+				}
+
+				if ((size & 1) != 0) ++size; // padding !
+				size -= bytesloaded;
+				// skip the remaining bytes of this chunk
+				pos = (int)Math.Min(data.Length, pos + (long)size);
+			}
+
+			// compute some usefull values, based on the bitmap header
+			int width = (w + 15) & ~15; // Width in pixels modulo 16
+			int bytesperline = ((w + 15) / 16) * 2;
+			int nbplanes = planes;
+			if (pbm) // File format : 'Packed Bitmap'
+			{
+				bytesperline *= 8;
+				nbplanes = 1;
+			}
+			// Security fix of SDL_image (CVE-2019-12216 and others, in the Debian 1.2.12 build and SDL2_image >= 2.0.5)
+			if (nbplanes != 1 && nbplanes != 4 && nbplanes != 8 && nbplanes != 24)
+				throw new InvalidDataException("unsupported number of color planes");
+			int stencil = mask & 1; // There is a mask ( 'stencil' )
+
+			// Only 8-bit surfaces are of use (Surface::loadImage rejects the others).
+			if (planes == 24 || flagHAM)
+				return null;
+
+			// Temporary buffer ( used for decompression/deinterleaving )
+			var miniBuf = new byte[bytesperline * (nbplanes + stencil)];
+			// SDL_CreateRGBSurface: 8 bits, palette of 256 black colours, pitch = width (a multiple of 16)
+			var palette = new Rgba[MAXCOLORS];
+			Array.Fill(palette, new Rgba(0, 0, 0));
+			int ncolors = MAXCOLORS;
+			int colorKey = (mask & 2) != 0 ? tcolor : 0; // There is a transparent color
+
+			// Update palette informations
+			if (nbcolors > 0)
+			{
+				int nbrcolorsfinal = 1 << (nbplanes + stencil);
+				int p = 0;
+				for (int i = 0; i < nbcolors; i++, p += 3)
+					palette[i] = new Rgba(colormap[p], colormap[p + 1], colormap[p + 2]);
+
+				// Amiga EHB mode (Extra-Half-Bright): 6 bitplanes mode with a 32 colors palette,
+				// the 32 last colors are the same but divided by 2
+				// (with the plane count check above this needs a 6-plane ILBM, which is rejected: kept as in the original)
+				if ((nbcolors == 32 || flagEHB) && (1 << nbplanes) == 64)
+				{
+					nbcolors = 64;
+					p = 0;
+					for (int i = 32; i < 64; i++, p += 3)
+						palette[i] = new Rgba((byte)(colormap[p] / 2), (byte)(colormap[p + 1] / 2), (byte)(colormap[p + 2] / 2));
+				}
+
+				// If nbcolors < 2^nbplanes, repeat the colormap
+				// This happens when pictures have a stencil mask
+				if (nbrcolorsfinal > (1 << nbplanes))
+					nbrcolorsfinal = 1 << nbplanes;
+				// Port: more than 8 planes would write past the 256 colours (undefined behaviour in C)
+				nbrcolorsfinal = Math.Min(nbrcolorsfinal, MAXCOLORS);
+				for (int i = (int)nbcolors; i < nbrcolorsfinal; i++)
+					palette[i] = palette[i % (int)nbcolors];
+				if (!pbm)
+					ncolors = nbrcolorsfinal;
+			}
+
+			var image = new IndexedImage(width, h, palette[..ncolors], colorKey);
+			var pixels = image.Pixels;
+
+			// Get the bitmap
+			for (int y = 0; y < h; y++)
+			{
+				// uncompress the datas of each planes
+				for (int plane = 0; plane < nbplanes + stencil; plane++)
+				{
+					int ptr = plane * bytesperline;
+					int remainingbytes = bytesperline;
+					if (tcomp == 1) // Datas are compressed
+					{
+						do
+						{
+							if (pos >= data.Length)
+								throw new InvalidDataException("error reading BODY chunk");
+							int count = data[pos++];
+							if ((count & 0x80) != 0)
+							{
+								count = (byte)(count ^ 0xFF);
+								count += 2; // now it
+								if (count > remainingbytes || pos >= data.Length)
+									throw new InvalidDataException("error reading BODY chunk");
+								miniBuf.AsSpan(ptr, count).Fill(data[pos++]);
+							}
+							else
+							{
+								++count;
+								if (count > remainingbytes || pos + count > data.Length)
+									throw new InvalidDataException("error reading BODY chunk");
+								data.AsSpan(pos, count).CopyTo(miniBuf.AsSpan(ptr));
+								pos += count;
+							}
+							ptr += count;
+							remainingbytes -= count;
+						}
+						while (remainingbytes > 0);
+					}
+					else
+					{
+						Read(data, ref pos, bytesperline, "error reading BODY chunk").CopyTo(miniBuf.AsSpan(ptr));
+					}
+				}
+
+				// One line has been read, store it !
+				int dst = y * width;
+				if (pbm) // File format : 'Packed Bitmap'
+				{
+					miniBuf.AsSpan(0, width).CopyTo(pixels.AsSpan(dst));
+				}
+				else // We have to un-interlace the bits !
+				{
+					int size = (width + 7) / 8;
+					for (int i = 0; i < size; i++)
+					{
+						pixels.AsSpan(dst, 8).Clear();
+						for (int plane = 0; plane < nbplanes + stencil; plane++)
+						{
+							byte color = miniBuf[i + plane * bytesperline];
+							byte msk = 0x80;
+							for (int j = 0; j < 8; j++)
+							{
+								// (Uint8)(color & msk) shifted as int, stored as Uint8
+								if (plane + j <= 7)
+									pixels[dst + j] |= (byte)((color & msk) >> (7 - plane - j));
+								else
+									pixels[dst + j] |= (byte)((color & msk) << (plane + j - 7));
+								msk >>= 1;
+							}
+						}
+						dst += 8;
+					}
+				}
+			}
+			return image;
+		}
+
+		private static void Read(byte[] data, ref int pos, byte[] dest, string error)
+			=> Read(data, ref pos, dest.Length, error).CopyTo(dest);
+
+		private static ReadOnlySpan<byte> Read(byte[] data, ref int pos, int count, string error)
+		{
+			if (count < 0 || pos + (long)count > data.Length)
+				throw new InvalidDataException(error);
+			var span = data.AsSpan(pos, count);
+			pos += count;
+			return span;
 		}
 	}
 }

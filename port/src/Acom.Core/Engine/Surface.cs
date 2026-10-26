@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Surface.h, src/Engine/Surface.cpp
-// Port status: partial (missing: loadImage of formats other than PNG/GIF (LBM, BMP, ...)).
 
 #pragma warning disable CA1815 // SDL_Rect mirrors SDL 1.2, SurfaceCrop is a blit helper; equality is not needed.
 
@@ -290,7 +289,7 @@ public class Surface
 		}
 	}
 
-	/// <summary>Loads an image file of a known format (PNG, GIF) through the mod file system.</summary>
+	/// <summary>Loads an image file of a known format (PNG, GIF, BMP, LBM; see ImageDecoder) through the mod file system.</summary>
 	public void LoadImage(string filename, int scale = 1) => LoadImage(FileMap.ReadAll(filename), filename, scale);
 
 	/// <summary>

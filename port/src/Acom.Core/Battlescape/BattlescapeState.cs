@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/BattlescapeState.h, src/Battlescape/BattlescapeState.cpp
-// Port status: partial (missing: saveAIMap/saveVoxelMap/saveVoxelView debug image dumps (no PNG encoder yet))
 #nullable disable
 
 using System.Runtime.CompilerServices;

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Writes small synthetic PNG/GIF files that cover the image loader paths (bit depths, interlacing,
-# filters, transparency rules, GIF LZW). Only own content; no external libraries.
+# Writes small synthetic PNG/GIF/BMP/LBM files that cover the image loader paths (bit depths, interlacing,
+# filters, transparency rules, GIF LZW, BMP RLE, IFF bit planes and ByteRun1). Only own content; no external libraries.
 # Usage: make_test_images.py <output dir>
 import os
 import struct
@@ -164,6 +164,125 @@ def pattern(w, h, colors, seed=1):
     return out
 
 
+def bmp_rle8_row(row):
+    out, i = bytearray(), 0
+    while i < len(row):
+        run = 1
+        while i + run < len(row) and row[i + run] == row[i] and run < 255:
+            run += 1
+        if run >= 2 or len(row) - i < 3:
+            out += bytes([run, row[i]])
+            i += run
+        else:
+            n = min(len(row) - i, 255)
+            k = 3
+            while k < n and not (k + 1 < n and row[i + k] == row[i + k + 1]):
+                k += 1
+            out += bytes([0, k]) + bytes(row[i:i + k]) + (b'\0' if k & 1 else b'')
+            i += k
+    return out
+
+
+def bmp_rle4_row(row):
+    out, i = bytearray(), 0
+    while i < len(row):
+        n = min(len(row) - i, 254)
+        if n >= 3 and i % 2 == 0:
+            k = n if n % 2 == 0 else n - 1
+            k = min(k, 8)
+            data = row[i:i + k]
+            packed = bytes((data[j] << 4) | (data[j + 1] if j + 1 < len(data) else 0) for j in range(0, len(data), 2))
+            out += bytes([0, k]) + packed + (b'\0' if ((k + 1) >> 1) & 1 else b'')
+            i += k
+        else:
+            a = row[i]
+            b = row[i + 1] if i + 1 < len(row) else 0
+            k = min(len(row) - i, 2)
+            out += bytes([k, (a << 4) | b])
+            i += k
+    return out
+
+
+def bmp(path, w, h, pixels, bits, colors, rle=False, top_down=False, core=False, delta=False):
+    """Windows BMP (BITMAPINFOHEADER or OS/2 core header), palette images, optional RLE8/RLE4."""
+    ncol = 1 << bits
+    pal = b''
+    for c in list(colors) + [(0, 0, 0)] * (ncol - len(colors)):
+        pal += bytes([c[2], c[1], c[0]]) + (b'' if core else b'\0')
+    rows = [pixels[y * w:(y + 1) * w] for y in range(h)]
+    order = rows if top_down else rows[::-1]
+    body = bytearray()
+    if rle:
+        for y, row in enumerate(order):
+            if delta and y == 1:
+                body += bytes([0, 2, 2, 1])  # skip 2 pixels and one line
+                continue
+            body += (bmp_rle8_row if bits == 8 else bmp_rle4_row)(row) + b'\0\0'
+        body += b'\0\1'
+    else:
+        for row in order:
+            line = pack_row(row, bits)
+            body += line + bytes((4 - len(line) % 4) % 4)
+    compression = (1 if bits == 8 else 2) if rle else 0
+    if core:
+        info = struct.pack('<IHHHH', 12, w, h, 1, bits)
+    else:
+        info = struct.pack('<IiiHHIIiiII', 40, w, -h if top_down else h, 1, bits, compression, len(body), 2835, 2835, 0, 0)
+    off = 14 + len(info) + len(pal)
+    data = b'BM' + struct.pack('<IHHI', off + len(body), 0, 0, off) + info + pal + bytes(body)
+    with open(path, 'wb') as f:
+        f.write(data)
+
+
+def byterun1(line):
+    out, i = bytearray(), 0
+    while i < len(line):
+        run = 1
+        while i + run < len(line) and line[i + run] == line[i] and run < 128:
+            run += 1
+        if run >= 2:
+            out += bytes([(257 - run) & 0xFF, line[i]])
+            i += run
+        else:
+            k = 1
+            while i + k < len(line) and k < 128 and not (i + k + 1 < len(line) and line[i + k] == line[i + k + 1]):
+                k += 1
+            out += bytes([k - 1]) + bytes(line[i:i + k])
+            i += k
+    return out
+
+
+def iff_chunk(kind, body):
+    return kind + struct.pack('>I', len(body)) + body + (b'\0' if len(body) & 1 else b'')
+
+
+def lbm(path, w, h, pixels, planes, colors, pbm=False, compress=False, mask=0, tcolor=0, camg=None, stencil_bits=None):
+    """IFF ILBM (bit planes, optional stencil plane) or PBM (one byte per pixel), optional ByteRun1."""
+    bpl = (w + 15) // 16 * 2
+    body = bytearray()
+    for y in range(h):
+        row = pixels[y * w:(y + 1) * w]
+        lines = []
+        if pbm:
+            lines.append(bytes(row) + bytes(bpl * 8 - w))
+        else:
+            for p in range(planes):
+                lines.append(pack_row([(v >> p) & 1 for v in row] + [0] * (bpl * 8 - w), 1))
+            if mask & 1:
+                lines.append(pack_row([stencil_bits[y * w + x] for x in range(w)] + [0] * (bpl * 8 - w), 1))
+        for line in lines:
+            body += byterun1(line) if compress else line
+    bmhd = struct.pack('>HHhhBBBBHBBhh', w, h, 0, 0, planes, mask, 1 if compress else 0, 0, tcolor, 10, 11, 320, 200)
+    form = (b'PBM ' if pbm else b'ILBM') + iff_chunk(b'BMHD', bmhd)
+    form += iff_chunk(b'ANNO', b'ACOM test')  # odd size: padding
+    if camg is not None:
+        form += iff_chunk(b'CAMG', struct.pack('>I', camg))
+    form += iff_chunk(b'CMAP', b''.join(bytes(c) for c in colors))
+    form += iff_chunk(b'BODY', bytes(body))
+    with open(path, 'wb') as f:
+        f.write(b'FORM' + struct.pack('>I', len(form)) + form)
+
+
 def main(out):
     os.makedirs(out, exist_ok=True)
     p = lambda name: os.path.join(out, name)
@@ -197,6 +316,28 @@ def main(out):
     gif(p('gif_local.gif'), 10, 6, [gif_image(10, 6, pattern(10, 6, 4), colors=ramp(4)),
                                      gif_image(10, 6, pattern(10, 6, 4, 7), colors=ramp(4))])
     gif(p('gif_big.gif'), 128, 96, [gif_image(128, 96, pattern(128, 96, 256))], colors=ramp(256), transparent=0)
+    bmp(p('b8.bmp'), 13, 7, pix16, 8, ramp(16))
+    bmp(p('b8_topdown.bmp'), 13, 7, pattern(13, 7, 256), 8, ramp(256), top_down=True)
+    bmp(p('b4.bmp'), 13, 7, pix16, 4, ramp(16))
+    bmp(p('b1.bmp'), 13, 7, pattern(13, 7, 2), 1, ramp(2))
+    bmp(p('b8_core.bmp'), 13, 7, pix16, 8, ramp(16), core=True)
+    bmp(p('b8_rle.bmp'), 21, 9, [v // 7 for v in pattern(21, 9, 64)], 8, ramp(16), rle=True)
+    bmp(p('b8_rle_delta.bmp'), 21, 9, [v // 7 for v in pattern(21, 9, 64)], 8, ramp(16), rle=True, delta=True)
+    bmp(p('b4_rle.bmp'), 21, 9, [v // 4 for v in pattern(21, 9, 64)], 4, ramp(16), rle=True)
+    with open(p('b24.bmp'), 'wb') as f:
+        f.write(b'BM' + struct.pack('<IHHI', 54 + 16, 0, 0, 54) + struct.pack('<IiiHHIIiiII', 40, 2, 2, 1, 24, 0, 16, 0, 0, 0, 0) + bytes(16))
+    with open(p('b8_short.bmp'), 'wb') as f:
+        f.write(b'BM not a bitmap')
+
+    lbm(p('ilbm4.lbm'), 13, 7, pix16, 4, ramp(16))
+    lbm(p('ilbm8_comp.lbm'), 21, 9, pattern(21, 9, 256), 8, ramp(256), compress=True)
+    lbm(p('ilbm1_key.lbm'), 13, 7, pattern(13, 7, 2), 1, ramp(2), mask=2, tcolor=1)
+    lbm(p('ilbm4_short_cmap.lbm'), 13, 7, pix16, 4, ramp(5), compress=True)
+    lbm(p('ilbm4_stencil.lbm'), 13, 7, pix16, 4, ramp(16), mask=1, stencil_bits=pattern(13, 7, 2, 5))
+    lbm(p('ilbm5.lbm'), 13, 7, pattern(13, 7, 32), 5, ramp(32))  # rejected plane count
+    lbm(p('pbm.lbm'), 13, 7, pattern(13, 7, 256), 8, ramp(256), pbm=True, compress=True)
+    lbm(p('pbm_ehb.lbm'), 13, 7, pattern(13, 7, 64), 6, ramp(32), pbm=True, camg=0x80)
+    lbm(p('pbm_key.iff'), 16, 4, pix16[:64], 8, ramp(16), pbm=True, mask=2, tcolor=0)
     gif(p('gif_as.png'), 13, 7, [gif_image(13, 7, pix16)], colors=ramp(16), transparent=3)
 
 

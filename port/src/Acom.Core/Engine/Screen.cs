@@ -18,7 +18,8 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Screen.h, src/Engine/Screen.cpp
-// Port status: partial (no OpenGL/shader/scaler paths, no Screen::handle/screenshot; the platform host owns the window and scales the frame on the GPU)
+// Not ported on purpose: the OpenGL/shader and software scaler paths (makeVideoFlags, use32bitScaler, useOpenGL, Zoom):
+// the platform host owns the window and scales the frame on the GPU (docs/architecture/csharp-port.md, deviations).
 
 using System.Runtime.InteropServices;
 
@@ -169,6 +170,112 @@ public sealed class Screen
 		Options.displayWidth = _windowWidth;
 		Options.displayHeight = _windowHeight;
 		UpdateBlackBands();
+	}
+
+	/// <summary>
+	/// Handles screen key shortcuts: debug slow motion (Alt+F8), fullscreen toggle (Alt+Enter, applied by the host
+	/// through <see cref="VideoModeHandler"/>) and the screenshot key.
+	/// </summary>
+	/// <param name="action">Pointer to an action.</param>
+	public void Handle(Action action)
+	{
+		ArgumentNullException.ThrowIfNull(action);
+		var ev = action.Details;
+		// SDL_GetModState(): the modifiers of the key event being handled
+		bool alt = (ev.key.keysym.mod & SDLMod.KMOD_ALT) != 0;
+		if (Options.debug)
+		{
+			if (ev.type == SDLEventType.SDL_KEYDOWN && ev.key.keysym.sym == SDLKey.SDLK_F8 && alt)
+			{
+				switch (Timer.GameSlowSpeed)
+				{
+					case 1: Timer.GameSlowSpeed = 5; break;
+					case 5: Timer.GameSlowSpeed = 15; break;
+					default: Timer.GameSlowSpeed = 1; break;
+				}
+			}
+		}
+
+		if (ev.type == SDLEventType.SDL_KEYDOWN && ev.key.keysym.sym == SDLKey.SDLK_RETURN && alt)
+		{
+			Options.fullscreen = !Options.fullscreen;
+			ResetDisplay();
+		}
+		else if (ev.type == SDLEventType.SDL_KEYDOWN && ev.key.keysym.sym == Options.keyScreenshot)
+		{
+			string filename;
+			int i = 0;
+			do
+			{
+				filename = Options.GetMasterUserFolder() + "screen" + i.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".png";
+				i++;
+			}
+			while (CrossPlatform.FileExists(filename));
+			Screenshot(filename);
+			return;
+		}
+	}
+
+	/// <summary>
+	/// Saves a screenshot of the screen's contents.
+	/// </summary>
+	/// <remarks>
+	/// Like the C++ software path: the window image (the frame scaled into the window with its black bands, width
+	/// rounded down to a multiple of 4) as RGB, or with <see cref="Options.oxceRawScreenShots"/> the indexed screen
+	/// buffer with its palette (the port's screen is always 8 bpp). The host scales on the GPU with nearest-neighbour
+	/// sampling, which the window image here reproduces.
+	/// </remarks>
+	/// <param name="filename">Filename of the PNG file.</param>
+	public void Screenshot(string filename)
+	{
+		byte[] png;
+		if (Options.oxceRawScreenShots)
+		{
+			var palette = new Rgba[256];
+			for (int i = 0; i < 256; ++i)
+				palette[i] = _palette[i] with { A = 255 };
+			png = PngEncoder.EncodePalette(_surface.Pixels, _surface.PhysicalWidth, _surface.PhysicalHeight, palette);
+		}
+		else
+		{
+			var (rgb, width, height) = WindowImage();
+			png = PngEncoder.EncodeRgb(rgb, width, height);
+		}
+		PngEncoder.WriteFile(filename, png);
+	}
+
+	/// <summary>
+	/// The window's contents as RGB: the last flipped frame scaled (nearest neighbour) into the area between the black
+	/// bands, the width rounded down to a multiple of 4 like the C++ screenshot surface.
+	/// </summary>
+	public (byte[] Rgb, int Width, int Height) WindowImage()
+	{
+		int width = Math.Max(_windowWidth - _windowWidth % 4, 1);
+		int height = Math.Max(_windowHeight, 1);
+		var rgb = new byte[width * height * 3];
+		int srcW = _surface.PhysicalWidth, srcH = _surface.PhysicalHeight;
+		var (dstW, dstH) = DisplaySize;
+		if (dstW <= 0 || dstH <= 0)
+			return (rgb, width, height);
+		for (int y = 0; y < dstH; ++y)
+		{
+			int wy = y + _topBlackBand;
+			if (wy < 0 || wy >= height)
+				continue;
+			int sy = (int)((long)y * srcH / dstH);
+			for (int x = 0; x < dstW; ++x)
+			{
+				int wx = x + _leftBlackBand;
+				if (wx < 0 || wx >= width)
+					continue;
+				int sx = (int)((long)x * srcW / dstW);
+				int s = (sy * srcW + sx) * 4, d = (wy * width + wx) * 3;
+				rgb[d] = _frame[s];
+				rgb[d + 1] = _frame[s + 1];
+				rgb[d + 2] = _frame[s + 2];
+			}
+		}
+		return (rgb, width, height);
 	}
 
 	/// <summary>Clears all the contents out of the internal buffer.</summary>

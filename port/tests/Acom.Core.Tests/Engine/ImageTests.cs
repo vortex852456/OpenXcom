@@ -64,7 +64,7 @@ public class ImageTests
 		{
 			Logger.Sink = oldSink;
 		}
-		Assert.Empty(failures);
+		Assert.True(failures.Count == 0, string.Join("\n", failures));
 	}
 
 	private static bool TryLodePng(byte[] data)
@@ -93,7 +93,9 @@ public class ImageTests
 	[Fact]
 	public void LoadImage_rejects_unknown_formats()
 	{
-		var e = Assert.Throws<InvalidDataException>(() => new Surface(1, 1).LoadImage([.. "BM not supported"u8], "x.bmp"));
-		Assert.Equal("x.bmp:Unsupported image format", e.Message);
+		var e = Assert.Throws<InvalidDataException>(() => new Surface(1, 1).LoadImage([.. "P6 not supported"u8], "x.ppm"));
+		Assert.Equal("x.ppm:Unsupported image format", e.Message);
+		e = Assert.Throws<InvalidDataException>(() => new Surface(1, 1).LoadImage([.. "BM truncated"u8], "x.bmp"));
+		Assert.Equal("x.bmp:Error reading from BMP", e.Message);
 	}
 }

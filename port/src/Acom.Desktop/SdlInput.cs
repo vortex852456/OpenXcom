@@ -91,9 +91,26 @@ internal sealed unsafe partial class SdlInput : IDisposable
 	/// <summary>Shows an error message box (CrossPlatform.ErrorDialogHandler, C++ showError's MessageBoxW).</summary>
 	public static void ShowErrorMessageBox(string error)
 	{
-		const uint SDL_MESSAGEBOX_ERROR = 0x10;
-		if (SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "ACOM Error", error, 0) != 0)
+		if (!ShowErrorBox("ACOM Error", error))
 			Console.Error.WriteLine(error);
+	}
+
+	private const uint SDL_MESSAGEBOX_ERROR = 0x10;
+
+	/// <summary>
+	/// Shows a modal error message box (the SDL2 counterpart of the dialogs of C++ CrossPlatform::showError).
+	/// </summary>
+	/// <returns>False if no box could be shown (no display, no SDL library).</returns>
+	public static bool ShowErrorBox(string title, string message)
+	{
+		try
+		{
+			return SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, message, 0) == 0;
+		}
+		catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException)
+		{
+			return false;
+		}
 	}
 
 	[LibraryImport(SdlLibrary, StringMarshalling = StringMarshalling.Utf8)]

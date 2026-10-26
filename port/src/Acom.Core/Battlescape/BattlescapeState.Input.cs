@@ -20,6 +20,8 @@
 // Ported from: src/Battlescape/BattlescapeState.cpp (event handling, battle end, tooltips, resize)
 #nullable disable
 
+using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 using static Acom.BattleType;
 using static Acom.UnitBodyPart;
@@ -486,32 +488,355 @@ public partial class BattlescapeState
 	/// <summary>
 	/// Saves a map as used by the AI.
 	/// </summary>
-	/// <remarks>Not ported: debug PNG dump (SDL_gfx drawing + lodepng), the port has no PNG encoder yet.</remarks>
 	public void SaveAIMap()
 	{
+		uint start = SDLTimer.SDL_GetTicks();
 		BattleUnit unit = _save.SelectedUnit;
 		if (unit == null) return;
-		Logger.Info("saveAIMap() is not available in this port.");
-	}
 
-	/// <summary>
-	/// Saves each layer of voxels on the bettlescape as a png.
-	/// </summary>
-	/// <remarks>Not ported: debug PNG dump, the port has no PNG encoder yet.</remarks>
-	public void SaveVoxelMap()
-	{
-		Logger.Info("saveVoxelMap() is not available in this port.");
+		int w = _save.MapSizeX;
+		int h = _save.MapSizeY;
+
+		var img = new RgbImage(w * 8, h * 8);
+		Logger.Info($"unit = {unit.Id}");
+
+		Position tilePos = unit.Position;
+		const int rw = 8, rh = 8;
+
+		// (C++ runs a first loop over the discovered tiles here that does nothing)
+
+		for (int y = 0; y < h; ++y)
+		{
+			tilePos.y = (short)y;
+			for (int x = 0; x < w; ++x)
+			{
+				tilePos.x = (short)x;
+				Tile t = _save.GetTile(tilePos);
+
+				if (t == null) continue;
+				if (!t.IsDiscovered(TilePart.O_FLOOR)) continue;
+
+				int rx = x * rw;
+				int ry = y * rh;
+
+				if (t.GetTUCost((int)TilePart.O_FLOOR, MovementType.MT_FLY) != Pathfinding.INVALID_MOVE_COST && t.GetTUCost((int)TilePart.O_OBJECT, MovementType.MT_FLY) != Pathfinding.INVALID_MOVE_COST)
+				{
+					img.FillRect(rx, ry, rw, rh, 255, 0, 0x20);
+					img.Character(rx, ry, '*', 0x7f, 0x7f, 0x7f, 0x7f);
+				}
+				else
+				{
+					if (t.Unit == null) img.FillRect(rx, ry, rw, rh, 0x50, 0x50, 0x50); // gray for blocked tile
+				}
+
+				for (int z = tilePos.z; z >= 0; --z)
+				{
+					Position pos = new(tilePos.x, tilePos.y, z);
+					t = _save.GetTile(pos);
+					BattleUnit wat = t.Unit;
+					if (wat != null)
+					{
+						switch (wat.Faction)
+						{
+							case FACTION_HOSTILE:
+								// #4080C0 is Volutar Blue
+								img.Character(rx, ry, (tilePos.z - z) != 0 ? 'a' : 'A', 0x40, 0x80, 0xC0, 0xff);
+								break;
+							case FACTION_PLAYER:
+								img.Character(rx, ry, (tilePos.z - z) != 0 ? 'x' : 'X', 255, 255, 127, 0xff);
+								break;
+							case FACTION_NEUTRAL:
+								img.Character(rx, ry, (tilePos.z - z) != 0 ? 'c' : 'C', 255, 127, 127, 0xff);
+								break;
+							case FACTION_NONE:
+							case FACTION_MAX:
+								break;
+						}
+						break;
+					}
+					pos.z--;
+					if (z > 0 && !t.HasNoFloor(_save)) break; // no seeing through floors
+				}
+
+				if (t.GetMapData(TilePart.O_NORTHWALL) != null && t.GetMapData(TilePart.O_NORTHWALL).GetTUCost(MovementType.MT_FLY) == Pathfinding.INVALID_MOVE_COST)
+				{
+					img.Line(rx, ry, rx + rw, ry, 0x50, 0x50, 0x50);
+				}
+
+				if (t.GetMapData(TilePart.O_WESTWALL) != null && t.GetMapData(TilePart.O_WESTWALL).GetTUCost(MovementType.MT_FLY) == Pathfinding.INVALID_MOVE_COST)
+				{
+					img.Line(rx, ry, rx, ry + rh, 0x50, 0x50, 0x50);
+				}
+			}
+		}
+
+		img.String(12, 12, "z = " + tilePos.z.ToString(CultureInfo.InvariantCulture), 0, 0, 0, 0x7f);
+
+		string filename;
+		int i = 0;
+		do
+		{
+			filename = Options.GetMasterUserFolder() + "AIExposure" + i.ToString("D3", CultureInfo.InvariantCulture) + ".png";
+			i++;
+		}
+		while (CrossPlatform.FileExists(filename));
+
+		PngEncoder.WriteFile(filename, PngEncoder.EncodeRgb(img.Pixels, img.Width, img.Height));
+		Logger.Info($"saveAIMap() completed in {SDLTimer.SDL_GetTicks() - start}ms.");
 	}
 
 	/// <summary>
 	/// Saves a first-person voxel view of the battlescape.
 	/// </summary>
-	/// <remarks>Not ported: debug PNG dump, the port has no PNG encoder yet.</remarks>
 	public void SaveVoxelView()
 	{
+		ReadOnlySpan<byte> pal =
+		//			ground		west wall	north wall		object		enemy unit						xcom unit	neutral unit
+		[0, 0, 0, 224, 224, 224, 192, 224, 255, 255, 224, 192, 128, 255, 128, 192, 0, 255, 0, 0, 0, 255, 255, 255, 224, 192, 0, 255, 64, 128];
+
 		BattleUnit bu = _save.SelectedUnit;
 		if (bu == null) return; //no unit selected
-		Logger.Info("saveVoxelView() is not available in this port.");
+		var trajectory = new List<Position>();
+
+		double ang_x, ang_y;
+		bool black;
+		Tile tile = null;
+		var image = new List<byte>(512 * 512 * 3);
+		int test;
+		Position originVoxel = _save.TileEngine.GetSightOriginVoxel(bu);
+
+		Position targetVoxel = default, hitPos = default;
+		double dist = 0;
+		bool debug = _save.DebugMode;
+		double dir = ((double)bu.Direction + 4) / 4 * Math.PI;
+		for (int y = -256 + 32; y < 256 + 32; ++y)
+		{
+			ang_y = (((double)y) / 640 * Math.PI + Math.PI / 2);
+			for (int x = -256; x < 256; ++x)
+			{
+				if (Options.oxceFirstPersonViewFisheyeProjection)
+				{
+					ang_x = ((double)x / 1024) * Math.PI + dir;
+					targetVoxel.x = (short)(originVoxel.x + (int)(-Math.Sin(ang_x) * 1024 * Math.Sin(ang_y)));
+					targetVoxel.y = (short)(originVoxel.y + (int)(Math.Cos(ang_x) * 1024 * Math.Sin(ang_y)));
+					targetVoxel.z = (short)(originVoxel.z + (int)(Math.Cos(ang_y) * 1024));
+				}
+				else
+				{
+					targetVoxel.x = (short)(originVoxel.x + (int)(-Math.Sin(dir + Math.PI / 2) * (x * 4) + Math.Cos(dir + Math.PI / 2) * (1024 + 512)));
+					targetVoxel.y = (short)(originVoxel.y + (int)(Math.Cos(dir + Math.PI / 2) * (x * 4) + Math.Sin(dir + Math.PI / 2) * (1024 + 512)));
+					targetVoxel.z = (short)(originVoxel.z + -y * 4);
+				}
+
+				trajectory.Clear();
+				test = (int)_save.TileEngine.CalculateLineVoxel(originVoxel, targetVoxel, false, trajectory, bu, null, !debug) + 1;
+				black = true;
+				if (test != 0 && test != 6)
+				{
+					tile = _save.GetTile(trajectory[0].ToTile());
+					if (debug
+						|| (tile.IsDiscovered(TilePart.O_WESTWALL) && test == 2)
+						|| (tile.IsDiscovered(TilePart.O_NORTHWALL) && test == 3)
+						|| (tile.IsDiscovered(TilePart.O_FLOOR) && (test == 1 || test == 4))
+						|| test == 5
+						)
+					{
+						if (test == 5)
+						{
+							if (tile.Unit != null)
+							{
+								if (tile.Unit.Faction == FACTION_NEUTRAL) test = 9;
+								else
+								if (tile.Unit.Faction == FACTION_PLAYER) test = 8;
+							}
+							else
+							{
+								tile = _save.GetBelowTile(tile);
+								if (tile != null && tile.Unit != null)
+								{
+									if (tile.Unit.Faction == FACTION_NEUTRAL) test = 9;
+									else
+									if (tile.Unit.Faction == FACTION_PLAYER) test = 8;
+								}
+							}
+						}
+						hitPos = trajectory[0];
+						dist = Position.Distance(hitPos, originVoxel);
+						black = false;
+					}
+				}
+
+				if (black)
+				{
+					dist = 0;
+				}
+				else
+				{
+					if (dist > 1000) dist = 1000;
+					if (dist < 1) dist = 1;
+					dist = (1000 - (Math.Log(dist)) * 140) / 700;//140
+
+					if (hitPos.x % 16 == 15)
+					{
+						dist *= 0.9;
+					}
+					if (hitPos.y % 16 == 15)
+					{
+						dist *= 0.9;
+					}
+					if (hitPos.z % 24 == 23)
+					{
+						dist *= 0.9;
+					}
+					if (dist > 1) dist = 1;
+					if (tile != null) dist *= (16 - (double)tile.Shade) / 16;
+				}
+
+				image.Add((byte)(int)((double)(pal[test * 3 + 0]) * dist));
+				image.Add((byte)(int)((double)(pal[test * 3 + 1]) * dist));
+				image.Add((byte)(int)((double)(pal[test * 3 + 2]) * dist));
+			}
+		}
+
+		string filename;
+		int i = 0;
+		do
+		{
+			filename = Options.GetMasterUserFolder() + "fpslook" + i.ToString("D3", CultureInfo.InvariantCulture) + ".png";
+			i++;
+		}
+		while (CrossPlatform.FileExists(filename));
+
+		PngEncoder.WriteFile(filename, PngEncoder.EncodeRgb(CollectionsMarshal.AsSpan(image), 512, 512));
+	}
+
+	/// <summary>
+	/// Saves each layer of voxels on the bettlescape as a png.
+	/// </summary>
+	public void SaveVoxelMap()
+	{
+		ReadOnlySpan<byte> pal =
+		[255, 255, 255, 224, 224, 224, 128, 160, 255, 255, 160, 128, 128, 255, 128, 192, 0, 255, 255, 255, 255, 255, 255, 255, 224, 192, 0, 255, 64, 128];
+
+		Tile tile;
+		int width = _save.MapSizeX * 16, height = _save.MapSizeY * 16;
+		var image = new byte[width * height * 3];
+
+		for (int z = 0; z < _save.MapSizeZ * 12; ++z)
+		{
+			int n = 0;
+			for (int y = 0; y < height; ++y)
+			{
+				for (int x = 0; x < width; ++x)
+				{
+					int test = (int)_save.TileEngine.VoxelCheck(new Position(x, y, z * 2), null, false) + 1;
+					float dist = 1;
+					if (x % 16 == 15)
+					{
+						dist *= 0.9f;
+					}
+					if (y % 16 == 15)
+					{
+						dist *= 0.9f;
+					}
+
+					// (compares the shifted value: V_OUTOFBOUNDS here means a unit voxel)
+					if (test == (int)VoxelType.V_OUTOFBOUNDS)
+					{
+						tile = _save.GetTile(new Position(x / 16, y / 16, z / 12));
+						if (tile.Unit != null)
+						{
+							if (tile.Unit.Faction == FACTION_NEUTRAL) test = 9;
+							else
+							if (tile.Unit.Faction == FACTION_PLAYER) test = 8;
+						}
+						else
+						{
+							tile = _save.GetBelowTile(tile);
+							if (tile != null && tile.Unit != null)
+							{
+								if (tile.Unit.Faction == FACTION_NEUTRAL) test = 9;
+								else
+								if (tile.Unit.Faction == FACTION_PLAYER) test = 8;
+							}
+						}
+					}
+
+					image[n++] = (byte)(int)((float)pal[test * 3 + 0] * dist);
+					image[n++] = (byte)(int)((float)pal[test * 3 + 1] * dist);
+					image[n++] = (byte)(int)((float)pal[test * 3 + 2] * dist);
+				}
+			}
+
+			string filename = Options.GetMasterUserFolder() + "voxel" + z.ToString("D2", CultureInfo.InvariantCulture) + ".png";
+			PngEncoder.WriteFile(filename, PngEncoder.EncodeRgb(image, width, height));
+		}
+	}
+
+	/// <summary>
+	/// The 24-bit SDL surface of saveAIMap (R, G, B bytes per pixel) with the SDL/SDL_gfx calls it uses: clipped
+	/// SDL_FillRect, lineRGBA (horizontal/vertical, opaque) and characterRGBA/stringRGBA (built-in 8x8 font, blended
+	/// with the colour's alpha like an SDL alpha blit).
+	/// </summary>
+	private sealed class RgbImage(int width, int height)
+	{
+		public int Width { get; } = width;
+
+		public int Height { get; } = height;
+
+		public byte[] Pixels { get; } = new byte[width * height * 3];
+
+		private void Plot(int x, int y, byte r, byte g, byte b, byte a)
+		{
+			if (x < 0 || y < 0 || x >= Width || y >= Height || a == 0)
+				return;
+			int i = (y * Width + x) * 3;
+			if (a == 255)
+			{
+				Pixels[i] = r;
+				Pixels[i + 1] = g;
+				Pixels[i + 2] = b;
+			}
+			else
+			{
+				Pixels[i] = (byte)(Pixels[i] + (r - Pixels[i]) * a / 255);
+				Pixels[i + 1] = (byte)(Pixels[i + 1] + (g - Pixels[i + 1]) * a / 255);
+				Pixels[i + 2] = (byte)(Pixels[i + 2] + (b - Pixels[i + 2]) * a / 255);
+			}
+		}
+
+		public void FillRect(int x, int y, int w, int h, byte r, byte g, byte b)
+		{
+			for (int iy = y; iy < y + h; ++iy)
+				for (int ix = x; ix < x + w; ++ix)
+					Plot(ix, iy, r, g, b, 255);
+		}
+
+		/// <summary>lineRGBA for horizontal and vertical lines (both end points drawn).</summary>
+		public void Line(int x1, int y1, int x2, int y2, byte r, byte g, byte b)
+		{
+			for (int y = Math.Min(y1, y2); y <= Math.Max(y1, y2); ++y)
+				for (int x = Math.Min(x1, x2); x <= Math.Max(x1, x2); ++x)
+					Plot(x, y, r, g, b, 255);
+		}
+
+		public void Character(int x, int y, char c, byte r, byte g, byte b, byte a)
+		{
+			var glyph = GfxPrimitives.Glyph((byte)c);
+			for (int iy = 0; iy < GfxPrimitives.CharSize; ++iy)
+				for (int ix = 0; ix < GfxPrimitives.CharSize; ++ix)
+					if ((glyph[iy] & (0x80 >> ix)) != 0)
+						Plot(x + ix, y + iy, r, g, b, a);
+		}
+
+		public void String(int x, int y, string s, byte r, byte g, byte b, byte a)
+		{
+			foreach (char c in s)
+			{
+				Character(x, y, c, r, g, b, a);
+				x += GfxPrimitives.CharSize;
+			}
+		}
 	}
 
 	/// <summary>

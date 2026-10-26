@@ -18,7 +18,8 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Game.h, src/Engine/Game.cpp
-// Port status: partial (missing: Screen::handle, mouse grab (host), frame pacing (Options::FPS/FPSInactive, SDL_Delay: host))
+// Main loop split into Update/Render for the host (see docs/architecture/csharp-port.md, "Hauptschleife"); the host
+// applies the frame pacing computed here (FrameDue, LoopDelay) and the window operations (GrabInputHandler, WarpMouseHandler).
 
 namespace Acom;
 
@@ -39,7 +40,8 @@ public enum ApplicationState
 /// The C++ version owns the main loop. Here the platform host (MonoGame) owns it: it queues
 /// input with <see cref="PushEvent"/>, calls <see cref="Update"/> every tick and <see cref="Render"/>
 /// whenever a frame is drawn. As in the C++ loop, logic runs every iteration while blitting may be
-/// skipped; frame pacing (Options::FPS, SDL_Delay) is the host's job, see <see cref="RunningState"/>.
+/// skipped: the host runs an iteration every <see cref="LoopDelay"/> (SDL_Delay) and draws when <see cref="FrameDue"/>
+/// (Options::FPS/FPSInactive).
 /// </remarks>
 public sealed class Game
 {
@@ -76,6 +78,8 @@ public sealed class Game
 	private uint _lastMouseMoveEvent;
 	private short _xrel, _yrel;
 	private int _mouseX, _mouseY;
+	private uint _timeOfLastFrame;
+	private int _timeUntilNextFrame;
 
 	// SDL 1.2 mouse/event state (SDL_mouse.c, SDL_events.c) for SDL_WarpMouse, SDL_GetMouseState and SDL_EventState.
 	private readonly byte[] _eventStates = CreateEventStates();
@@ -155,6 +159,49 @@ public sealed class Game
 
 	/// <summary>Run mode of the loop. While not RUNNING the C++ loop sleeps 100 ms per iteration instead of 1 ms.</summary>
 	public ApplicationState RunningState => _runningState;
+
+	/// <summary>
+	/// Time between two loop iterations (C++ "Save on CPU": SDL_Delay(1) while running, SDL_Delay(100) when slowed or paused).
+	/// The host waits this long between <see cref="Update"/> calls.
+	/// </summary>
+	public TimeSpan LoopDelay => TimeSpan.FromMilliseconds(_runningState == ApplicationState.RUNNING ? 1 : 100);
+
+	/// <summary>
+	/// Milliseconds until the next frame may be drawn, as computed by the last <see cref="Update"/> (C++ _timeUntilNextFrame).
+	/// </summary>
+	public int TimeUntilNextFrame => _timeUntilNextFrame;
+
+	/// <summary>
+	/// Whether the iteration that just ran its <see cref="Update"/> draws a frame (C++: not paused, active state
+	/// initialized and <see cref="TimeUntilNextFrame"/> &lt;= 0). The host skips <see cref="Render"/> otherwise.
+	/// </summary>
+	public bool FrameDue => !_quit && _init && _states.Count > 0 && _runningState != ApplicationState.PAUSED && _timeUntilNextFrame <= 0;
+
+	/// <summary>
+	/// Frame budget in milliseconds: 1000 / Options::FPS (Options::FPSInactive without input focus), or 0 for no limit
+	/// (FPS 0, or OpenGL with vertical sync).
+	/// </summary>
+	/// <param name="inputFocus">Whether the window has the keyboard focus (SDL_APPINPUTFOCUS).</param>
+	public static float FrameBudget(bool inputFocus)
+	{
+		if (Options.FPS > 0 && !(Options.useOpenGL && Options.vSyncForOpenGL))
+		{
+			int fps = inputFocus ? Options.FPS : Options.FPSInactive;
+			return 1000.0f / fps;
+		}
+		return 0;
+	}
+
+	/// <summary>
+	/// C++ <c>_timeUntilNextFrame = (1000.0f / fps) - (SDL_GetTicks() - _timeOfLastFrame)</c> (unsigned difference, float, truncated to int),
+	/// 0 without a frame limit.
+	/// </summary>
+	public static int ComputeTimeUntilNextFrame(float budget, uint now, uint timeOfLastFrame)
+	{
+		if (budget == 0)
+			return 0;
+		return (int)(budget - (float)(now - timeOfLastFrame));
+	}
 
 	/// <summary>The state stack, bottom first.</summary>
 	public IReadOnlyList<State> States => _states;
@@ -378,6 +425,9 @@ public sealed class Game
 		{
 			_states[^1].Think();
 			_fpsCounter.Think();
+			// Update our FPS delay time based on the time of the last draw.
+			float budget = FrameBudget((AppState & SDLApp.SDL_APPINPUTFOCUS) != 0);
+			_timeUntilNextFrame = ComputeTimeUntilNextFrame(budget, SDLTimer.SDL_GetTicks(), _timeOfLastFrame);
 		}
 	}
 
@@ -388,6 +438,8 @@ public sealed class Game
 		if (_quit || !_init || _states.Count == 0 || _runningState == ApplicationState.PAUSED)
 			return false;
 
+		// make a note of when this frame update occurred.
+		_timeOfLastFrame = SDLTimer.SDL_GetTicks();
 		_fpsCounter.AddFrame();
 		_screen.Clear();
 		// start at the topmost full-screen state
@@ -420,7 +472,7 @@ public sealed class Game
 	private void HandleEvent(SDL_Event ev)
 	{
 		var action = CreateAction(ev);
-		// missing: _screen->handle(&action) (debug slow motion, Alt+Enter, screenshot key)
+		_screen.Handle(action);
 		_cursor.Handle(action);
 		_fpsCounter.Handle(action);
 		if (action.Details.type == SDLEventType.SDL_KEYDOWN)

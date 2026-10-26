@@ -18,7 +18,8 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/OptionsVideoState.h, src/Menu/OptionsVideoState.cpp
-// Port status: partial (missing: SDL_ListModes – the host provides FullscreenModes; display mode, filters and OpenGL shaders are stored as options, their effect is a host matter)
+// SDL_ListModes comes from the host (FullscreenModes); the host applies display mode and OpenGL smoothing/vsync.
+// Software scalers (Scale/HQX/xBRZ) stay selectable without effect, OpenGL shaders only switch on useOpenGL (GPU scaling: docs/architecture/csharp-port.md).
 #nullable disable
 
 using System.Globalization;
@@ -228,7 +229,7 @@ public class OptionsVideoState : OptionsBaseState
 		_filters.Add("");
 		_filters.Add("");
 
-		// the shaders stay selectable (the OpenGL build of the original); applying them is a host matter
+		// the shaders stay selectable (the OpenGL build of the original): they switch on useOpenGL (host: smoothing, vsync), the shader itself is not applied
 		var filters = new List<string>(FileMap.FilterFiles(FileMap.GetVFolderContents(GL_FOLDER), GL_EXT));
 		filters.Sort(Unicode.NaturalComparison);
 		foreach (var file in filters)

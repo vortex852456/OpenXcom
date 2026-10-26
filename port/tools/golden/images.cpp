@@ -1,7 +1,7 @@
 // Golden values for Surface::loadImage: the decoding steps of src/Engine/Surface.cpp
 // (lodepng first for .png, SDL_image otherwise, FixTransparent) on a plain pixel buffer.
 // Output per file: <path> lodepng|sdl <width> <height> <transparent> <fnv(pixels)> <colors> <fnv(palette)>, or <path> error.
-// The palette hash covers the colours defined by the file: r,g,b,alpha for lodepng (alpha decides the transparent
+// The palette hash covers the colours defined by the file (GIF/BMP/LBM: see gifColors/bmpColors/lbmColors): r,g,b,alpha for lodepng (alpha decides the transparent
 // index), r,g,b for SDL_image (the "unused" byte differs between SDL 1.2 and sdl12-compat).
 // Build/run: port/tools/golden/generate.sh
 #include <cstdio>
@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <algorithm>
 #include <vector>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -41,6 +42,34 @@ static int gifColors(const std::vector<unsigned char> &d)
 		}
 	}
 	return 0;
+}
+
+// Palette entries an SDL_image 1.2 BMP/LBM load defines from the file; the others keep the initial colour of a new
+// palette (black in SDL 1.2, white in sdl12-compat) and are left out of the hash.
+static int bmpColors(const std::vector<unsigned char> &d, int ncolors)
+{
+	if (d.size() < 18) return 0;
+	uint32_t biSize = d[14] | d[15] << 8 | d[16] << 16 | (uint32_t)d[17] << 24;
+	size_t entry = biSize == 12 ? 3 : 4;
+	size_t start = 14 + biSize;
+	size_t avail = d.size() > start ? (d.size() - start) / entry : 0;
+	return (int)std::min<size_t>(avail, ncolors);
+}
+
+static int lbmColors(const std::vector<unsigned char> &d, int ncolors)
+{
+	bool pbm = d.size() >= 12 && memcmp(&d[8], "PBM ", 4) == 0;
+	if (!pbm) return ncolors; // ILBM: ncolors = 1 << planes, all defined (the colour map repeats)
+	int n = 0;
+	for (size_t pos = 12; pos + 8 <= d.size();)
+	{
+		uint32_t size = (uint32_t)d[pos + 4] << 24 | d[pos + 5] << 16 | d[pos + 6] << 8 | d[pos + 7];
+		if (memcmp(&d[pos], "BODY", 4) == 0) break;
+		if (memcmp(&d[pos], "CMAP", 4) == 0) n = size / 3;
+		pos += 8 + size + (size & 1);
+	}
+	// PBM counts as one plane: no EHB, the colour map is repeated up to 2 colours
+	return n == 0 ? 0 : std::min(std::max(n, 2), ncolors);
 }
 
 static bool isPng(const std::string &name)
@@ -95,7 +124,10 @@ int main(int argc, char **argv)
 			width = surface->w;
 			height = surface->h;
 			memcpy(palette, surface->format->palette->colors, surface->format->palette->ncolors * sizeof(SDL_Color));
-			colors = png.size() >= 3 && memcmp(png.data(), "GIF", 3) == 0 ? gifColors(png) : surface->format->palette->ncolors;
+			colors = surface->format->palette->ncolors;
+			if (png.size() >= 3 && memcmp(png.data(), "GIF", 3) == 0) colors = gifColors(png);
+			else if (png.size() >= 2 && memcmp(png.data(), "BM", 2) == 0) colors = bmpColors(png, colors);
+			else if (png.size() >= 4 && memcmp(png.data(), "FORM", 4) == 0) colors = lbmColors(png, colors);
 			for (int y = 0; y < height; ++y)
 			{
 				const uint8_t *row = (const uint8_t *)surface->pixels + y * surface->pitch;

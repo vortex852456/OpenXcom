@@ -138,4 +138,97 @@ public class ScreenTests
 		Screen.UpdateScale((int)ScaleType.SCALE_SCREEN_DIV_8, ref w, ref h, false);
 		Assert.Equal((320, 200), (w, h)); // 240x135 is raised to the minimum
 	}
+
+	private static Screen FilledScreen()
+	{
+		var screen = new Screen(4, 4);
+		var palette = Enumerable.Range(0, 256).Select(i => new Rgba((byte)i, (byte)(i + 1), (byte)(i + 2))).ToArray();
+		screen.SetPalette(palette);
+		for (int i = 0; i < 16; ++i)
+			screen.Surface.Pixels[i] = (byte)(i * 10);
+		screen.Flip();
+		return screen;
+	}
+
+	[Fact]
+	public void Window_image_scales_the_frame_into_the_black_bands()
+	{
+		DefaultOptions();
+		var screen = FilledScreen();
+		screen.SetWindowSize(10, 8); // 2x, image 8 wide with a 1 pixel band on the left
+		var (rgb, width, height) = screen.WindowImage();
+		Assert.Equal((8, 8), (width, height)); // width rounded down to a multiple of 4
+		Assert.Equal(new byte[] { 0, 0, 0 }, rgb[..3]); // band
+		Assert.Equal(new byte[] { 0, 1, 2 }, rgb[3..6]); // pixel (0,0)
+		int i = (3 * width + 3) * 3; // window (3,3) = logical (1,1) = index 5 -> colour 50
+		Assert.Equal(new byte[] { 50, 51, 52 }, rgb[i..(i + 3)]);
+	}
+
+	[Fact]
+	public void Screenshots_are_written_as_png()
+	{
+		DefaultOptions();
+		var screen = FilledScreen();
+		screen.SetWindowSize(8, 8);
+		var file = Path.Combine(Path.GetTempPath(), "acom-screenshot-" + Guid.NewGuid().ToString("N") + ".png");
+		try
+		{
+			screen.Screenshot(file);
+			var (w, h, rgb) = PngEncoderTests.Decode(File.ReadAllBytes(file));
+			Assert.Equal((8, 8), (w, h));
+			Assert.Equal(new byte[] { 10, 11, 12 }, rgb[6..9]); // window (2,0) = logical (1,0)
+
+			Options.oxceRawScreenShots = true;
+			screen.Screenshot(file);
+			var raw = ImageDecoder.DecodeLodePng(File.ReadAllBytes(file))!;
+			Assert.Equal((4, 4), (raw.Width, raw.Height));
+			Assert.Equal(screen.Surface.Pixels.ToArray(), raw.Pixels);
+			Assert.Equal(256, raw.Palette.Length);
+			Assert.Equal(new Rgba(7, 8, 9), raw.Palette[7]);
+		}
+		finally
+		{
+			File.Delete(file);
+		}
+	}
+
+	[Fact]
+	public void Alt_enter_toggles_fullscreen_through_the_host()
+	{
+		DefaultOptions();
+		Options.fullscreen = false;
+		var screen = new Screen();
+		int calls = 0;
+		screen.VideoModeHandler = (w, h) => { calls++; screen.SetWindowSize(w, h); };
+		screen.Handle(new Action(SDL_Event.KeyDown(SDLKey.SDLK_RETURN, SDLMod.KMOD_LALT), 1, 1, 0, 0));
+		Assert.True(Options.fullscreen);
+		Assert.Equal(1, calls);
+		screen.Handle(new Action(SDL_Event.KeyDown(SDLKey.SDLK_RETURN), 1, 1, 0, 0));
+		Assert.Equal(1, calls);
+	}
+
+	[Fact]
+	public void Alt_f8_cycles_slow_motion_in_debug_mode()
+	{
+		DefaultOptions();
+		Options.debug = true;
+		var screen = new Screen();
+		var slow = Timer.GameSlowSpeed;
+		try
+		{
+			Timer.GameSlowSpeed = 1;
+			var f8 = new Action(SDL_Event.KeyDown(SDLKey.SDLK_F8, SDLMod.KMOD_RALT), 1, 1, 0, 0);
+			screen.Handle(f8);
+			Assert.Equal(5u, Timer.GameSlowSpeed);
+			screen.Handle(f8);
+			Assert.Equal(15u, Timer.GameSlowSpeed);
+			screen.Handle(f8);
+			Assert.Equal(1u, Timer.GameSlowSpeed);
+		}
+		finally
+		{
+			Timer.GameSlowSpeed = slow;
+			Options.debug = false;
+		}
+	}
 }

@@ -48,7 +48,8 @@ port/
 `Engine/Yaml.cs` liest mit dem Event-Parser von YamlDotNet in einen eigenen Knotenbaum, damit das Verhalten von rapidyaml erhalten bleibt: doppelte Schlüssel erlaubt (erster Treffer gewinnt), Merge-Schlüssel `<<` wie `Tree::resolve()`, Zahlen/Bools wie c4core (`0x`, `True`, ...). Die Selbsttests aus `src/Engine/Yaml.cpp` sind in `YamlTests` übernommen; `RepoYamlTests` liest alle `.rul`/`.yml` des Repos.
 
 ## Bilder laden
-`Engine/ImageDecoder.cs` ersetzt lodepng und SDL_image, weil gängige .NET-Bibliotheken nach RGBA wandeln und die Palettenindizes verlieren. Wie `Surface::loadImage`: `.png` mit 8 Bit pro Pixel nach lodepng-Regeln (erster Paletteneintrag mit Alpha 0 wird transparent), alles andere nach SDL_image-Regeln (PNG mit 1–16 Bit Palette/Grau, GIF; Colour Key wird transparent). Golden-Test: `tools/golden/images.cpp` lädt alle Repo-Bilder und die synthetischen Testbilder (`tools/golden/make_test_images.py`) mit lodepng/SDL_image.
+`Engine/ImageDecoder.cs` ersetzt lodepng und SDL_image, weil gängige .NET-Bibliotheken nach RGBA wandeln und die Palettenindizes verlieren. Wie `Surface::loadImage`: `.png` mit 8 Bit pro Pixel nach lodepng-Regeln (erster Paletteneintrag mit Alpha 0 wird transparent), alles andere nach SDL_image-Regeln (PNG mit 1–16 Bit Palette/Grau, GIF, BMP mit 1/4/8 Bit inkl. RLE4/RLE8, IFF-LBM als ILBM/PBM mit ByteRun1; Colour Key wird transparent). Golden-Test: `tools/golden/images.cpp` lädt alle Repo-Bilder und die synthetischen Testbilder (`tools/golden/make_test_images.py`) mit lodepng/SDL_image. Paletteneinträge, die die Datei nicht setzt, zählen nicht mit (SDL 1.2: schwarz, sdl12-compat: weiß; der Port nimmt schwarz).
+`Engine/PngEncoder.cs` ersetzt `lodepng::encode` (Screenshots, Debug-Dumps der Battlescape): Palette (PLTE/tRNS) und RGB, gleiche Pixel, andere Bytes.
 
 ## Generierter Code
 `Options.Values.cs` und `Options.Create.cs` erzeugt `port/tools/gen/gen_options.py` aus `Options.inc.h`/`Options.cpp` (C-Präprozessor mit Desktop-Defines). Neue Optionen im C++-Stil dort ergänzen und neu generieren, nicht von Hand editieren.
@@ -58,7 +59,7 @@ C++ `Game::run()` wird aufgeteilt, weil MonoGame die Schleife besitzt:
 - `Game.Update()` – Zustände aufräumen, aktiven State initialisieren, Ereignisse abarbeiten, `think()`.
 - `Game.Render()` – ab oberstem Vollbild-State blitten, `Screen.Flip()` (Palette → RGBA).
 
-Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. Eingaben kommen über einen SDL2-Event-Watch (`SdlInput`), weil MonoGames Polling Klicks verliert, die kürzer als ein Frame sind.
+Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. Taktung wie `Game::run`: Ein MonoGame-Tick ist ein Durchlauf (`IsFixedTimeStep = false`); `Game.FrameDue` sagt, ob das Bildbudget (`1000 / Options::FPS` bzw. `FPSInactive` ohne Fokus, 0 bei OpenGL+vSync) abgelaufen ist, danach wartet der Host `Game.LoopDelay` (SDL_Delay: 1 ms, verlangsamt/pausiert 100 ms). Eingaben kommen über einen SDL2-Event-Watch (`SdlInput`), weil MonoGames Polling Klicks verliert, die kürzer als ein Frame sind.
 
 ## HD-Konzept
 - **Logische Koordinaten bleiben:** Layout, Rulesets und Mods arbeiten weiter im 320×200-Raster (bzw. der konfigurierten Basisauflösung).
@@ -71,12 +72,13 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. E
 |---|---|---|---|
 | Benutzer-/Konfig-/Datenordner | `openxcom`/`OpenXcom` | `acom`/`ACOM` | Eigenes Projekt, keine Vermischung mit OpenXcom-Installationen |
 | Ordnerinhalte (`getFolderContents`) | Reihenfolge des Dateisystems (Linux zufällig) | sortiert, Groß/Klein ignoriert (wie NTFS) | Deterministische Ruleset-Reihenfolge auf allen Systemen |
-| `oxceUpdateCheck` | nur Windows, prüft OXCE-Server | entfällt | Kein Update-Check gegen fremde Server |
+| `oxceUpdateCheck`, `startUpdateProcess` | nur Windows, prüft OXCE-Server und startet den Updater | entfällt | Kein Update-Check gegen fremde Server |
 | Palette `setColors`/`setColor` | +1 auf doppelte Schwarztöne | entfällt | Workaround für SDL-1.2-Farbabgleich, der hier nicht stattfindet |
 | YAML-Suche mit Duplikaten | ohne Index: Suche ab letzter Fundstelle | immer erster Treffer | Einfacher, deckt sich mit der indizierten Suche des Originals |
 | Eingebettete Assets (`exe:common.zip`/`exe:standard.zip`, `getEmbeddedAsset`) | optional (`EMBED_ASSETS`) | entfällt; `oxceEmbeddedOnly` wirkungslos | Inhalte kommen als Dateien/Zip |
 | Absturzbericht (`crashDump`/`stackTrace`) | Windows-Minidump bzw. native Backtrace, Text nennt OpenXcom-Forum | .NET-Ausnahme und Stacktrace ins Log, Text nennt ACOM; Fehlerfenster unter Windows über SDL (`ErrorDialogHandler`) | Kein nativer Code; eigenes Projekt |
-| Bildformate (`loadImage`) | alles, was SDL_image kann (auch BMP, LBM, PCX, ...) | nur PNG und GIF | Mods nutzen praktisch nur PNG/GIF; weitere Leser bei Bedarf |
+| Bildformate (`loadImage`) | alles, was SDL_image kann (auch PCX, TGA, PNM, XPM, XCF, ...) | PNG, GIF, BMP, LBM | Mods nutzen praktisch nur PNG/GIF (BMP/LBM aus dem Originalumfeld); weitere Leser bei Bedarf |
+| LBM mit 2, 3, 5–7 Bitebenen | SDL_image 1.2.12 ohne Patch: lesbar | abgelehnt („unsupported number of color planes“) | Wie die Sicherheitskorrektur in Debians SDL_image 1.2 und SDL2_image ≥ 2.0.5 (Referenz der Golden-Tests) |
 | Palettenalpha auf dem SDL_image-Weg | SDL 1.2: `unused` = 0, sdl12-compat: 255 | 255 | Byte ist in SDL 1.2 unbenutzt; Transparenz kommt dort aus dem Colour Key |
 | `Timer`-Spielzeit (`slowTick`) | erster Aufruf springt einmalig, 32-Bit-Überlauf nach 74 h | gleichmäßig, 64 Bit | Offensichtlicher Fehler ohne gewollte Wirkung |
 | Font-Zeichen außerhalb der BMP (z. B. Emoji) | eigene Glyphe | belegen ihren Platz, sind aber nicht abrufbar | Text ist im Port UTF-16 (`char`) |
@@ -90,6 +92,8 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. E
 | Nicht initialisierte C++-Felder (z. B. Zähler in Mission-/Arc-Skripten) | unbestimmt | 0 bzw. -1 | Definierter Startwert |
 | YAML-Gleitkommazahlen | c4core/fast_float direkt nach `float` | über `double` nach `float`, keine Hex-Floats | Praktisch gleiche Werte |
 | Fenster/Anzeige (`Screen`) | SDL-Videomodus, Software-Skalierer | Host (MonoGame) besitzt das Fenster; Pixeldichte auf 2560×1600 begrenzt | GPU-Skalierung, HD-Konzept |
+| Filter (`OptionsVideoState`) | Software-Skalierer (Scale/HQX/xBRZ), OpenGL-Shader | wählbar, aber ohne Wirkung; OpenGL-Glättung = lineare Filterung, vSync = `vSyncForOpenGL` | GPU skaliert; Shader-Programme (GLSL von SDL 1.2/OpenGL 2) nicht portiert |
+| Screenshot (Taste `keyScreenshot`) | liest das Fensterbild (SDL-Surface bzw. `glReadPixels`) | Bild im Core per Nearest-Neighbour ins Fenster skaliert (mit Rändern) | Das GPU-Bild liegt nur im Host; ohne Glättung gleiche Pixel |
 | Ladebildschirm (`StartState`) | eigener SDL-Thread | `Task` | Gleicher Ablauf, MonoGame besitzt die Schleife |
 | Destruktoren mit Logik | `delete` | `State.Destroy()` (vom Game aufgerufen) bzw. `Target.Destroy()` | Kein deterministisches `delete` in .NET |
 

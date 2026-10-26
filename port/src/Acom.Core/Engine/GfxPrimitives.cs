@@ -707,6 +707,9 @@ internal static class GfxPrimitives
 		}
 	}
 
+	/// <summary>The 8 rows of a character of the built-in font (bit 7 = left pixel), for drawing on true colour images.</summary>
+	public static ReadOnlySpan<byte> Glyph(byte c) => FontData.Slice(c * CharSize, CharSize);
+
 	/// <summary>Draws a character of the built-in 8x8 font (characterColor), clipped.</summary>
 	public static void CharacterColor(Surface dst, short x, short y, byte c, byte color)
 	{

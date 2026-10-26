@@ -51,6 +51,16 @@ bin/standard/xcom2/Resources/UI/invcopy_active_TFTD.png lodepng 32 22 0 8d545c14
 bin/standard/xcom2/Resources/UI/invpaste_TFTD.png lodepng 32 22 0 5059ce8c791853bd 256 30354c279b583310
 bin/standard/xcom2/Resources/UI/invpaste_empty_TFTD.png lodepng 32 22 0 6df157297a303f9f 256 30354c279b583310
 bin/standard/xcom2/Resources/Weapons/Terror.png lodepng 288 48 0 66ded3e12b93daa1 256 382890dcc29cfc23
+port/tests/Acom.Core.Tests/Images/b1.bmp sdl 13 7 0 82e0c4df9d8c2546 9 94c5aa4596be6237
+port/tests/Acom.Core.Tests/Images/b24.bmp error
+port/tests/Acom.Core.Tests/Images/b4.bmp sdl 13 7 0 1864feb6c0256862 30 0386cb91f3f7c4c8
+port/tests/Acom.Core.Tests/Images/b4_rle.bmp sdl 21 9 0 15c6dcb0722af129 61 fe1cbed397eee046
+port/tests/Acom.Core.Tests/Images/b8.bmp sdl 13 7 0 1864feb6c0256862 256 e266dddcbf479585
+port/tests/Acom.Core.Tests/Images/b8_core.bmp sdl 13 7 0 1864feb6c0256862 256 e266dddcbf479585
+port/tests/Acom.Core.Tests/Images/b8_rle.bmp sdl 21 9 0 0c78f0ca1836675b 256 e266dddcbf479585
+port/tests/Acom.Core.Tests/Images/b8_rle_delta.bmp sdl 21 9 0 1cfe9326d43912d6 256 e266dddcbf479585
+port/tests/Acom.Core.Tests/Images/b8_short.bmp error
+port/tests/Acom.Core.Tests/Images/b8_topdown.bmp sdl 13 7 0 45844f0a0cf269c2 256 89eff521bc35a525
 port/tests/Acom.Core.Tests/Images/g16.png sdl 13 7 0 45844f0a0cf269c2 256 3ac8574c48f9b025
 port/tests/Acom.Core.Tests/Images/g2_interlaced.png sdl 13 7 0 bdd7a61f8d0acf9a 256 3ac8574c48f9b025
 port/tests/Acom.Core.Tests/Images/g4.png sdl 13 7 0 7f666c0b738aff12 256 3ac8574c48f9b025
@@ -61,6 +71,12 @@ port/tests/Acom.Core.Tests/Images/gif_big.gif sdl 128 96 0 303bf9cc10b77f20 256 
 port/tests/Acom.Core.Tests/Images/gif_interlaced.gif sdl 9 19 0 2c965a44e61c45ba 8 820d7767a2637ad5
 port/tests/Acom.Core.Tests/Images/gif_local.gif sdl 10 6 0 38d8198846ecee48 4 786e2234a7cbdb1d
 port/tests/Acom.Core.Tests/Images/gif_trans.gif sdl 13 7 7 78008758125f7cc5 16 64e1e10e77cad545
+port/tests/Acom.Core.Tests/Images/ilbm1_key.lbm sdl 16 7 1 a4ca53d582377be5 2 7646a4d78c89a17e
+port/tests/Acom.Core.Tests/Images/ilbm4.lbm sdl 16 7 0 f52e29844096aefc 16 64e1e10e77cad545
+port/tests/Acom.Core.Tests/Images/ilbm4_short_cmap.lbm sdl 16 7 0 f52e29844096aefc 16 ef768d8ff30d5b59
+port/tests/Acom.Core.Tests/Images/ilbm4_stencil.lbm sdl 16 7 0 c4d789c360e45e2c 16 64e1e10e77cad545
+port/tests/Acom.Core.Tests/Images/ilbm5.lbm error
+port/tests/Acom.Core.Tests/Images/ilbm8_comp.lbm sdl 32 9 0 fed8080652a3d709 256 89eff521bc35a525
 port/tests/Acom.Core.Tests/Images/p1.png sdl 13 7 0 82e0c4df9d8c2546 2 7646a4d78c89a17e
 port/tests/Acom.Core.Tests/Images/p2.png sdl 13 7 0 ae99683a6cb69efe 4 786e2234a7cbdb1d
 port/tests/Acom.Core.Tests/Images/p4_alltrns_opaque.png sdl 13 7 0 1864feb6c0256862 16 64e1e10e77cad545
@@ -75,4 +91,7 @@ port/tests/Acom.Core.Tests/Images/p8_notrns16.png lodepng 13 7 16 1864feb6c02568
 port/tests/Acom.Core.Tests/Images/p8_tiny_interlaced.png lodepng 3 2 4 27396a9cddb3c007 4 4e026d94df3812c9
 port/tests/Acom.Core.Tests/Images/p8_trns0.png lodepng 13 7 0 1864feb6c0256862 16 2f62db63c13c129c
 port/tests/Acom.Core.Tests/Images/p8_trns5.png lodepng 13 7 5 20dbf843aa2fafd9 16 9c301e4fdd319dc8
+port/tests/Acom.Core.Tests/Images/pbm.lbm sdl 16 7 0 e33984eb9f50183c 256 89eff521bc35a525
+port/tests/Acom.Core.Tests/Images/pbm_ehb.lbm sdl 16 7 0 70adaf0f6431637c 32 76d7af73a3d8da45
+port/tests/Acom.Core.Tests/Images/pbm_key.iff sdl 16 4 0 4209831d3999dfed 16 64e1e10e77cad545
 port/tests/Acom.Core.Tests/Images/rgb.png error

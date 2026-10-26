@@ -28,8 +28,12 @@ using GameTime = Microsoft.Xna.Framework.GameTime; // Acom.GameTime is the in-ga
 
 /// <summary>
 /// MonoGame host: owns the window and main loop, feeds input into the engine and
-/// presents the engine's indexed screen as a GPU texture (nearest-neighbour, letterboxed).
+/// presents the engine's indexed screen as a GPU texture (nearest-neighbour or, with OpenGL smoothing, linear; letterboxed).
 /// </summary>
+/// <remarks>
+/// One MonoGame tick is one iteration of the C++ <c>Game::run</c> loop: events and logic (<see cref="Acom.Game.Update"/>),
+/// a frame when <see cref="Acom.Game.FrameDue"/> (Options::FPS), then <c>SDL_Delay</c> (<see cref="Acom.Game.LoopDelay"/>).
+/// </remarks>
 internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 {
 	/// <summary>Pixel density of the screen buffer: 4 = HD (1280x800 for the 320x200 layout).</summary>
@@ -53,11 +57,12 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 		{
 			PreferredBackBufferWidth = Screen.ORIGINAL_WIDTH * RenderScale,
 			PreferredBackBufferHeight = Screen.ORIGINAL_HEIGHT * RenderScale,
-			SynchronizeWithVerticalRetrace = true,
+			SynchronizeWithVerticalRetrace = false, // Options::vSyncForOpenGL, see ApplyVideoMode
 		};
 		IsMouseVisible = false; // the game draws its own cursor (Interface/Cursor); C++ shows an invisible hardware cursor
-		IsFixedTimeStep = true;
-		TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 60);
+		// The engine paces itself like the C++ loop (frame budget + SDL_Delay), so MonoGame runs one tick per iteration.
+		IsFixedTimeStep = false;
+		InactiveSleepTime = TimeSpan.Zero; // Options::pauseMode/FPSInactive decide (Game.LoopDelay, Game.FrameBudget)
 		Window.AllowUserResizing = true;
 		Window.Title = title;
 	}
@@ -81,6 +86,8 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 			ApplyVideoMode(Options.displayWidth, Options.displayHeight);
 		}
 		screen.VideoModeHandler = ApplyVideoMode;
+		// SDL_ListModes(NULL, SDL_FULLSCREEN) for the video options
+		OptionsVideoState.FullscreenModes = ListFullscreenModes;
 		Mixer.Device = _audio; // Game.InitAudio opens it (or runs muted without audio hardware)
 		_game = new Acom.Game(screen)
 		{
@@ -119,19 +126,50 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 		_spriteBatch?.Dispose();
 	}
 
-	/// <summary>Applies the configured window mode and display size (C++ SDL_SetVideoMode, see <see cref="Screen.VideoModeHandler"/>).</summary>
+	/// <summary>
+	/// The display modes of the primary monitor, largest first and without duplicates (SDL_ListModes sorts by size;
+	/// MonoGame lists every format and refresh rate).
+	/// </summary>
+	private static IReadOnlyList<(int Width, int Height)> ListFullscreenModes()
+	{
+		return [.. GraphicsAdapter.DefaultAdapter.SupportedDisplayModes
+			.Select(m => (m.Width, m.Height))
+			.Distinct()
+			.OrderByDescending(m => m.Width)
+			.ThenByDescending(m => m.Height)];
+	}
+
+	/// <summary>
+	/// Applies the configured window mode and display size (C++ makeVideoFlags + SDL_SetVideoMode, see
+	/// <see cref="Screen.VideoModeHandler"/>): fullscreen/borderless/resizable, window position (rootWindowedMode),
+	/// vertical sync (OpenGL option). The software scalers and shaders are not available (GPU scaling, see the docs).
+	/// </summary>
 	private void ApplyVideoMode(int width, int height)
 	{
 		width = Math.Max(width, Screen.ORIGINAL_WIDTH);
 		height = Math.Max(height, Screen.ORIGINAL_HEIGHT);
+		bool vsync = Options.useOpenGL && Options.vSyncForOpenGL;
+		Window.AllowUserResizing = Options.allowResize;
 		if (_graphics.PreferredBackBufferWidth != width || _graphics.PreferredBackBufferHeight != height
-			|| _graphics.IsFullScreen != Options.fullscreen || Window.IsBorderless != Options.borderless)
+			|| _graphics.IsFullScreen != Options.fullscreen || Window.IsBorderless != Options.borderless
+			|| _graphics.SynchronizeWithVerticalRetrace != vsync)
 		{
 			_graphics.PreferredBackBufferWidth = width;
 			_graphics.PreferredBackBufferHeight = height;
 			_graphics.IsFullScreen = Options.fullscreen;
+			_graphics.SynchronizeWithVerticalRetrace = vsync;
 			Window.IsBorderless = Options.borderless;
 			_graphics.ApplyChanges();
+		}
+		// Handle window positioning (SDL_VIDEO_WINDOW_POS / SDL_VIDEO_CENTERED)
+		if (!Options.fullscreen && Options.rootWindowedMode)
+		{
+			Window.Position = new Point(Options.windowedModePositionX, Options.windowedModePositionY);
+		}
+		else if (!Options.fullscreen && Options.borderless)
+		{
+			var mode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+			Window.Position = new Point(Math.Max(0, (mode.Width - width) / 2), Math.Max(0, (mode.Height - height) / 2));
 		}
 		UpdateWindowSize();
 	}
@@ -163,14 +201,24 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 		_input!.Flush(game);
 		game.Update();
 		if (game.IsQuitting)
+		{
 			Exit();
+			return;
+		}
+		// Process rendering when the frame budget allows it (C++: _timeUntilNextFrame <= 0)
+		if (game.FrameDue)
+			game.Render();
+		// Present only new frames
+		if (game.Screen.FrameNumber == _uploadedFrame)
+			SuppressDraw();
 		base.Update(gameTime);
+		// Save on CPU (SDL_Delay)
+		Thread.Sleep(game.LoopDelay);
 	}
 
 	protected override void Draw(GameTime gameTime)
 	{
 		var screen = _game!.Screen;
-		_game.Render();
 		var surface = screen.Surface;
 		if (_texture!.Width != surface.PhysicalWidth || _texture.Height != surface.PhysicalHeight)
 		{
@@ -189,7 +237,9 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 
 		GraphicsDevice.Clear(Color.Black);
 		var (w, h) = screen.DisplaySize;
-		_spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
+		// OpenGL smoothing: linear filtering of the scaled image (the original's GL_LINEAR), otherwise nearest neighbour
+		var sampler = Options.useOpenGL && Options.useOpenGLSmoothing ? SamplerState.LinearClamp : SamplerState.PointClamp;
+		_spriteBatch!.Begin(samplerState: sampler);
 		_spriteBatch.Draw(_texture, new Rectangle(screen.LeftBlackBand, screen.TopBlackBand, w, h), Color.White);
 		_spriteBatch.End();
 		base.Draw(gameTime);
