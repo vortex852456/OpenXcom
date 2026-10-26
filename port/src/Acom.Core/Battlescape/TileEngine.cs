@@ -26,7 +26,7 @@ namespace Acom;
 
 public class TileEngine
 {
-	public static Position invalid;
+	public static readonly Position invalid = new(-1, -1, -1);
 	public static Position voxelTileSize;
 	public static Position voxelTileCenter;
 	public TileEngine(SavedBattleGame save, Mod mod) => throw new NotImplementedException();

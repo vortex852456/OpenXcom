@@ -957,7 +957,7 @@ public partial class Mod
 				}
 				else if (name == "gm.cat")
 				{
-					gmcat = new GMCatFile("SOUND/" + name);
+					using (var gmStream = FileMap.GetStream("SOUND/" + name)) gmcat = new GMCatFile(gmStream, "SOUND/" + name);
 				}
 			}
 
@@ -1360,7 +1360,7 @@ public partial class Mod
 					if (track < (ulong)adlibcat.Size)
 					{
 						music = new AdlibMusic(rule.Normalization);
-						music.Load(adlibcat.GetItem((int)track));
+						music.Load(new MemoryStream(adlibcat.GetItem((int)track).ToArray()));
 					}
 					// separate intro music
 					else if (aintrocat != null)
@@ -1369,7 +1369,7 @@ public partial class Mod
 						if (track < (ulong)aintrocat.Size)
 						{
 							music = new AdlibMusic(rule.Normalization);
-							music.Load(aintrocat.GetItem((int)track));
+							music.Load(new MemoryStream(aintrocat.GetItem((int)track).ToArray()));
 						}
 						else
 						{

@@ -394,20 +394,13 @@ public sealed class ModRulesetTests : IDisposable
 
 	private static readonly string[] VanillaSoundSets = ["GEO.CAT", "BATTLE.CAT", "BATTLE2.CAT", "SAMPLE3.CAT", "INTRO.CAT"];
 
-	/// <summary>
-	/// A sound set; while SoundSet is a stub, an uninitialized object whose members throw NotImplementedException
-	/// (so rules using sounds are skipped instead of failing with "Sound Set not found").
-	/// </summary>
+	/// <summary>A sound set with 100 empty sounds, so the ruleset sound indexes verify like with the original CAT files.</summary>
 	private static SoundSet CreateSoundSet()
 	{
-		try
-		{
-			return new SoundSet();
-		}
-		catch (NotImplementedException)
-		{
-			return (SoundSet)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(SoundSet));
-		}
+		var set = new SoundSet();
+		for (int i = 0; i < 100; ++i)
+			set.AddSound(i);
+		return set;
 	}
 
 	private static void RegisterVanillaSets(GameMod mod)
@@ -416,6 +409,8 @@ public sealed class ModRulesetTests : IDisposable
 			mod._sets[name] = new SurfaceSet(32, 40);
 		foreach (var name in VanillaSoundSets)
 			mod._sounds[name] = CreateSoundSet();
+		// LOFTEMPS stand-in: 128 empty voxel templates of 16 rows (the original has about 110)
+		mod.VoxelData.AddRange(new ushort[128 * 16]);
 	}
 
 	private static GameMod CreateMod()
