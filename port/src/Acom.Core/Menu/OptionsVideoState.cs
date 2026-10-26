@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/OptionsVideoState.h, src/Menu/OptionsVideoState.cpp
-// Port status: partial (missing: SDL_ListModes and SDL_WM_GrabInput – the host provides FullscreenModes and applies the mouse grab; display mode, filters and OpenGL shaders are stored as options, their effect is a host matter)
+// Port status: partial (missing: SDL_ListModes – the host provides FullscreenModes; display mode, filters and OpenGL shaders are stored as options, their effect is a host matter)
 #nullable disable
 
 using System.Globalization;
@@ -546,7 +546,7 @@ public class OptionsVideoState : OptionsBaseState
 	public void BtnLockMouseClick(Action action)
 	{
 		Options.captureMouse = _btnLockMouse.Pressed ? SDL_GrabMode.SDL_GRAB_ON : SDL_GrabMode.SDL_GRAB_OFF;
-		// missing: SDL_WM_GrabInput(Options::captureMouse); (host matter)
+		_game.GrabInput(Options.captureMouse);
 	}
 
 	/// <summary>Ask user where he wants to root screen.</summary>

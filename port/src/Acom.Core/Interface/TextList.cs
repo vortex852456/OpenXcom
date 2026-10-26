@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Interface/TextList.h, src/Interface/TextList.cpp
-// Port status: partial (missing: PageUp/PageDown scrolling and IsMouseCursorOverMe(State), need State.HasOnlyOneScrollableTextList and State.CursorX/CursorY)
 #nullable disable
 
 namespace Acom;
@@ -914,11 +913,9 @@ public class TextList : InteractiveSurface
 			}
 		}
 		// scrolling by keyboard
-		// TODO: C++ also requires (state->hasOnlyOneScrollableTextList() || isMouseCursorOverMe(state));
-		// enable once State.HasOnlyOneScrollableTextList and State.CursorX/CursorY are ported.
 		if (action.Details.type == SDLEventType.SDL_KEYDOWN &&
 			_rows.Count > _visibleRows &&
-			IsKeyboardScrollTarget(state))
+			(state.HasOnlyOneScrollableTextList || IsMouseCursorOverMe(state)))
 		{
 			if (action.Details.key.keysym.sym == SDLKey.SDLK_PAGEDOWN)
 			{
@@ -931,12 +928,8 @@ public class TextList : InteractiveSurface
 		}
 	}
 
-	/// <summary>C++: <c>state->hasOnlyOneScrollableTextList() || isMouseCursorOverMe(state)</c> (not ported yet, see Handle).</summary>
-	private static bool IsKeyboardScrollTarget(State state) => false;
-
 	/// <summary>Is the mouse cursor over the list?</summary>
-	/// <remarks>Needs State.CursorX/CursorY (C++ <c>state->getCursorX()</c>), which are not ported yet.</remarks>
-	public bool IsMouseCursorOverMe(State state) => throw new NotImplementedException("needs State.CursorX/CursorY");
+	public bool IsMouseCursorOverMe(State state) => IsMouseCursorOverMe(state.CursorX, state.CursorY);
 
 	/// <summary>Is the cursor (screen coordinates) over the list? Bounds are inclusive like in C++.</summary>
 	internal bool IsMouseCursorOverMe(int cursorX, int cursorY)

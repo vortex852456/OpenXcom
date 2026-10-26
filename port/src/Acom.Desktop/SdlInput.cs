@@ -81,6 +81,13 @@ internal sealed unsafe partial class SdlInput : IDisposable
 		}
 	}
 
+	/// <summary>Traps the mouse inside the window or releases it (SDL2 counterpart of SDL_WM_GrabInput).</summary>
+	public static void SetWindowGrab(nint window, bool grabbed) => SDL_SetWindowGrab(window, grabbed ? 1 : 0);
+
+	[LibraryImport(SdlLibrary)]
+	[UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+	private static partial void SDL_SetWindowGrab(nint window, int grabbed);
+
 	[LibraryImport(SdlLibrary)]
 	[UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
 	private static partial void SDL_AddEventWatch(delegate* unmanaged[Cdecl]<nint, nint, int> filter, nint userdata);

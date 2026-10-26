@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/OptionsBaseState.h, src/Menu/OptionsBaseState.cpp
-// Port status: partial (missing: Screen::resetDisplay and SDL_WM_GrabInput – display mode, filters and mouse grab are applied by the host)
 #nullable disable
 
 using System.Runtime.CompilerServices;
@@ -206,7 +205,8 @@ public class OptionsBaseState : State
 		Recenter(dX, dY);
 		Options.Save();
 		_game.LoadLanguages();
-		_game.Screen.ResetDisplay(); // SDL_WM_GrabInput(Options::captureMouse) is a host matter
+		_game.Screen.ResetDisplay();
+		_game.GrabInput(Options.captureMouse);
 		_game.SetVolume(Options.soundVolume, Options.musicVolume, Options.uiVolume);
 		if (Options.reload && _origin == OptionsOrigin.OPT_MENU)
 		{
@@ -236,7 +236,7 @@ public class OptionsBaseState : State
 	{
 		Options.reload = false;
 		Options.Load();
-		// missing: SDL_WM_GrabInput(Options::captureMouse); (host matter)
+		_game.GrabInput(Options.captureMouse);
 		Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, _origin == OptionsOrigin.OPT_BATTLESCAPE);
 		Screen.UpdateScale(Options.geoscapeScale, ref Options.baseXGeoscape, ref Options.baseYGeoscape, _origin != OptionsOrigin.OPT_BATTLESCAPE);
 		_game.SetVolume(Options.soundVolume, Options.musicVolume, Options.uiVolume);

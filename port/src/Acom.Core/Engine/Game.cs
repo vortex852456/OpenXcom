@@ -203,6 +203,12 @@ public sealed class Game
 	/// </summary>
 	public System.Action<int, int>? WarpMouseHandler { get; set; }
 
+	/// <summary>Host hook that traps the mouse inside the window or releases it (SDL_WM_GrabInput). Null without a window.</summary>
+	public System.Action<SDL_GrabMode>? GrabInputHandler { get; set; }
+
+	/// <summary>SDL 1.2 SDL_WM_GrabInput: traps the mouse inside the window (or releases it).</summary>
+	public void GrabInput(SDL_GrabMode mode) => GrabInputHandler?.Invoke(mode);
+
 	/// <summary>
 	/// SDL 1.2 SDL_WarpMouse: moves the pointer to a window position and posts the resulting
 	/// SDL_MOUSEMOTION event like SDL_PrivateMouseMotion (clamped to the window, relative motion
@@ -423,8 +429,8 @@ public sealed class Game
 			// "ctrl-g" grab input
 			if (sym == SDLKey.SDLK_g && IsCtrlPressed())
 			{
-				// missing: SDL_WM_GrabInput, the host has to apply the option
 				Options.captureMouse = Options.captureMouse == SDL_GrabMode.SDL_GRAB_OFF ? SDL_GrabMode.SDL_GRAB_ON : SDL_GrabMode.SDL_GRAB_OFF;
+				GrabInput(Options.captureMouse);
 			}
 			// "ctrl-n" notes UI
 			else if (sym == SDLKey.SDLK_n && IsCtrlPressed() && !IsAltPressed())

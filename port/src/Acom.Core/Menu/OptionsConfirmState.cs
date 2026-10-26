@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Menu/OptionsConfirmState.h, src/Menu/OptionsConfirmState.cpp
-// Port status: partial (missing: Screen::resetDisplay – the host applies the restored display options)
 #nullable disable
 
 using System.Globalization;
