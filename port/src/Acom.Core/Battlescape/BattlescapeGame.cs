@@ -45,6 +45,7 @@ public class BattleActionCost : RuleItemUseCost
 	public void UpdateTU() => throw new NotImplementedException();
 	public void ClearTU() => throw new NotImplementedException();
 	public bool HaveTU(string message = null) => throw new NotImplementedException();
+	public bool HaveTU(ref string message) => throw new NotImplementedException();
 	public bool SpendTU(string message = null) => throw new NotImplementedException();
 }
 
