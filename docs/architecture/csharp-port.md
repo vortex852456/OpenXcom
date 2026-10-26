@@ -113,7 +113,7 @@ Fortschritt: `python3 port/tools/port-status.py` (Zeilen je Bereich, offen/teilw
 ## Bekannte Probleme
 - Desktop-Host unter Xvfb: CPU-Last skaliert mit `FPS` (60 → ~67 %, 10 → ~15 %), also Kosten des Software-Renderings je Bild, keine Leerlaufschleife; auf echter Hardware mit GPU ungeprüft.
 - Battlescape: Feld-Cursor war im Spieltest unsichtbar, solange der Soldat auf Ebene 1 stand. Die Cursor-Zeichenlogik (`Map::drawTerrain`) entspricht Zeile für Zeile dem C++-Code; Ursache vermutlich Platzhalterdaten, mit Originaldaten zu prüfen.
-- Platzhalterdaten: Abfangfenster-Buttons nur als Kästen ohne Beschriftung (`INTERWIN.DAT`); Musik, Intro und Originalschriften werden nicht erzeugt.
+- Platzhalterdaten: Abfangfenster-Buttons mit eigener 3x5-Kurzbeschriftung (`INTERWIN.DAT`); Musik, Intro und Originalschriften werden nicht erzeugt.
 
 ## Offene Entscheidungen
 - Keine. (Skript-Engine: wird 1:1 portiert, damit OXCE-Mods laufen; das Grundspiel `xcom1` nutzt sie nicht.)

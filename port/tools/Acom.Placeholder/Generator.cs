@@ -442,7 +442,29 @@ public sealed class PlaceholderGenerator
 			: Art.Sprite(kind, w, h, frame, seed);
 
 	/// <summary>Positions (x, y, height; width 36) of the six ImageButtons in DogfightState's window.</summary>
-	private static readonly (int x, int y, int h)[] s_dogfightButtons = [(83, 4, 15), (120, 4, 15), (83, 20, 15), (120, 20, 15), (120, 36, 15), (120, 52, 17)];
+	private static readonly (int x, int y, int h, string label)[] s_dogfightButtons =
+		[(83, 4, 15, "STAND"), (120, 4, 15, "CAUT"), (83, 20, 15, "STD"), (120, 20, 15, "AGGR"), (120, 36, 15, "DISEN"), (120, 52, 17, "UFO")];
+
+	/// <summary>Own 3x5 pixel letters for the dogfight button labels (rows top to bottom, 3 bits each, MSB left).</summary>
+	private static readonly Dictionary<char, int[]> s_tinyFont = new()
+	{
+		['A'] = [2, 5, 7, 5, 5], ['C'] = [3, 4, 4, 4, 3], ['D'] = [6, 5, 5, 5, 6], ['E'] = [7, 4, 6, 4, 7],
+		['F'] = [7, 4, 6, 4, 4], ['G'] = [3, 4, 5, 5, 3], ['I'] = [7, 2, 2, 2, 7], ['N'] = [5, 7, 7, 5, 5],
+		['O'] = [2, 5, 5, 5, 2], ['R'] = [6, 5, 6, 5, 5], ['S'] = [3, 4, 2, 1, 6], ['T'] = [7, 2, 2, 2, 2],
+		['U'] = [5, 5, 5, 5, 7],
+	};
+
+	private static void TinyText(Image img, int x0, int y0, string text, byte color)
+	{
+		for (int i = 0; i < text.Length; ++i)
+		{
+			var rows = s_tinyFont[text[i]];
+			for (int y = 0; y < 5; ++y)
+				for (int x = 0; x < 3; ++x)
+					if ((rows[y] >> (2 - x) & 1) != 0)
+						img[x0 + i * 4 + x, y0 + y] = color;
+		}
+	}
 
 	private static Image Screen(string name, int w, int h, uint seed, int group)
 	{
@@ -466,10 +488,11 @@ public sealed class PlaceholderGenerator
 				for (int x = 0; x < 160; ++x)
 					img[x, y] = Art.Color(9, 12 + Noise.Range(seed, 2, x / 2, y / 2));
 			Art.Border(img, 0, 0, 160, 96, 9, 1);
-			foreach (var (bx, by, bh) in s_dogfightButtons)
+			foreach (var (bx, by, bh, label) in s_dogfightButtons)
 			{
 				Art.Rect(img, bx, by, 36, bh, Art.Color(9, 5));
 				Art.Border(img, bx, by, 36, bh, 9, 1);
+				TinyText(img, bx + (36 - (label.Length * 4 - 1)) / 2, by + (bh - 5) / 2, label, Art.Color(9, 14));
 			}
 			return img;
 		}
