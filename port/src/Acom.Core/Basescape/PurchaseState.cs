@@ -72,6 +72,17 @@ public class PurchaseState : TouchState
 		return value;
 	}
 
+	/// <summary>C++ <c>std::map&lt;std::string, bool&gt;::operator[]</c> read: inserts false when missing.</summary>
+	internal static bool MapGetBool(IDictionary<string, bool> map, string key)
+	{
+		if (!map.TryGetValue(key, out bool value))
+		{
+			map[key] = false;
+			value = false;
+		}
+		return value;
+	}
+
 	/// <summary>
 	/// Formats the "space used" value: used stores, the pending change (if any) and the available stores.
 	/// </summary>
