@@ -33,11 +33,11 @@ public class BattleState
 
 	/// <summary>Sets up a BattleState.</summary>
 	/// <param name="parent">Pointer to the parent state.</param>
-	/// <param name="action">Struct containing info about the action (copied, like the C++ by-value parameter).</param>
+	/// <param name="action">Struct containing info about the action (copied, like the C++ value parameter).</param>
 	public BattleState(BattlescapeGame parent, BattleAction action)
 	{
 		_parent = parent;
-		_action = CopyAction(action);
+		_action = new BattleAction(action);
 	}
 
 	/// <summary>Sets up a BattleState.</summary>
@@ -73,50 +73,4 @@ public class BattleState
 
 	/// <summary>Gets the action result. Returns error messages or an empty string when everything went fine.</summary>
 	public BattleAction Action => _action;
-
-	/// <summary>
-	/// Copies a BattleAction member by member like the implicit C++ copy constructor of the value struct
-	/// (the waypoint list is copied too, not shared).
-	/// </summary>
-	/// <param name="action">The action to copy.</param>
-	/// <returns>An independent copy.</returns>
-	internal static BattleAction CopyAction(BattleAction action)
-	{
-		ArgumentNullException.ThrowIfNull(action);
-		var copy = new BattleAction();
-		// RuleItemUseCost
-		copy.Time = action.Time;
-		copy.Energy = action.Energy;
-		copy.Morale = action.Morale;
-		copy.Health = action.Health;
-		copy.Stun = action.Stun;
-		copy.Mana = action.Mana;
-		// BattleActionCost
-		copy.type = action.type;
-		copy.actor = action.actor;
-		copy.weapon = action.weapon;
-		copy.skillRules = action.skillRules;
-		// BattleAction
-		copy.target = action.target;
-		copy.waypoints = action.waypoints != null ? new List<Position>(action.waypoints) : null;
-		copy.targeting = action.targeting;
-		copy.value = action.value;
-		copy.result = action.result;
-		copy.strafe = action.strafe;
-		copy.run = action.run;
-		copy.sneak = action.sneak;
-		copy.ignoreSpottedEnemies = action.ignoreSpottedEnemies;
-		copy.kneel = action.kneel;
-		copy.diff = action.diff;
-		copy.autoShotCounter = action.autoShotCounter;
-		copy.cameraPosition = action.cameraPosition;
-		copy.desperate = action.desperate;
-		copy.finalFacing = action.finalFacing;
-		copy.finalAction = action.finalAction;
-		copy.number = action.number;
-		copy.sprayTargeting = action.sprayTargeting;
-		copy.relativeOrigin = action.relativeOrigin;
-		copy.terrainMeleeTilePart = action.terrainMeleeTilePart;
-		return copy;
-	}
 }
