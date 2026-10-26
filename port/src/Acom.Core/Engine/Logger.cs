@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Logger.h
-// Port status: partial (missing: log file output from CrossPlatform::log; messages go to the configurable Sink).
 
 namespace Acom;
 
@@ -52,8 +51,11 @@ public static class Logger
 	/// <summary>Messages above this level are dropped.</summary>
 	public static SeverityLevel ReportingLevel { get; set; } = SeverityLevel.LOG_UNCENSORED;
 
-	/// <summary>Receives every reported message (default: standard error).</summary>
-	public static Action<SeverityLevel, string> Sink { get; set; } = (level, message) => Console.Error.WriteLine($"[{ToString(level)}]\t{message}");
+	/// <summary>
+	/// Receives every reported message. Default: <see cref="CrossPlatform.Log"/> (standard error and the log file,
+	/// like the C++ Logger destructor); tests can replace it to capture messages.
+	/// </summary>
+	public static Action<SeverityLevel, string> Sink { get; set; } = CrossPlatform.Log;
 
 	/// <summary>Display name of a level.</summary>
 	public static string ToString(SeverityLevel level) => s_levelNames[(int)level];

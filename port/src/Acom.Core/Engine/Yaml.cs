@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Yaml.h, src/Engine/Yaml.cpp
-// Port status: partial (missing: readValBase64/writeBase64, emitDescendants with default values, save-header-only reading)
 //
 // The C++ code wraps rapidyaml. This port parses with YamlDotNet's event parser into an own node tree,
 // so rapidyaml's behaviour is kept where rulesets and mods rely on it:
@@ -245,8 +244,20 @@ public sealed class YamlRootNodeReader
 	{
 	}
 
-	/// <summary>Reads a YAML file.</summary>
-	public static YamlRootNodeReader FromFile(string fullFilePath) => new(File.ReadAllBytes(fullFilePath), fullFilePath);
+	/// <summary>Reads a YAML file (C++ <c>YamlRootNodeReader(fullFilePath, onlyInfoHeader)</c>).</summary>
+	/// <param name="fullFilePath">File to read.</param>
+	/// <param name="onlyInfoHeader">Read only the first document of a savegame (up to the first "\n---"), for the load/save lists.</param>
+	public static YamlRootNodeReader FromFile(string fullFilePath, bool onlyInfoHeader = false)
+	{
+		byte[] data = onlyInfoHeader ? CrossPlatform.GetYamlSaveHeaderRaw(fullFilePath) : CrossPlatform.ReadFileRaw(fullFilePath);
+		int length = data.Length;
+		if (onlyInfoHeader)
+		{
+			// C++: str.find("\n---") + 1, i.e. npos + 1 == 0 (empty document) without a separator
+			length = data.AsSpan().IndexOf("\n---"u8) + 1;
+		}
+		return new YamlRootNodeReader(data.AsSpan(0, length), fullFilePath);
+	}
 
 	/// <summary>The root node.</summary>
 	public YamlNodeReader ToBase() => _root;
@@ -448,6 +459,39 @@ public readonly struct YamlNodeReader
 
 	/// <summary>Serializes this node (and its children) back to YAML text.</summary>
 	public string Emit() => _node == null ? string.Empty : YamlEmitter.Emit(YamlEmitter.FromReader(_node));
+
+	/// <summary>Serializes the children of a map/seq node as a new root document; empty for other nodes (C++ emitDescendants).</summary>
+	public string EmitDescendants() => EmitDescendants(default);
+
+	/// <summary>
+	/// Serializes the children of a map/seq node as a new root document, plus the children of
+	/// <paramref name="defaultValuesReader"/> whose keys are still missing (appended at the end).
+	/// Empty for a scalar or invalid node (C++ <c>emitDescendants(defaultValuesReader)</c>).
+	/// </summary>
+	public string EmitDescendants(YamlNodeReader defaultValuesReader)
+	{
+		YamlWriteNode root;
+		if (IsMap)
+			root = new YamlWriteNode { Kind = YamlWriteNode.NodeKind.Map };
+		else if (IsSeq)
+			root = new YamlWriteNode { Kind = YamlWriteNode.NodeKind.Seq };
+		else
+			return string.Empty;
+		foreach (var child in _node!.Children)
+			root.Children.Add(YamlEmitter.FromReader(child));
+		if (defaultValuesReader._node is { } defaults)
+		{
+			foreach (var child in defaults.Children)
+			{
+				if (!root.Children.Exists(c => c.Key == child.Key))
+					root.Children.Add(YamlEmitter.FromReader(child));
+			}
+		}
+		return YamlEmitter.Emit(root);
+	}
+
+	/// <summary>Decodes a base64 scalar into binary data (C++ readValBase64).</summary>
+	public byte[] ReadValBase64() => Convert.FromBase64String(Val);
 
 	[System.Diagnostics.CodeAnalysis.DoesNotReturn]
 	private static void ThrowTypeError(YamlTreeNode node, Type type)

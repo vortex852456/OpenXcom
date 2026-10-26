@@ -18,8 +18,10 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/CrossPlatform.h, src/Engine/CrossPlatform.cpp
-// Port status: partial (command line, folder discovery, file/path helpers, versions, locale, quit shortcut; missing: screenshots, embedded assets,
-// save headers, error dialogs, path conversions; flashWindow is a no-op).
+// Not ported: getEmbeddedAsset (no embedded assets, see the deviation table in docs/architecture/csharp-port.md),
+// setWindowIcon (the host owns the window), testInternetConnection/downloadFile/startUpdateProcess (only used by the
+// dropped oxceUpdateCheck), processArgs (SetArgs; .NET already passes UTF-16 arguments). flashWindow is a no-op.
+// Deviation: crashDump logs the .NET exception and stack trace instead of writing a Windows minidump / native backtrace.
 // Deviation: folder listings are sorted case-insensitively (like NTFS); the C++ code uses the unspecified readdir order.
 // Deviation: ACOM uses its own folder names ("acom"/"ACOM") instead of "openxcom"/"OpenXcom",
 // so it never touches an existing OpenXcom installation.
@@ -393,10 +395,73 @@ public static class CrossPlatform
 	/// <summary>Is the version of the data (common/standard folders) lower than the minimum required ruleset version?</summary>
 	public static bool IsLowerThanRequiredVersion(string dataVersion) => IsLowerThanRequiredVersion(ParseVersion(dataVersion), Acom.Version.MIN_REQUIRED_RULESET_VERSION_NUMBER);
 
-	/// <summary>Reads a whole file.</summary>
-	public static byte[] ReadFileRaw(string filename) => File.ReadAllBytes(filename);
+	/// <summary>Fully reads a file and returns a stream over its bytes.</summary>
+	public static Stream ReadFile(string filename) => new MemoryStream(ReadFileRaw(filename), writable: false);
+
+	/// <summary>Fully reads a file.</summary>
+	/// <exception cref="IOException">The file can't be read (the error is logged too).</exception>
+	public static byte[] ReadFileRaw(string filename)
+	{
+		try
+		{
+			return File.ReadAllBytes(filename);
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			string err = $"Failed to read {filename}: {e.Message}";
+			Logger.Error(err);
+			throw new IOException(err, e);
+		}
+	}
+
+	/// <summary>Gets a stream over a file's bytes at least up to and including the first "\n---" sequence (savegames only).</summary>
+	public static Stream GetYamlSaveHeader(string filename) => new MemoryStream(GetYamlSaveHeaderRaw(filename), writable: false);
+
+	/// <summary>
+	/// Reads a file in 4096 byte chunks until the data contains the first "\n---" sequence or the file ends
+	/// (savegames only, so the load/save lists don't parse the whole game).
+	/// </summary>
+	/// <returns>All bytes read so far, which may extend past the separator.</returns>
+	/// <exception cref="IOException">The file can't be read (the error is logged too).</exception>
+	public static byte[] GetYamlSaveHeaderRaw(string filename)
+	{
+		ReadOnlySpan<byte> separator = "\n---"u8;
+		const int chunksize = 4096;
+		try
+		{
+			using var stream = File.OpenRead(filename);
+			byte[] data = new byte[chunksize];
+			int size = 0;
+			int offs = 0;
+			while (true)
+			{
+				int actuallyRead = stream.Read(data, offs, chunksize);
+				if (actuallyRead == 0)
+				{
+					break;
+				}
+				size += actuallyRead;
+				// C++ strstr stops at a NUL byte; savegames are text, so the plain search is the same
+				int searchFrom = offs > 4 ? offs - 4 : 0;
+				if (data.AsSpan(searchFrom, size - searchFrom).IndexOf(separator) >= 0)
+				{
+					break;
+				}
+				Array.Resize(ref data, size + chunksize);
+				offs = size;
+			}
+			return data[..size];
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			string err = $"Failed to read {filename}: {e.Message}";
+			Logger.Error(err);
+			throw new IOException(err, e);
+		}
+	}
 
 	/// <summary>Writes a text file (UTF-8 without BOM).</summary>
+	/// <returns>If we did write it.</returns>
 	public static bool WriteFile(string filename, string data)
 	{
 		try
@@ -409,6 +474,64 @@ public static class CrossPlatform
 			Logger.Error($"Failed to write {filename}: {e.Message}");
 			return false;
 		}
+	}
+
+	/// <summary>Writes a binary file.</summary>
+	/// <returns>If we did write it.</returns>
+	public static bool WriteFile(string filename, ReadOnlySpan<byte> data)
+	{
+		try
+		{
+			using var stream = File.Create(filename);
+			stream.Write(data);
+			return true;
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			Logger.Error($"Failed to write {filename}: {e.Message}");
+			return false;
+		}
+	}
+
+	/// <summary>Copies a file, replacing any existing file (like C++, only on Windows; elsewhere it returns false).</summary>
+	/// <returns>True if the operation succeeded, False otherwise.</returns>
+	public static bool CopyFile(string src, string dest)
+	{
+		if (!OperatingSystem.IsWindows())
+			return false;
+		try
+		{
+			File.Copy(src, dest, true);
+			return true;
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			return false;
+		}
+	}
+
+	/// <summary>Adds an ending slash to a path if necessary.</summary>
+	public static string ConvertPath(string path)
+	{
+		ArgumentNullException.ThrowIfNull(path);
+		if (path.Length != 0 && path[^1] != '/')
+			return path + '/';
+		return path;
+	}
+
+	/// <summary>Gets the last modified date of a file as a Unix timestamp (0 if it can't be read).</summary>
+	public static long GetDateModified(string path)
+	{
+		if (!File.Exists(path))
+			return 0;
+		return new DateTimeOffset(File.GetLastWriteTimeUtc(path)).ToUnixTimeSeconds();
+	}
+
+	/// <summary>Converts a Unix timestamp into local date and time strings using ISO 8601 ("%Y-%m-%d", "%H:%M").</summary>
+	public static (string first, string second) TimeToString(long time)
+	{
+		var local = DateTimeOffset.FromUnixTimeSeconds(time).ToLocalTime();
+		return (local.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), local.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture));
 	}
 
 	/// <summary>Gets the user's locale as "language-COUNTRY" (e.g. "de-DE").</summary>
@@ -474,11 +597,204 @@ public static class CrossPlatform
 		}
 	}
 
-	private static string s_logFileName = "standard error output";
+	/// <summary>
+	/// Gets the file name of the executable (C++ only knows it on Windows and returns "" elsewhere).
+	/// </summary>
+	/// <param name="includingPath">Including full path or just the file name?</param>
+	public static string GetExeFilename(bool includingPath)
+	{
+		if (OperatingSystem.IsWindows() && Environment.ProcessPath is { } path)
+			return includingPath ? path.Replace('\\', '/') : Path.GetFileName(path);
+		return string.Empty;
+	}
 
-	/// <summary>Where the log goes (C++ writes a log file; the port's <see cref="Logger"/> writes to <see cref="Logger.Sink"/>).</summary>
+	private static string s_errorDlg = string.Empty;
+
+	/// <summary>
+	/// Shows an error message box where the C++ code calls MessageBoxW (Windows). Set by the host, which has a
+	/// windowing library; without it the error goes to standard error.
+	/// </summary>
+	public static Action<string>? ErrorDialogHandler { get; set; }
+
+	/// <summary>Determines the available Linux error dialogs (kdialog, zenity, gdialog, xdialog).</summary>
+	public static void GetErrorDialog()
+	{
+		if (OperatingSystem.IsWindows())
+			return;
+		if (Environment.GetEnvironmentVariable("KDE_SESSION_UID") != null && RunShell("which kdialog > /dev/null 2>&1") == 0)
+			s_errorDlg = "kdialog --error ";
+		else if (RunShell("which zenity > /dev/null 2>&1") == 0)
+			s_errorDlg = "zenity --no-wrap --error --text=";
+		else if (RunShell("which kdialog > /dev/null 2>&1") == 0)
+			s_errorDlg = "kdialog --error ";
+		else if (RunShell("which gdialog > /dev/null 2>&1") == 0)
+			s_errorDlg = "gdialog --msgbox ";
+		else if (RunShell("which xdialog > /dev/null 2>&1") == 0)
+			s_errorDlg = "xdialog --msgbox ";
+	}
+
+	/// <summary>Displays a message box with an error message and logs it as fatal.</summary>
+	public static void ShowError(string error)
+	{
+		ArgumentNullException.ThrowIfNull(error);
+		if (OperatingSystem.IsWindows())
+		{
+			if (ErrorDialogHandler != null)
+				ErrorDialogHandler(error);
+			else
+				Console.Error.WriteLine(error);
+		}
+		else if (s_errorDlg.Length == 0)
+		{
+			Console.Error.WriteLine(error);
+		}
+		else
+		{
+			string nError = '"' + error + '"';
+			nError = nError.Replace("\n", "\\n", StringComparison.Ordinal);
+			string cmd = s_errorDlg + nError;
+			if (RunShell(cmd) != 0)
+				Console.Error.WriteLine(error);
+		}
+		Logger.Fatal(error);
+	}
+
+	/// <summary>Runs a command through /bin/sh like C <c>system()</c>; -1 if the shell can't be started.</summary>
+	private static int RunShell(string cmd)
+	{
+		try
+		{
+			var info = new System.Diagnostics.ProcessStartInfo("/bin/sh") { UseShellExecute = false };
+			info.ArgumentList.Add("-c");
+			info.ArgumentList.Add(cmd);
+			using var process = System.Diagnostics.Process.Start(info);
+			if (process == null)
+				return -1;
+			process.WaitForExit();
+			return process.ExitCode;
+		}
+		catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or PlatformNotSupportedException)
+		{
+			return -1;
+		}
+	}
+
+	/// <summary>Logs the stack back trace (of the exception, or leading up to this call if null).</summary>
+	public static void StackTrace(Exception? ex)
+	{
+		string trace = ex?.StackTrace ?? Environment.StackTrace;
+		foreach (var line in trace.Split('\n'))
+		{
+			string frame = line.TrimEnd('\r');
+			if (frame.Length != 0)
+				Logger.Fatal(frame);
+		}
+	}
+
+	/// <summary>Logs the details of this crash and shows an error.</summary>
+	/// <param name="ex">The unhandled exception, if any.</param>
+	/// <param name="err">Exception message, if any (used when <paramref name="ex"/> is null).</param>
+	public static void CrashDump(Exception? ex, string err)
+	{
+		string error = ex == null ? err : $"{ex.GetType().FullName}: {ex.Message}";
+		Logger.Fatal($"A fatal error has occurred: {error}");
+		StackTrace(ex);
+		var msg = new System.Text.StringBuilder();
+		// Deviation: names ACOM instead of OpenXcom and its OXCE forum board
+		msg.Append("ACOM has crashed: ").Append(error).Append('\n');
+		msg.Append("Log file: ").Append(GetLogFileName()).Append('\n');
+		msg.Append("If this error was unexpected, please report it to the ACOM project.").Append('\n');
+		msg.Append("The following can help us solve the problem:").Append('\n');
+		msg.Append("1. a saved game from just before the crash (helps 98%)").Append('\n');
+		msg.Append("2. a detailed description how to reproduce the crash (helps 80%)").Append('\n');
+		msg.Append("3. a log file (helps 10%)").Append('\n');
+		msg.Append("4. a screenshot of this error message (helps 5%)");
+		ShowError(msg.ToString());
+	}
+
+	private const int LOG_BUFFER_LIMIT = 1 << 10;
+	private static readonly LinkedList<(SeverityLevel level, string msg)> s_logBuffer = new();
+	private static readonly System.Threading.Lock s_logLock = new();
+	private static string s_logFileName = string.Empty;
+
+	/// <summary>Gets the log file (empty until <see cref="Options.Init"/> sets it).</summary>
 	public static string GetLogFileName() => s_logFileName;
 
-	/// <summary>Sets the name reported by <see cref="GetLogFileName"/> (for a host that writes the log to a file).</summary>
-	public static void SetLogFileName(string name) => s_logFileName = name;
+	/// <summary>
+	/// Setting the log file name and setting the effective reportingLevel to not LOG_UNCENSORED turns off
+	/// buffering of the log messages, and turns on writing them to the actual log (and flushes the buffer).
+	/// </summary>
+	public static void SetLogFileName(string name)
+	{
+		DeleteFile(name);
+		int sz;
+		lock (s_logLock)
+			sz = s_logBuffer.Count;
+		Logger.Debug($"setLogFileName({name}) was '{s_logFileName}'; {sz} in buffer");
+		s_logFileName = name;
+	}
+
+	/// <summary>Appends a file, logs nothing to avoid recursion.</summary>
+	private static bool LogToFile(string filename, string data)
+	{
+		try
+		{
+			File.AppendAllText(filename, data);
+			return true;
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+		{
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Writes a reported log message: to standard error at debug levels, into the log file once it is set
+	/// (messages before that are buffered and filtered by the then effective level).
+	/// </summary>
+	public static void Log(SeverityLevel level, string message)
+	{
+		string msg = $"[{Now()}]\t[{Logger.ToString(level)}]\t{message}\n";
+
+		var effectiveLevel = Logger.ReportingLevel;
+		lock (s_logLock)
+		{
+			if (effectiveLevel >= SeverityLevel.LOG_DEBUG)
+			{
+				Console.Error.Write(msg);
+				Console.Error.Flush();
+			}
+			if (s_logBuffer.Count > LOG_BUFFER_LIMIT) // drop earliest message so as to not eat all memory
+			{
+				s_logBuffer.RemoveFirst();
+			}
+			if (s_logFileName.Length == 0 || effectiveLevel == SeverityLevel.LOG_UNCENSORED) // no log file; accumulate.
+			{
+				s_logBuffer.AddLast((level, msg));
+				return;
+			}
+			// attempt to flush the buffer
+			bool failed = false;
+			while (s_logBuffer.Count != 0)
+			{
+				var front = s_logBuffer.First!.Value;
+				if (effectiveLevel >= front.level)
+				{
+					if (!LogToFile(s_logFileName, front.msg))
+					{
+						string err = $"Failed to append to '{s_logFileName}'";
+						s_logBuffer.AddLast((SeverityLevel.LOG_ERROR, err));
+						failed = true;
+						break;
+					}
+				}
+				s_logBuffer.RemoveFirst();
+			}
+			// retain the current message if write fails.
+			if (failed || !LogToFile(s_logFileName, msg))
+			{
+				s_logBuffer.AddLast((level, msg));
+			}
+		}
+	}
 }

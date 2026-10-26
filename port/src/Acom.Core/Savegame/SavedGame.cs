@@ -318,7 +318,7 @@ public partial class SavedGame
 				}
 				info.Add(saveInfo);
 			}
-			catch (Exception e) when (e is InvalidOperationException or YamlReadException)
+			catch (Exception e) when (e is InvalidOperationException or IOException or YamlReadException)
 			{
 				Logger.Error($"{filename}: {e.Message}");
 				continue;
@@ -340,7 +340,7 @@ public partial class SavedGame
 	internal static SaveInfo ReadSaveInfo(string fullname, string file, Language lang)
 	{
 		ArgumentNullException.ThrowIfNull(lang);
-		var reader = new YamlRootNodeReader(ReadYamlSaveHeader(fullname), fullname).ToBase();
+		var reader = YamlRootNodeReader.FromFile(fullname, true).ToBase();
 		var save = new SaveInfo();
 
 		save.fileName = file;
@@ -381,8 +381,8 @@ public partial class SavedGame
 			save.reserved = false;
 		}
 
-		save.timestamp = GetDateModified(fullname);
-		var str = TimeToString(save.timestamp);
+		save.timestamp = CrossPlatform.GetDateModified(fullname);
+		var str = CrossPlatform.TimeToString(save.timestamp);
 		save.isoDate = str.first;
 		save.isoTime = str.second;
 		reader.TryRead("mods", ref save.mods);
@@ -408,62 +408,6 @@ public partial class SavedGame
 		save.details = details.ToString();
 
 		return save;
-	}
-
-	/// <summary>
-	/// Reads a save file up to the first "\n---" document separator and returns the header document
-	/// (C++ CrossPlatform::getYamlSaveHeaderRaw plus the cut in YamlRootNodeReader). Empty if there is no separator.
-	/// </summary>
-	internal static string ReadYamlSaveHeader(string filename)
-	{
-		ReadOnlySpan<byte> separator = "\n---"u8;
-		try
-		{
-			using var stream = File.OpenRead(filename);
-			var data = new MemoryStream();
-			var chunk = new byte[4096];
-			int found = -1;
-			while (true)
-			{
-				int actuallyRead = stream.Read(chunk, 0, chunk.Length);
-				if (actuallyRead == 0)
-				{
-					break;
-				}
-				int searchFrom = Math.Max(0, (int)data.Length - (separator.Length - 1));
-				data.Write(chunk, 0, actuallyRead);
-				int pos = data.GetBuffer().AsSpan(searchFrom, (int)data.Length - searchFrom).IndexOf(separator);
-				if (pos >= 0)
-				{
-					found = searchFrom + pos;
-					break;
-				}
-			}
-			// C++: str.find("\n---") + 1, i.e. npos + 1 == 0 without separator
-			int length = found + 1;
-			return Encoding.UTF8.GetString(data.GetBuffer(), 0, length);
-		}
-		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-		{
-			string err = $"Failed to read {filename}: {e.Message}";
-			Logger.Error(err);
-			throw new InvalidOperationException(err, e);
-		}
-	}
-
-	/// <summary>C++ CrossPlatform::getDateModified: modification time of a file as time_t, 0 if it can't be read.</summary>
-	private static long GetDateModified(string path)
-	{
-		if (!File.Exists(path))
-			return 0;
-		return new DateTimeOffset(File.GetLastWriteTimeUtc(path)).ToUnixTimeSeconds();
-	}
-
-	/// <summary>C++ CrossPlatform::timeToString: local date and time in ISO 8601 ("%Y-%m-%d", "%H:%M").</summary>
-	private static (string first, string second) TimeToString(long time)
-	{
-		var local = DateTimeOffset.FromUnixTimeSeconds(time).ToLocalTime();
-		return (local.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), local.ToString("HH:mm", CultureInfo.InvariantCulture));
 	}
 
 	/// <summary>Loads a saved game's contents from a YAML file.</summary>

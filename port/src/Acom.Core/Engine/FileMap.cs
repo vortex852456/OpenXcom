@@ -18,7 +18,8 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/FileMap.h, src/Engine/FileMap.cpp
-// Port status: partial (missing: embedded assets (exe:common.zip/standard.zip), getAllYAML (not implemented in C++ either))
+// Deviation: no embedded assets (exe:common.zip/standard.zip, scanModZipRW/mapZipFileRW), see docs/architecture/csharp-port.md;
+// embeddedOnly therefore never skips the folder/zip search. getAllYAML is declared but not implemented in C++ either.
 // Zip files are read with System.IO.Compression instead of miniz.
 
 using System.IO.Compression;
@@ -442,6 +443,9 @@ public static class FileMap
 		{
 			Logger.Verbose(logCtx + "zip not found (" + fullname + ")");
 		}
+
+		// now try the embedded zip: getEmbeddedAsset never finds one in this port
+		Logger.Verbose(logCtx + "embedded asset not found (" + zipname + ")");
 
 		if (!mappedAnything)
 			Logger.Info(logCtx + "external resources not found.");

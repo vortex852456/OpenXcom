@@ -110,7 +110,7 @@ public class StatString
 			{
 				string wstring = statStringDef.String;
 				result += wstring;
-				if (wstring.EnumerateRunes().Count() > 1) // Unicode::codePointLengthUTF8
+				if (Unicode.CodePointLength(wstring) > 1)
 				{
 					break;
 				}

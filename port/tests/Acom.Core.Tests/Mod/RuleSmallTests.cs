@@ -99,16 +99,15 @@ public class RuleSmallTests
 	[Fact]
 	public void Spawned_soldier_template_merges_previous_values()
 	{
-		var first = RuleEvent.EmitDescendants(new YamlRootNodeReader("{name: Bob, rank: 2}", "test").ToBase(), default);
-		var merged = RuleEvent.EmitDescendants(new YamlRootNodeReader("{rank: 3, armor: STR_NONE_UC}", "test").ToBase(),
-			new YamlRootNodeReader(first, "previous").ToBase());
+		var first = new YamlRootNodeReader("{name: Bob, rank: 2}", "test").ToBase().EmitDescendants(default);
+		var merged = new YamlRootNodeReader("{rank: 3, armor: STR_NONE_UC}", "test").ToBase().EmitDescendants(new YamlRootNodeReader(first, "previous").ToBase());
 		var reader = new YamlRootNodeReader(merged, "merged").ToBase();
 		Assert.Equal(3, reader["rank"].ReadVal<int>());
 		Assert.Equal("STR_NONE_UC", reader["armor"].ReadVal<string>());
 		Assert.Equal("Bob", reader["name"].ReadVal<string>());
-		Assert.Equal("", RuleEvent.EmitDescendants(new YamlRootNodeReader("scalar", "test").ToBase(), default));
+		Assert.Equal("", new YamlRootNodeReader("scalar", "test").ToBase().EmitDescendants(default));
 		// an empty previous template (the default "" of the C++ YamlString) is valid too
-		var fromEmpty = RuleEvent.EmitDescendants(new YamlRootNodeReader("{rank: 1}", "test").ToBase(), new YamlRootNodeReader("", "empty").ToBase());
+		var fromEmpty = new YamlRootNodeReader("{rank: 1}", "test").ToBase().EmitDescendants(new YamlRootNodeReader("", "empty").ToBase());
 		Assert.Equal(1, new YamlRootNodeReader(fromEmpty, "x").ToBase()["rank"].ReadVal<int>());
 	}
 

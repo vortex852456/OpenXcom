@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Palette.h, src/Engine/Palette.cpp
-// Port status: partial (file access goes through streams until FileMap/CrossPlatform are ported).
+// File access goes through FileMap (loadDat) and CrossPlatform.WriteFile (save*); the stream overloads serve tests and tools.
 
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -45,6 +45,18 @@ public sealed class Palette
 
 	/// <summary>Gets the colors of the palette (all of them, starting at index 0).</summary>
 	public Rgba[] Colors => _colors ?? throw new InvalidOperationException("Palette is not initialized");
+
+	/// <summary>
+	/// Loads a palette in X-Com DAT format (6-bit RGB triplets) from the virtual file system.
+	/// </summary>
+	/// <param name="filename">Filename of the palette (VFS path).</param>
+	/// <param name="ncolors">Number of colors in the palette.</param>
+	/// <param name="offset">Position of the palette in the file (in bytes).</param>
+	public void LoadDat(string filename, int ncolors, int offset = 0)
+	{
+		using var palFile = FileMap.GetStream(filename);
+		LoadDat(palFile, ncolors, offset);
+	}
 
 	/// <summary>
 	/// Loads a palette in X-Com DAT format (6-bit RGB triplets).
@@ -129,6 +141,30 @@ public sealed class Palette
 
 	/// <summary>Position of a color block in a palette (usually 16-color gradients).</summary>
 	public static byte BlockOffset(byte block) => (byte)(block * 16);
+
+	/// <summary>Saves the palette as a RIFF PAL file.</summary>
+	public void SavePal(string file)
+	{
+		using var output = new MemoryStream();
+		SavePal(output);
+		CrossPlatform.WriteFile(file, output.GetBuffer().AsSpan(0, (int)output.Length));
+	}
+
+	/// <summary>Saves the palette as a ruleset snippet (customPalettes).</summary>
+	public void SavePalMod(string file, string type, string target)
+	{
+		using var output = new StringWriter(CultureInfo.InvariantCulture);
+		SavePalMod(output, type, target);
+		CrossPlatform.WriteFile(file, output.ToString());
+	}
+
+	/// <summary>Saves the palette in JASC-PAL text format.</summary>
+	public void SavePalJasc(string file)
+	{
+		using var output = new StringWriter(CultureInfo.InvariantCulture);
+		SavePalJasc(output);
+		CrossPlatform.WriteFile(file, output.ToString());
+	}
 
 	/// <summary>Writes the palette as a RIFF PAL file.</summary>
 	public void SavePal(Stream output)

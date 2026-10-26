@@ -265,4 +265,29 @@ public class YamlTests
 		var again = new YamlRootNodeReader(reader.ToBase().Emit(), "again").ToBase();
 		Assert.Equal(["x", "y"], again["b"].ReadVal<List<string>>());
 	}
+
+	[Fact]
+	public void Base64_round_trip()
+	{
+		byte[] data = [0, 1, 2, 0xFE, 0xFF, (byte)'\n', 0x3E];
+		var writer = new YamlRootNodeWriter();
+		writer.SetAsMap();
+		writer.WriteBase64("bin", data);
+		var reader = new YamlRootNodeReader(writer.Emit(), "b64").ToBase();
+		Assert.Equal("AAEC/v8KPg==", reader["bin"].Val);
+		Assert.Equal(data, reader["bin"].ReadValBase64());
+		Assert.Empty(Root("bin: ''").ToBase()["bin"].ReadValBase64());
+	}
+
+	[Fact]
+	public void Emit_descendants_without_defaults()
+	{
+		var node = Root("t:\n  a: 1\n  b: [x, y]\n")["t"];
+		var copy = new YamlRootNodeReader(node.EmitDescendants(), "copy").ToBase();
+		Assert.Equal(["a", "b"], copy.Children().Select(c => c.Key));
+		Assert.Equal(["x", "y"], copy["b"].ReadVal<List<string>>());
+		Assert.Equal(["x", "y"], new YamlRootNodeReader(copy["b"].EmitDescendants(), "seq").ToBase().ReadVal<List<string>>());
+		Assert.Equal("", copy["a"].EmitDescendants());
+		Assert.Equal("", default(YamlNodeReader).EmitDescendants());
+	}
 }

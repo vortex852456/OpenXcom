@@ -137,18 +137,18 @@ public class UnitTests
 	public void Emit_descendants_adds_missing_default_keys()
 	{
 		var node = new YamlRootNodeReader("t:\n  a: 1\n  b: [x, y]\n", "test").ToBase()["t"];
-		var first = Unit.EmitDescendants(node, new YamlRootNodeReader("", "(spawned soldier template)").ToBase());
+		var first = node.EmitDescendants(new YamlRootNodeReader("", "(spawned soldier template)").ToBase());
 		var parsed = new YamlRootNodeReader(first, "first").ToBase();
 		Assert.Equal(1, parsed.Read("a", 0));
 		Assert.Equal(["x", "y"], parsed.Read<List<string>>("b", null!));
 
 		// a later mod only changes "a": "b" comes from the previous template
 		var later = new YamlRootNodeReader("t:\n  a: 2\n", "test").ToBase()["t"];
-		var merged = new YamlRootNodeReader(Unit.EmitDescendants(later, parsed), "merged").ToBase();
+		var merged = new YamlRootNodeReader(later.EmitDescendants(parsed), "merged").ToBase();
 		Assert.Equal(2, merged.Read("a", 0));
 		Assert.Equal(["x", "y"], merged.Read<List<string>>("b", null!));
 		Assert.Equal(["a", "b"], merged.Children().Select(c => c.Key));
 
-		Assert.Equal("", Unit.EmitDescendants(new YamlRootNodeReader("t: 5", "test").ToBase()["t"], default));
+		Assert.Equal("", new YamlRootNodeReader("t: 5", "test").ToBase()["t"].EmitDescendants(default));
 	}
 }

@@ -366,32 +366,6 @@ public partial class Soldier
 		}
 	}
 
-	/// <summary>Number of Unicode code points (C++ Unicode::codePointLengthUTF8).</summary>
-	private static int CodePointLength(string str)
-	{
-		int size = 0;
-		for (int i = 0; i < str.Length; ++i)
-		{
-			if (char.IsHighSurrogate(str[i]) && i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
-				++i;
-			++size;
-		}
-		return size;
-	}
-
-	/// <summary>The first <paramref name="count"/> code points (C++ Unicode::codePointSubstrUTF8(str, 0, count)).</summary>
-	private static string CodePointPrefix(string str, long count)
-	{
-		int end = 0;
-		for (long curr = 0; end < str.Length && curr < count; ++curr)
-		{
-			if (char.IsHighSurrogate(str[end]) && end + 1 < str.Length && char.IsLowSurrogate(str[end + 1]))
-				++end;
-			++end;
-		}
-		return str[..end];
-	}
-
 	/// <summary>Returns the soldier's full name (and, optionally, statString).</summary>
 	/// <param name="statstring">Add stat string?</param>
 	/// <param name="maxLength">Restrict length to a certain value.</param>
@@ -399,13 +373,13 @@ public partial class Soldier
 	{
 		if (statstring && _statString.Length != 0)
 		{
-			int nameCodePointLength = CodePointLength(_name);
-			int statCodePointLength = CodePointLength(_statString);
+			int nameCodePointLength = Unicode.CodePointLength(_name);
+			int statCodePointLength = Unicode.CodePointLength(_statString);
 			if (nameCodePointLength + statCodePointLength > maxLength)
 			{
 				// C++ computes the count unsigned: a stat string longer than maxLength wraps around and keeps the whole name
 				long count = maxLength - (long)statCodePointLength;
-				return CodePointPrefix(_name, count < 0 ? long.MaxValue : count) + "/" + _statString;
+				return Unicode.CodePointSubstr(_name, 0, count < 0 ? long.MaxValue : count) + "/" + _statString;
 			}
 			else
 			{
@@ -449,7 +423,7 @@ public partial class Soldier
 	/// <param name="maxLength">Restrict length to a certain value.</param>
 	public string GetCallsign(uint maxLength = 20)
 	{
-		return "\"" + CodePointPrefix(_callsign, maxLength) + "\"";
+		return "\"" + Unicode.CodePointSubstr(_callsign, 0, maxLength) + "\"";
 	}
 
 	/// <summary>Changes the soldier's callsign.</summary>

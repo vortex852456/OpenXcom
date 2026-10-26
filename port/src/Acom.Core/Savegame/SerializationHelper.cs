@@ -18,8 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Savegame/SerializationHelper.h, src/Savegame/SerializationHelper.cpp
-// Also contains YamlNodeReader::readValBase64 / YamlNodeWriter::writeBase64 (src/Engine/Yaml.cpp) as extension
-// methods, because the binary tile data of battle saves is their only user.
 #nullable disable
 
 using System.Buffers.Binary;
@@ -99,15 +97,5 @@ public static class SerializationHelper
 			return value > 0 ? "inf" : "-inf";
 		// .NET "G17" uses the same fixed/scientific switch as %g and also strips trailing zeros
 		return value.ToString("G17", CultureInfo.InvariantCulture).Replace("E", "e", StringComparison.Ordinal);
-	}
-
-	/// <summary>Reads a base64 scalar as binary data (C++ YamlNodeReader::readValBase64).</summary>
-	public static byte[] ReadValBase64(this YamlNodeReader reader) => Convert.FromBase64String(reader.Val);
-
-	/// <summary>Adds a key with binary data encoded as base64 (C++ YamlNodeWriter::writeBase64).</summary>
-	public static YamlNodeWriter WriteBase64(this YamlNodeWriter writer, string key, ReadOnlySpan<byte> data)
-	{
-		ArgumentNullException.ThrowIfNull(writer);
-		return writer.Write(key, Convert.ToBase64String(data));
 	}
 }

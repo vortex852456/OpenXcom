@@ -1619,32 +1619,6 @@ public partial class Mod
 	}
 
 	/// <summary>
-	/// C++ <c>YamlNodeReader::emitDescendants(defaultValuesReader)</c>: copies the children of the node and
-	/// appends the children of the default node whose key is missing, then emits the result.
-	/// </summary>
-	private static string EmitDescendants(YamlNodeReader reader, YamlNodeReader defaultValuesReader)
-	{
-		YamlWriteNode root;
-		if (reader.IsMap)
-			root = new YamlWriteNode { Kind = YamlWriteNode.NodeKind.Map };
-		else if (reader.IsSeq)
-			root = new YamlWriteNode { Kind = YamlWriteNode.NodeKind.Seq };
-		else
-			return "";
-		foreach (var child in reader.Node.Children)
-			root.Children.Add(YamlEmitter.FromReader(child));
-		if (defaultValuesReader)
-		{
-			foreach (var child in defaultValuesReader.Node.Children)
-			{
-				if (!root.Children.Exists(c => c.Key == child.Key))
-					root.Children.Add(YamlEmitter.FromReader(child));
-			}
-		}
-		return YamlEmitter.Emit(root);
-	}
-
-	/// <summary>
 	/// Loads a ruleset's contents from a YAML file.
 	/// Rules that match pre-existing rules overwrite them.
 	/// </summary>
@@ -1981,7 +1955,7 @@ public partial class Mod
 			{
 				if (IsMapHelper(@base))
 				{
-					return EmitDescendants(@base, new YamlRootNodeReader(destRef, "(starting base template)").ToBase());
+					return @base.EmitDescendants(new YamlRootNodeReader(destRef, "(starting base template)").ToBase());
 				}
 				else
 				{

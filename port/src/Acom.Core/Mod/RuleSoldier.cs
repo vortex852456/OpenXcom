@@ -233,7 +233,7 @@ public partial class RuleSoldier
 
 		if (reader["spawnedSoldier"])
 		{
-			_spawnedSoldier = Unit.EmitDescendants(reader["spawnedSoldier"], new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
+			_spawnedSoldier = reader["spawnedSoldier"].EmitDescendants(new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
 		}
 		reader.TryRead("group", ref _group);
 		reader.TryRead("listOrder", ref _listOrder);

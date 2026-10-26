@@ -58,9 +58,7 @@ public class TestPaletteState : State
 		{
 			// export the palette
 			string exportName = palette + ".jasc.pal";
-			using var output = new StringWriter(CultureInfo.InvariantCulture);
-			_game.Mod.GetPalette(palette).SavePalJasc(output);
-			CrossPlatform.WriteFile(exportName, output.ToString());
+			_game.Mod.GetPalette(palette).SavePalJasc(exportName);
 		}
 
 		Add(_bg);

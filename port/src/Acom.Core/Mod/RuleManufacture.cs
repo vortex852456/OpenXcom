@@ -142,7 +142,7 @@ public class RuleManufacture
 		reader.TryRead("spawnedPersonName", ref _spawnedPersonName);
 		if (reader["spawnedSoldier"])
 		{
-			_spawnedSoldier = EmitDescendants(reader["spawnedSoldier"], new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
+			_spawnedSoldier = reader["spawnedSoldier"].EmitDescendants(new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
 		}
 		reader.TryRead("transferTimes", ref _transferTimes);
 		reader.TryRead("listOrder", ref _listOrder);
@@ -372,25 +372,4 @@ public class RuleManufacture
 
 	/// <summary>Gets the list weight for this manufacture item.</summary>
 	public int ListOrder => _listOrder;
-
-	/// <summary>
-	/// C++ <c>YamlNodeReader::emitDescendants(defaultValuesReader)</c>: serializes the node's children plus
-	/// the children of <paramref name="defaultValuesReader"/> whose keys the node does not have.
-	/// </summary>
-	private static string EmitDescendants(YamlNodeReader reader, YamlNodeReader defaultValuesReader)
-	{
-		var node = reader.Node;
-		if (node == null || (node.Kind != YamlKind.Map && node.Kind != YamlKind.Seq))
-			return "";
-		var root = YamlEmitter.FromReader(node);
-		if (defaultValuesReader.Node is { } defaults)
-		{
-			foreach (var child in defaults.Children)
-			{
-				if (!root.Children.Exists(c => c.Key == child.Key))
-					root.Children.Add(YamlEmitter.FromReader(child));
-			}
-		}
-		return YamlEmitter.Emit(root);
-	}
 }

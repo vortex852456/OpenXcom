@@ -60,19 +60,27 @@ public sealed class SavedGameTests : IDisposable
 	public void Header_reading_stops_at_the_document_separator()
 	{
 		string path = WriteFile("a.sav", GeoscapeSave);
-		string header = SavedGame.ReadYamlSaveHeader(path);
-		Assert.EndsWith("ironman: true\n", header.ReplaceLineEndings("\n"), StringComparison.Ordinal);
-		Assert.DoesNotContain("---", header, StringComparison.Ordinal);
+		// only the first document is parsed: the broken body would throw otherwise
+		var header = YamlRootNodeReader.FromFile(path, true);
+		Assert.True(header["ironman"].ReadVal<bool>());
+		Assert.False(header["difficulty"].IsValid);
+		Assert.Throws<YamlReadException>(() => YamlRootNodeReader.FromFile(path));
 
 		// no separator: C++ ends up with an empty header (npos + 1)
-		Assert.Equal("", SavedGame.ReadYamlSaveHeader(WriteFile("b.sav", "name: x\n")));
+		Assert.False(YamlRootNodeReader.FromFile(WriteFile("b.sav", "name: x\n"), true).IsValid);
 
 		// separator across the 4096 byte read chunks
 		string big = "name: " + new string('a', 4088) + "\n";
 		Assert.Equal(4095, big.Length);
-		Assert.Equal(big, SavedGame.ReadYamlSaveHeader(WriteFile("c.sav", big + "---\nbody: 1\n")));
+		string bigPath = WriteFile("c.sav", big + "---\nbody: 1\n");
+		Assert.Equal(new string('a', 4088), YamlRootNodeReader.FromFile(bigPath, true)["name"].ReadVal<string>());
+		Assert.False(YamlRootNodeReader.FromFile(bigPath, true)["body"].IsValid);
 
-		Assert.Throws<InvalidOperationException>(() => SavedGame.ReadYamlSaveHeader(Path.Combine(_folder, "missing.sav")));
+		// the raw header stops reading after the chunk that holds the separator
+		string huge = big + "---\n" + new string('b', 20000);
+		Assert.Equal(8192, CrossPlatform.GetYamlSaveHeaderRaw(WriteFile("d.sav", huge)).Length);
+
+		Assert.Throws<IOException>(() => YamlRootNodeReader.FromFile(Path.Combine(_folder, "missing.sav"), true));
 	}
 
 	[Fact]

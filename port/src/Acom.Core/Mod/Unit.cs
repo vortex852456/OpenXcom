@@ -535,7 +535,7 @@ public partial class Unit
 		mod.LoadNameNull(_type, ref _liveAlienName, reader["liveAlien"]);
 		if (reader["spawnedSoldier"])
 		{
-			_spawnedSoldier = EmitDescendants(reader["spawnedSoldier"], new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
+			_spawnedSoldier = reader["spawnedSoldier"].EmitDescendants(new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
 		}
 		reader.TryRead("race", ref _race);
 		reader.TryRead("showFullNameInAlienInventory", ref _showFullNameInAlienInventory);
@@ -668,32 +668,6 @@ public partial class Unit
 				);
 			}
 		}
-	}
-
-	/// <summary>
-	/// Serializes the node's descendants, plus the top-level keys of <paramref name="defaultValuesReader"/> that the node
-	/// lacks (C++ <c>YamlNodeReader::emitDescendants(defaultValuesReader)</c>, used for spawned soldier templates).
-	/// </summary>
-	internal static string EmitDescendants(YamlNodeReader node, YamlNodeReader defaultValuesReader)
-	{
-		YamlWriteNode root;
-		if (node.IsMap)
-			root = new YamlWriteNode { Kind = YamlWriteNode.NodeKind.Map };
-		else if (node.IsSeq)
-			root = new YamlWriteNode { Kind = YamlWriteNode.NodeKind.Seq };
-		else
-			return string.Empty;
-		foreach (var child in node.Node.Children)
-			root.Children.Add(YamlEmitter.FromReader(child));
-		if (defaultValuesReader)
-		{
-			foreach (var child in defaultValuesReader.Node.Children)
-			{
-				if (!root.Children.Exists(c => c.Key == child.Key))
-					root.Children.Add(YamlEmitter.FromReader(child));
-			}
-		}
-		return YamlEmitter.Emit(root);
 	}
 
 	/// <summary>Gets the unit's type (also its language string).</summary>

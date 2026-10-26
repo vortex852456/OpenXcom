@@ -88,6 +88,18 @@ internal sealed unsafe partial class SdlInput : IDisposable
 	[UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
 	private static partial void SDL_SetWindowGrab(nint window, int grabbed);
 
+	/// <summary>Shows an error message box (CrossPlatform.ErrorDialogHandler, C++ showError's MessageBoxW).</summary>
+	public static void ShowErrorMessageBox(string error)
+	{
+		const uint SDL_MESSAGEBOX_ERROR = 0x10;
+		if (SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "ACOM Error", error, 0) != 0)
+			Console.Error.WriteLine(error);
+	}
+
+	[LibraryImport(SdlLibrary, StringMarshalling = StringMarshalling.Utf8)]
+	[UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+	private static partial int SDL_ShowSimpleMessageBox(uint flags, string title, string message, nint window);
+
 	[LibraryImport(SdlLibrary)]
 	[UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
 	private static partial void SDL_AddEventWatch(delegate* unmanaged[Cdecl]<nint, nint, int> filter, nint userdata);

@@ -74,7 +74,8 @@ Wie im Original läuft die Logik jeden Durchlauf, das Zeichnen darf ausfallen. E
 | `oxceUpdateCheck` | nur Windows, prüft OXCE-Server | entfällt | Kein Update-Check gegen fremde Server |
 | Palette `setColors`/`setColor` | +1 auf doppelte Schwarztöne | entfällt | Workaround für SDL-1.2-Farbabgleich, der hier nicht stattfindet |
 | YAML-Suche mit Duplikaten | ohne Index: Suche ab letzter Fundstelle | immer erster Treffer | Einfacher, deckt sich mit der indizierten Suche des Originals |
-| Eingebettete Assets (`exe:standard.zip`) | optional | entfällt | Inhalte kommen als Dateien/Zip |
+| Eingebettete Assets (`exe:common.zip`/`exe:standard.zip`, `getEmbeddedAsset`) | optional (`EMBED_ASSETS`) | entfällt; `oxceEmbeddedOnly` wirkungslos | Inhalte kommen als Dateien/Zip |
+| Absturzbericht (`crashDump`/`stackTrace`) | Windows-Minidump bzw. native Backtrace, Text nennt OpenXcom-Forum | .NET-Ausnahme und Stacktrace ins Log, Text nennt ACOM; Fehlerfenster unter Windows über SDL (`ErrorDialogHandler`) | Kein nativer Code; eigenes Projekt |
 | Bildformate (`loadImage`) | alles, was SDL_image kann (auch BMP, LBM, PCX, ...) | nur PNG und GIF | Mods nutzen praktisch nur PNG/GIF; weitere Leser bei Bedarf |
 | Palettenalpha auf dem SDL_image-Weg | SDL 1.2: `unused` = 0, sdl12-compat: 255 | 255 | Byte ist in SDL 1.2 unbenutzt; Transparenz kommt dort aus dem Colour Key |
 | `Timer`-Spielzeit (`slowTick`) | erster Aufruf springt einmalig, 32-Bit-Überlauf nach 74 h | gleichmäßig, 64 Bit | Offensichtlicher Fehler ohne gewollte Wirkung |

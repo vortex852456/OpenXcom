@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Options.h, src/Engine/Options.cpp
-// Port status: partial (missing: logging to file, embedded standard.zip)
+// Deviation: no embedded assets (exe:standard.zip), so refreshMods always scans the data folder and oxceEmbeddedOnly is ignored.
 // Option declarations and registrations are generated: Options.Values.cs, Options.Create.cs (port/tools/gen/gen_options.py).
 
 using System.Security.Cryptography;
@@ -220,6 +220,9 @@ public static partial class Options
 		if (verboseLogging)
 			Logger.ReportingLevel = SeverityLevel.LOG_VERBOSE;
 
+		// this enables writes to the log file and filters already emitted messages
+		CrossPlatform.SetLogFileName(GetUserFolder() + "openxcom.log");
+
 		Logger.Info($"ACOM Version: {Version.ACOM_VERSION} (OpenXcom {Version.OPENXCOM_VERSION_SHORT})");
 		Logger.Info($"Platform: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}");
 		Logger.Info($"Data folder is: {_dataFolder}");
@@ -263,6 +266,7 @@ public static partial class Options
 		if (reload)
 			_masterMod = "";
 		_modInfos.Clear();
+		// C++ first scans the embedded "exe:standard.zip"; the port has no embedded assets (getEmbeddedAsset is always null)
 		Logger.Info($"Scanning standard mods in '{GetDataFolder()}'...");
 		FileMap.ScanModDir(GetDataFolder(), "standard", true);
 		Logger.Info($"Scanning user mods in '{GetUserFolder()}'...");

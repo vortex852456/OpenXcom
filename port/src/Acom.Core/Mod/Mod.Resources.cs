@@ -225,8 +225,7 @@ public partial class Mod
 
 	private static void LoadPaletteDat(Palette palette, string path, int ncolors, int offset = 0)
 	{
-		using var stream = FileMap.GetStream(path);
-		palette.LoadDat(stream, ncolors, offset);
+		palette.LoadDat(path, ncolors, offset);
 	}
 
 	private static void LoadScr(Surface surface, string path)

@@ -149,18 +149,9 @@ public class PlaceFacilityState : State
 		int max = 19;
 		if (cost > 9) --max;
 		if (cost > 99) --max;
-		if (name.EnumerateRunes().Count() > max) // Unicode::codePointLengthUTF8
+		if (Unicode.CodePointLength(name) > max)
 		{
-			// Unicode::codePointSubstrUTF8(name, 0, max)
-			var sub = new StringBuilder();
-			int count = 0;
-			foreach (var rune in name.EnumerateRunes())
-			{
-				if (count++ == max)
-					break;
-				sub.Append(rune.ToString());
-			}
-			name = sub.ToString();
+			name = Unicode.CodePointSubstr(name, 0, max);
 		}
 		return string.Create(CultureInfo.InvariantCulture, $"{name}: {cost}");
 	}

@@ -91,7 +91,7 @@ public class RuleEvent
 		reader.TryRead("spawnedPersonName", ref _spawnedPersonName);
 		if (reader["spawnedSoldier"])
 		{
-			_spawnedSoldier = EmitDescendants(reader["spawnedSoldier"], new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
+			_spawnedSoldier = reader["spawnedSoldier"].EmitDescendants(new YamlRootNodeReader(_spawnedSoldier, "(spawned soldier template)").ToBase());
 		}
 		reader.TryRead("everyMultiItemList", ref _everyMultiItemList);
 		reader.TryRead("everyItemList", ref _everyItemList);
@@ -109,35 +109,6 @@ public class RuleEvent
 		reader.TryRead("invert", ref _invert);
 		reader.TryRead("everyMultiSoldierList", ref _everyMultiSoldierList);
 		reader.TryRead("randomMultiSoldierList", ref _randomMultiSoldierList);
-	}
-
-	/// <summary>
-	/// C++ <c>YamlNodeReader::emitDescendants(defaultValuesReader)</c>: emits the children of a map/seq node,
-	/// plus the children of <paramref name="defaults"/> whose keys are missing (appended at the end).
-	/// Returns an empty string for a scalar node.
-	/// </summary>
-	internal static string EmitDescendants(YamlNodeReader node, YamlNodeReader defaults)
-	{
-		var source = node.Node;
-		YamlKind kind;
-		if (node.IsMap)
-			kind = YamlKind.Map;
-		else if (node.IsSeq)
-			kind = YamlKind.Seq;
-		else
-			return "";
-		var root = new YamlTreeNode { Kind = kind, File = source.File };
-		foreach (var child in source.Children)
-			root.Children.Add(child.Clone(child.Key));
-		if (defaults && defaults.Node != null)
-		{
-			foreach (var child in defaults.Node.Children)
-			{
-				if (!root.Children.Exists(c => c.Key == child.Key))
-					root.Children.Add(child.Clone(child.Key));
-			}
-		}
-		return YamlEmitter.Emit(YamlEmitter.FromReader(root));
 	}
 
 	/// <summary>Cross link with other rules.</summary>

@@ -30,7 +30,16 @@ using Acom.Desktop;
 
 // Crash handling routines (C++ exceptionLogger -> CrossPlatform::crashDump)
 AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-	Logger.Fatal($"A fatal error has occurred: {(e.ExceptionObject as Exception)?.ToString() ?? "Unknown exception"}");
+{
+	if (e.ExceptionObject is Exception ex)
+		CrossPlatform.CrashDump(ex, "");
+	else
+		CrossPlatform.CrashDump(null, "Unknown exception");
+};
+
+// C++ shows MessageBoxW on Windows; the host uses SDL's message box there
+CrossPlatform.ErrorDialogHandler = SdlInput.ShowErrorMessageBox;
+CrossPlatform.GetErrorDialog();
 
 var options = HostOptions.Parse(args);
 if (!options.Demo)

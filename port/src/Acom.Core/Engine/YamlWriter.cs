@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Yaml.h (YamlNodeWriter, YamlRootNodeWriter)
-// Port status: partial (missing: writeBase64)
 
 using System.Collections;
 using System.Runtime.CompilerServices;
@@ -158,6 +157,9 @@ public class YamlNodeWriter
 
 	/// <summary>Converts the written tree into a reader.</summary>
 	public YamlNodeReader ToReader() => new YamlRootNodeReader(Emit(), "writer").ToBase();
+
+	/// <summary>Adds a key with binary data encoded as base64 (C++ writeBase64).</summary>
+	public YamlNodeWriter WriteBase64(string key, ReadOnlySpan<byte> data) => Write(key, Convert.ToBase64String(data));
 
 	/// <summary>Serializes this node to YAML text.</summary>
 	public string Emit() => YamlEmitter.Emit(_node);

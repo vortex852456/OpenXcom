@@ -18,7 +18,10 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Engine/Unicode.h, src/Engine/Unicode.cpp
-// Port status: partial (text tokens, character classes, naturalCompare, upper/lowerCase and number formatting; C# strings are UTF-16, so most of the UTF-8 helpers are not needed)
+// C# strings are UTF-16, so the UTF-8 helpers map as follows: convUtf8ToUtf32/convUtf32ToUtf8/convWcToMb/convMbToWc and
+// getUtf8Locale are not needed (text is already decoded; Font/Text work on chars), isValidUTF8 is done by the decoders
+// (Encoding.UTF8, ZipArchive entry names), codePointLengthUTF8/codePointSubstrUTF8 count UTF-16 code points,
+// replace is string.Replace. caseCompare/caseFind have no callers in OXCE and are not ported.
 
 namespace Acom;
 
@@ -106,6 +109,44 @@ public static class Unicode
 
 	/// <summary>Converts a string to lower case (C++ lowerCase works in place; here a new string is returned).</summary>
 	public static string LowerCase(string s) => string.IsNullOrEmpty(s) ? s : s.ToLowerInvariant();
+
+	/// <summary>Number of Unicode code points (C++ codePointLengthUTF8); a lone surrogate counts as one.</summary>
+	public static int CodePointLength(string str)
+	{
+		ArgumentNullException.ThrowIfNull(str);
+		int size = 0;
+		for (int i = 0; i < str.Length; ++i)
+		{
+			if (char.IsHighSurrogate(str[i]) && i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+				++i;
+			++size;
+		}
+		return size;
+	}
+
+	/// <summary>Substring by code points (C++ codePointSubstrUTF8); <paramref name="count"/> may run past the end.</summary>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="pos"/> is past the end (C++ substr throws out_of_range).</exception>
+	public static string CodePointSubstr(string str, long pos, long count = long.MaxValue)
+	{
+		ArgumentNullException.ThrowIfNull(str);
+		int begin = -1;
+		int i = 0;
+		for (long curr = 0; ; ++curr)
+		{
+			if (begin < 0 && curr == pos)
+				begin = i;
+			if (begin >= 0 && count-- == 0)
+				break;
+			if (i >= str.Length)
+				break;
+			if (char.IsHighSurrogate(str[i]) && i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+				++i;
+			++i;
+		}
+		if (begin < 0)
+			throw new ArgumentOutOfRangeException(nameof(pos), "Invalid code point position for substr");
+		return str[begin..i];
+	}
 
 	/// <summary>Takes an integer value and formats it as number with separators (spacing the thousands).</summary>
 	/// <param name="value">The value.</param>
