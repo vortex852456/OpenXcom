@@ -18,7 +18,17 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Acom;
 using Acom.Desktop;
 
-using var host = new AcomHost(HostOptions.Parse(args));
+var options = HostOptions.Parse(args);
+if (!options.Demo)
+{
+	// Like C++ main(): process the command line and load the options before creating the game
+	CrossPlatform.SetArgs(options.GameArgs);
+	if (!Options.Init())
+		return;
+}
+
+using var host = new AcomHost(options);
 host.Run();

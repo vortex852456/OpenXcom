@@ -316,6 +316,30 @@ public static class CrossPlatform
 	/// <summary>Is the given version higher than the OXCE version this port is based on?</summary>
 	public static bool IsHigherThanCurrentVersion(string newVersion) => IsHigherThanCurrentVersion(ParseVersion(newVersion), Acom.Version.OPENXCOM_VERSION_NUMBER);
 
+	/// <summary>Is <paramref name="dataVersion"/> lower than <paramref name="ver"/> (component-wise from the left)?</summary>
+	public static bool IsLowerThanRequiredVersion(IReadOnlyList<int> dataVersion, IReadOnlyList<int> ver)
+	{
+		ArgumentNullException.ThrowIfNull(dataVersion);
+		ArgumentNullException.ThrowIfNull(ver);
+		bool isLower = false;
+		for (int k = 0; k < ver.Count; ++k)
+		{
+			if (dataVersion[k] < ver[k])
+			{
+				isLower = true;
+				break;
+			}
+			else if (dataVersion[k] > ver[k])
+			{
+				break;
+			}
+		}
+		return isLower;
+	}
+
+	/// <summary>Is the version of the data (common/standard folders) lower than the minimum required ruleset version?</summary>
+	public static bool IsLowerThanRequiredVersion(string dataVersion) => IsLowerThanRequiredVersion(ParseVersion(dataVersion), Acom.Version.MIN_REQUIRED_RULESET_VERSION_NUMBER);
+
 	/// <summary>Reads a whole file.</summary>
 	public static byte[] ReadFileRaw(string filename) => File.ReadAllBytes(filename);
 
@@ -371,4 +395,20 @@ public static class CrossPlatform
 		//TODO add other OSs shortcuts.
 		return false;
 	}
+
+	/// <summary>Gets the DOS-style path shown on the start screen (the C++ Windows build shortens the exe path).</summary>
+	public static string GetDosPath() => "C:\\GAMES\\ACOM";
+
+	/// <summary>Makes the window flash in the taskbar (Windows only in C++; the host owns the window, so nothing happens here).</summary>
+	public static void FlashWindow()
+	{
+	}
+
+	private static string s_logFileName = "standard error output";
+
+	/// <summary>Where the log goes (C++ writes a log file; the port's <see cref="Logger"/> writes to <see cref="Logger.Sink"/>).</summary>
+	public static string GetLogFileName() => s_logFileName;
+
+	/// <summary>Sets the name reported by <see cref="GetLogFileName"/> (for a host that writes the log to a file).</summary>
+	public static void SetLogFileName(string name) => s_logFileName = name;
 }

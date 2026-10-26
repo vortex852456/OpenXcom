@@ -65,12 +65,21 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 	{
 		Surface.DefaultScale = RenderScale;
 		var screen = new Screen(Screen.ORIGINAL_WIDTH, Screen.ORIGINAL_HEIGHT, RenderScale);
-		// No options.cfg is loaded yet: start from the defaults of Options::create (audio format, volumes, ...)
-		Options.Create();
-		Options.ResetDefault(false);
+		if (_options.Demo)
+		{
+			// The demo loads no options.cfg: start from the defaults of Options::create (audio format, volumes, ...)
+			Options.Create();
+			Options.ResetDefault(false);
+		}
+		else
+		{
+			// Options.Init ran in Program (like C++ main before creating the Game)
+			Options.baseXResolution = Options.displayWidth;
+			Options.baseYResolution = Options.displayHeight;
+		}
 		Mixer.Device = _audio; // Game.InitAudio opens it (or runs muted without audio hardware)
 		_game = new Acom.Game(screen);
-		_game.SetState(new DemoState());
+		_game.SetState(_options.Demo ? new DemoState() : new StartState());
 		_input = new SdlInput();
 		Window.ClientSizeChanged += (_, _) => UpdateWindowSize();
 		base.Initialize();
@@ -87,6 +96,9 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 
 	protected override void UnloadContent()
 	{
+		// C++ deletes the Game at the end of main (saving the options); headless checks leave the config alone.
+		if (!_options.Demo && _options.ScreenshotPath == null)
+			_game?.Shutdown();
 		Mixer.CloseAudio();
 		Mixer.Device = null;
 		_audio.Dispose();
@@ -140,20 +152,33 @@ internal sealed class AcomHost : Microsoft.Xna.Framework.Game
 }
 
 /// <summary>Command line options of the desktop host.</summary>
-internal sealed record HostOptions(string? ScreenshotPath, int ScreenshotAfterFrames)
+/// <param name="ScreenshotPath">Save a screenshot here and quit (headless checks).</param>
+/// <param name="ScreenshotAfterFrames">Number of frames drawn before the screenshot.</param>
+/// <param name="Demo">Show the rendering demo instead of starting the game.</param>
+/// <param name="GameArgs">All other arguments, for the game's own command line (<see cref="CrossPlatform.SetArgs"/>).</param>
+internal sealed record HostOptions(string? ScreenshotPath, int ScreenshotAfterFrames, bool Demo, IReadOnlyList<string> GameArgs)
 {
-	/// <summary>Parses <c>--screenshot &lt;file.png&gt; [--frames &lt;n&gt;]</c> (used for automated checks).</summary>
+	/// <summary>
+	/// Parses <c>--screenshot &lt;file.png&gt; [--frames &lt;n&gt;]</c> (used for automated checks) and <c>--demo</c>;
+	/// everything else is left for the game (e.g. <c>-data &lt;folder&gt;</c>, <c>-oxceFoo true</c>).
+	/// </summary>
 	public static HostOptions Parse(string[] args)
 	{
 		string? screenshot = null;
 		int frames = 30;
-		for (int i = 0; i + 1 < args.Length; ++i)
+		bool demo = false;
+		var rest = new List<string>();
+		for (int i = 0; i < args.Length; ++i)
 		{
-			if (args[i] == "--screenshot")
+			if (args[i] == "--screenshot" && i + 1 < args.Length)
 				screenshot = args[++i];
-			else if (args[i] == "--frames")
+			else if (args[i] == "--frames" && i + 1 < args.Length)
 				frames = int.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture);
+			else if (args[i] == "--demo")
+				demo = true;
+			else
+				rest.Add(args[i]);
 		}
-		return new HostOptions(screenshot, frames);
+		return new HostOptions(screenshot, frames, demo, rest);
 	}
 }

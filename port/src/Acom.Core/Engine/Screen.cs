@@ -132,4 +132,80 @@ public sealed class Screen
 		CursorTopBlackBand = (windowHeight - h) / 2;
 		DisplaySize = (w, h);
 	}
+
+	/// <summary>
+	/// Updates the base resolution of a scale type (geoscape/battlescape) from the display size.
+	/// </summary>
+	/// <param name="type">Scale type (<see cref="ScaleType"/> as int, like the options).</param>
+	/// <param name="width">Base width to set.</param>
+	/// <param name="height">Base height to set.</param>
+	/// <param name="change">Also set the current base resolution if it differs.</param>
+	public static void UpdateScale(int type, ref int width, ref int height, bool change)
+	{
+		double pixelRatioY = 1.0;
+
+		if (Options.nonSquarePixelRatio)
+		{
+			pixelRatioY = 1.2;
+		}
+
+		switch ((ScaleType)type)
+		{
+			case ScaleType.SCALE_15X:
+				width = (int)(ORIGINAL_WIDTH * 1.5);
+				height = (int)(ORIGINAL_HEIGHT * 1.5);
+				break;
+			case ScaleType.SCALE_2X:
+				width = ORIGINAL_WIDTH * 2;
+				height = ORIGINAL_HEIGHT * 2;
+				break;
+			case ScaleType.SCALE_SCREEN_DIV_10:
+				width = (int)(Options.displayWidth / 10.0);
+				height = (int)(Options.displayHeight / pixelRatioY / 10.0);
+				break;
+			case ScaleType.SCALE_SCREEN_DIV_8:
+				width = (int)(Options.displayWidth / 8.0);
+				height = (int)(Options.displayHeight / pixelRatioY / 8.0);
+				break;
+			case ScaleType.SCALE_SCREEN_DIV_6:
+				width = (int)(Options.displayWidth / 6.0);
+				height = (int)(Options.displayHeight / pixelRatioY / 6.0);
+				break;
+			case ScaleType.SCALE_SCREEN_DIV_5:
+				width = (int)(Options.displayWidth / 5.0);
+				height = (int)(Options.displayHeight / pixelRatioY / 5.0);
+				break;
+			case ScaleType.SCALE_SCREEN_DIV_4:
+				width = (int)(Options.displayWidth / 4.0);
+				height = (int)(Options.displayHeight / pixelRatioY / 4.0);
+				break;
+			case ScaleType.SCALE_SCREEN_DIV_3:
+				width = (int)(Options.displayWidth / 3.0);
+				height = (int)(Options.displayHeight / pixelRatioY / 3.0);
+				break;
+			case ScaleType.SCALE_SCREEN_DIV_2:
+				width = (int)(Options.displayWidth / 2.0);
+				height = (int)(Options.displayHeight / pixelRatioY / 2.0);
+				break;
+			case ScaleType.SCALE_SCREEN:
+				width = Options.displayWidth;
+				height = (int)(Options.displayHeight / pixelRatioY);
+				break;
+			case ScaleType.SCALE_ORIGINAL:
+			default:
+				width = ORIGINAL_WIDTH;
+				height = ORIGINAL_HEIGHT;
+				break;
+		}
+
+		// don't go under minimum resolution... it's bad, mmkay?
+		width = Math.Max(width, ORIGINAL_WIDTH);
+		height = Math.Max(height, ORIGINAL_HEIGHT);
+
+		if (change && (Options.baseXResolution != width || Options.baseYResolution != height))
+		{
+			Options.baseXResolution = width;
+			Options.baseYResolution = height;
+		}
+	}
 }
