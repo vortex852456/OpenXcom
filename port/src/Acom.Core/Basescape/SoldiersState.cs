@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Basescape/SoldiersState.h, src/Basescape/SoldiersState.cpp
-// Port status: partial (missing: SDL_WarpMouse - the mouse pointer does not follow a soldier moved with the arrows)
 #nullable disable
 
 using System.Globalization;
@@ -570,13 +569,8 @@ public class SoldiersState : State
 		InitList(_lstSoldiers.Scroll);
 	}
 
-	/// <summary>
-	/// SDL_WarpMouse: would move the mouse pointer to the given window position.
-	/// Port status: the host cannot move the system pointer yet, so this does nothing.
-	/// </summary>
-	internal static void WarpMouse(int x, int y)
-	{
-	}
+	/// <summary>SDL_WarpMouse: moves the mouse pointer to the given window position.</summary>
+	internal static void WarpMouse(int x, int y) => SDLMouse.SDL_WarpMouse((ushort)x, (ushort)y);
 
 	/// <summary>
 	/// Returns to the previous screen.

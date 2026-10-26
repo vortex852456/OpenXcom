@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Basescape/ResearchState.h, src/Basescape/ResearchState.cpp
-// Port status: partial (missing: SDL_WarpMouse - the mouse pointer does not follow a topic moved with the arrows)
 #nullable disable
 
 using System.Globalization;
@@ -361,9 +360,5 @@ public class ResearchState : State
 		FillProjectList(_lstResearch.Scroll);
 	}
 
-#pragma warning disable IDE0060 // C++: SDL_WarpMouse(x, y); the host cannot warp the pointer yet
-	private static void WarpMouse(int x, int y)
-	{
-	}
-#pragma warning restore IDE0060
+	private static void WarpMouse(int x, int y) => SDLMouse.SDL_WarpMouse((ushort)x, (ushort)y);
 }
