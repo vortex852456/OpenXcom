@@ -611,7 +611,7 @@ public partial class BattlescapeState
 				// skip Debriefing
 				Options.baseXResolution = Options.baseXGeoscape;
 				Options.baseYResolution = Options.baseYGeoscape;
-				// missing: _game->getScreen()->resetDisplay(false);
+				_game.Screen.ResetDisplay(false);
 
 				// Restore the cursor in case something weird happened
 				_game.Cursor.Visible = true;

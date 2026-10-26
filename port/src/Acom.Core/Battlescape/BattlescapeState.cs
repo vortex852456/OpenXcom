@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/BattlescapeState.h, src/Battlescape/BattlescapeState.cpp
-// Port status: partial (missing: SDL_WarpMouse/SDL_EventState pointer warping while drag-scrolling, Screen::resetDisplay, saveAIMap/saveVoxelMap/saveVoxelView debug image dumps (no PNG encoder yet))
+// Port status: partial (missing: SDL_WarpMouse/SDL_EventState pointer warping while drag-scrolling, saveAIMap/saveVoxelMap/saveVoxelView debug image dumps (no PNG encoder yet))
 #nullable disable
 
 using System.Runtime.CompilerServices;

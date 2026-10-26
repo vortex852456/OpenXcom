@@ -18,7 +18,7 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/InventoryState.h, src/Battlescape/InventoryState.cpp
-// Port status: partial (missing: Screen::resetDisplay, SDL_WarpMouse in refreshMouse)
+// Port status: partial (missing: SDL_WarpMouse in refreshMouse)
 #nullable disable
 
 using System.Globalization;
@@ -33,7 +33,7 @@ namespace Acom;
 /// <summary>
 /// Screen which displays soldier's inventory.
 /// </summary>
-public class InventoryState : State, IDisposable
+public class InventoryState : State
 {
 	private const int _templateBtnX = 288;
 	private const int _createTemplateBtnY = 90;
@@ -103,12 +103,12 @@ public class InventoryState : State, IDisposable
 		{
 			Options.baseXResolution = Screen.ORIGINAL_WIDTH;
 			Options.baseYResolution = Screen.ORIGINAL_HEIGHT;
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 		else if (_battleGame.IsBaseCraftInventory)
 		{
 			Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, true);
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 
 		// Create objects
@@ -359,20 +359,11 @@ public class InventoryState : State, IDisposable
 	}
 
 	/// <summary>Cleans up the Inventory state (C++ destructor).</summary>
-	public void Dispose()
-	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
-
-	/// <summary>C++ destructor logic.</summary>
-	protected virtual void Dispose(bool disposing)
+	public override void Destroy()
 	{
 		if (_disposed)
 			return;
 		_disposed = true;
-		if (!disposing)
-			return;
 
 		ClearInventoryTemplate(_curInventoryTemplate);
 		ClearInventoryTemplate(_tempInventoryTemplate);
@@ -382,7 +373,7 @@ public class InventoryState : State, IDisposable
 			if (Options.maximizeInfoScreens)
 			{
 				Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, true);
-				// missing: _game->getScreen()->resetDisplay(false);
+				_game.Screen.ResetDisplay(false);
 			}
 
 			//fix case when scripts could kill unit before inventory is closed
@@ -398,7 +389,7 @@ public class InventoryState : State, IDisposable
 		else
 		{
 			Screen.UpdateScale(Options.geoscapeScale, ref Options.baseXGeoscape, ref Options.baseYGeoscape, true);
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 	}
 

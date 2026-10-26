@@ -206,7 +206,7 @@ public class OptionsBaseState : State
 		Recenter(dX, dY);
 		Options.Save();
 		_game.LoadLanguages();
-		// missing: _game->getScreen()->resetDisplay(); SDL_WM_GrabInput(Options::captureMouse); (host matters)
+		_game.Screen.ResetDisplay(); // SDL_WM_GrabInput(Options::captureMouse) is a host matter
 		_game.SetVolume(Options.soundVolume, Options.musicVolume, Options.uiVolume);
 		if (Options.reload && _origin == OptionsOrigin.OPT_MENU)
 		{

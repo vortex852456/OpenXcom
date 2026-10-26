@@ -18,7 +18,6 @@
  * along with Acom.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Ported from: src/Battlescape/AlienInventoryState.h, src/Battlescape/AlienInventoryState.cpp
-// Port status: partial (missing: Screen::resetDisplay)
 #nullable disable
 
 using System.Globalization;
@@ -32,7 +31,7 @@ namespace Acom;
 /// <summary>
 /// Screen which displays alien's inventory.
 /// </summary>
-public class AlienInventoryState : State, IDisposable
+public class AlienInventoryState : State
 {
 	private readonly Surface _bg, _soldier;
 	private readonly BattlescapeButton _btnArmor;
@@ -62,7 +61,7 @@ public class AlienInventoryState : State, IDisposable
 		{
 			Options.baseXResolution = Screen.ORIGINAL_WIDTH;
 			Options.baseYResolution = Screen.ORIGINAL_HEIGHT;
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 
 		// Create objects
@@ -309,22 +308,15 @@ public class AlienInventoryState : State, IDisposable
 	}
 
 	/// <summary>Cleans up the AlienInventory state (C++ destructor).</summary>
-	public void Dispose()
-	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
-
-	/// <summary>C++ destructor logic.</summary>
-	protected virtual void Dispose(bool disposing)
+	public override void Destroy()
 	{
 		if (_disposed)
 			return;
 		_disposed = true;
-		if (disposing && Options.maximizeInfoScreens)
+		if (Options.maximizeInfoScreens)
 		{
 			Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, true);
-			// missing: _game->getScreen()->resetDisplay(false);
+			_game.Screen.ResetDisplay(false);
 		}
 	}
 

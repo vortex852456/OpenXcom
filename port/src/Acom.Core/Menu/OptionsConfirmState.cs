@@ -124,7 +124,7 @@ public class OptionsConfirmState : State
 		Screen.UpdateScale(Options.battlescapeScale, ref Options.baseXBattlescape, ref Options.baseYBattlescape, _origin == OptionsOrigin.OPT_BATTLESCAPE);
 		Screen.UpdateScale(Options.geoscapeScale, ref Options.baseXGeoscape, ref Options.baseYGeoscape, _origin != OptionsOrigin.OPT_BATTLESCAPE);
 		Options.Save();
-		// missing: _game->getScreen()->resetDisplay(); (host matter)
+		_game.Screen.ResetDisplay();
 		_game.PopState();
 		OptionsBaseState.Restart(_origin);
 	}
